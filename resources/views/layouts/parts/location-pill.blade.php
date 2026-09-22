@@ -4,8 +4,8 @@
 
      呼び出し元のレイアウト／コントローラから $userLocation 変数（UserLocationService::getActiveLocation の結果 or null）が渡されることを想定。
      渡されない場合は app() 経由でその場で解決する。
-     - キャスト側: 現在地／住所指定（パスポート）を保存できるモーダルを開く
-     - 店舗側: 拠点は店舗住所固定（仕様）のため、説明のみのモーダルを開く
+     - キャスト側: 現在地／エリア指定（パスポート）／プロフィール住所を保存できるモーダルを開く
+     - 店舗側: 拠点は店舗住所固定（仕様）のため、説明＋検索半径のみのモーダルを開く
 --}}
 @php
     $locationService = app(\App\Services\UserLocationService::class);
@@ -22,6 +22,17 @@
     };
     // profile モードは label 自体が「プロフィール住所／店舗住所」なのでチップと重複させない
     $showModeChip = in_array($userLocation['mode'] ?? null, ['current', 'passport'], true);
+
+    // Cast side: profile address preview for the "use profile address" shortcut
+    $locationProfileAddress = '';
+    if ($isCastSide) {
+        $locationProfileSettings = $locationService->loadProfileSettings();
+        $locationProfileAddress = (string) ($locationProfileSettings['profile_address'] ?? '');
+    }
+
+    $locationDistanceOptions = \App\Services\UserLocationService::DISTANCE_OPTIONS_KM;
+    // One-tap presets for well-known nightlife areas (geocoded server-side)
+    $locationAreaPresets = ['新宿', '渋谷', '六本木', '銀座', '池袋', '中洲', 'すすきの'];
 @endphp
 
 <div class="location-pill-wrap">
@@ -57,15 +68,26 @@
         </button>
         <h2 class="location-modal__title">{{ $isCastSide ? '探索拠点を設定' : '探索拠点について' }}</h2>
 
-        @if($isCastSide)
-            <p class="location-modal__lead">
-                お店との距離を表示するには、現在地を取得するか、任意の住所・駅名を指定してください。
-            </p>
+        {{-- Current origin summary shown first so users always know the active state --}}
+        <div class="location-modal__current">
+            @if($userLocation)
+                <i class="fas fa-location-dot" aria-hidden="true"></i>
+                <span>いまの拠点：<strong>{{ $modeLabel }}</strong></span>
+                @if(!empty($userLocation['label']) && $userLocation['label'] !== $modeLabel)
+                    <span class="location-modal__current-label">{{ $userLocation['label'] }}</span>
+                @endif
+                <span class="location-modal__current-radius">{{ $locationMaxKm > 0 ? '半径' . $locationMaxKm . 'km' : '距離制限なし' }}</span>
+            @else
+                <i class="fas fa-circle-exclamation" aria-hidden="true"></i>
+                <span>拠点が未設定です。距離の表示・並び替えが無効になっています。</span>
+            @endif
+        </div>
 
+        @if($isCastSide)
             <div class="location-modal__section">
-                <h3 class="location-modal__section-title">現在地から探す</h3>
+                <h3 class="location-modal__section-title"><i class="fas fa-crosshairs" aria-hidden="true"></i> 現在地から探す</h3>
                 <button type="button" id="location-use-current" class="location-modal__btn-primary">
-                    <i class="fas fa-crosshairs"></i> 端末の現在地を取得
+                    <i class="fas fa-location-crosshairs"></i> いまいる場所を拠点にする
                 </button>
                 <p class="location-modal__hint">ブラウザの位置情報の許可が必要です。</p>
             </div>
@@ -73,14 +95,34 @@
             <div class="location-modal__divider"><span>または</span></div>
 
             <div class="location-modal__section">
-                <h3 class="location-modal__section-title">パスポートモード（住所・駅名で指定）</h3>
-                <form id="location-passport-form" class="location-modal__form">
-                    <input type="text" name="address" class="location-modal__input" placeholder="例: 東京都港区六本木 / 新宿駅" autocomplete="off" required>
+                <h3 class="location-modal__section-title"><i class="fas fa-map-location-dot" aria-hidden="true"></i> エリア・駅名で探す（パスポートモード）</h3>
+                <p class="location-modal__hint location-modal__hint--top">住みたい街や働きたいエリアを拠点にできます。人気エリアはワンタップで設定。</p>
+                <div class="location-modal__chips" id="location-area-presets">
+                    @foreach($locationAreaPresets as $area)
+                        <button type="button" class="location-modal__chip" data-area="{{ $area }}">{{ $area }}</button>
+                    @endforeach
+                </div>
+                <form id="location-passport-form" class="location-modal__form" autocomplete="off">
+                    <div class="location-modal__suggest-wrap">
+                        <input type="text" name="address" id="location-passport-input" class="location-modal__input"
+                               placeholder="住所・駅名を入力（例: 港区六本木 / 新宿駅）"
+                               autocomplete="off" required
+                               role="combobox" aria-expanded="false" aria-controls="location-suggest-list" aria-autocomplete="list">
+                        <ul id="location-suggest-list" class="location-modal__suggest" role="listbox" hidden></ul>
+                    </div>
                     <button type="submit" class="location-modal__btn-secondary">
-                        <i class="fas fa-paper-plane"></i> この位置で検索
+                        <i class="fas fa-map-pin"></i> この場所を拠点にする
                     </button>
                 </form>
             </div>
+
+            @if($locationProfileAddress !== '')
+                <div class="location-modal__section">
+                    <button type="button" id="location-use-profile" class="location-modal__btn-ghost-wide">
+                        <i class="fas fa-house"></i> プロフィール住所（{{ \Illuminate\Support\Str::limit($locationProfileAddress, 20) }}）を拠点にする
+                    </button>
+                </div>
+            @endif
         @else
             {{-- 店舗側：拠点は店舗住所に固定（キャスト側のようなモード切替は無い仕様） --}}
             <p class="location-modal__lead">
@@ -97,22 +139,29 @@
                         <i class="fas fa-pen"></i> プロフィール編集で住所を登録
                     </a>
                 @endif
-            @else
-                <p class="location-modal__hint">検索半径（○km圏内）は詳細検索から変更できます。</p>
             @endif
         @endif
 
-        @if($userLocation)
-            <div class="location-modal__current">
-                <span>現在の探索拠点：<strong>{{ $modeLabel }}</strong></span>
-                @if(!empty($userLocation['label']) && $userLocation['label'] !== $modeLabel)
-                    <span class="location-modal__current-label">{{ $userLocation['label'] }}</span>
-                @endif
-                @if($isCastSide && in_array($userLocation['mode'] ?? null, ['current', 'passport'], true))
-                    <button type="button" id="location-clear" class="location-modal__btn-ghost">
-                        <i class="fas fa-rotate-left"></i> 解除
-                    </button>
-                @endif
+        @if($userLocation || $isCastSide)
+            <div class="location-modal__section location-modal__section--radius">
+                <h3 class="location-modal__section-title"><i class="fas fa-circle-dot" aria-hidden="true"></i> 検索半径（タップで即反映）</h3>
+                <div class="location-modal__radius" id="location-radius-chips">
+                    @foreach($locationDistanceOptions as $km)
+                        <button type="button"
+                                class="location-modal__radius-chip {{ $locationMaxKm === (int) $km ? 'is-active' : '' }}"
+                                data-km="{{ $km }}">
+                            {{ $km === 0 ? '制限なし' : $km . 'km' }}
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+        @if($isCastSide && in_array($userLocation['mode'] ?? null, ['current', 'passport'], true))
+            <div class="location-modal__footer">
+                <button type="button" id="location-clear" class="location-modal__btn-ghost">
+                    <i class="fas fa-rotate-left"></i> 解除してプロフィール住所に戻す
+                </button>
             </div>
         @endif
 
@@ -185,6 +234,11 @@
     margin: 0 0 16px;
 }
 .location-modal__section { margin-bottom: 14px; }
+.location-modal__section--radius {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--color-border);
+}
 .location-modal__section-title {
     font-size: 0.78rem;
     font-weight: 700;
@@ -192,6 +246,7 @@
     margin: 0 0 8px;
     letter-spacing: 0.04em;
 }
+.location-modal__section-title i { margin-right: 2px; }
 .location-modal__btn-primary,
 .location-modal__btn-secondary {
     display: inline-flex;
@@ -221,18 +276,34 @@
     background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 999px;
-    padding: 5px 10px;
+    padding: 6px 12px;
     color: var(--color-text-muted);
     font-size: 0.78rem;
     cursor: pointer;
-    margin-left: auto;
 }
 .location-modal__btn-ghost:hover { color: var(--color-text-header); border-color: rgba(255, 255, 255, 0.35); }
+.location-modal__btn-ghost-wide {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-header);
+    font-size: 0.84rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+.location-modal__btn-ghost-wide:hover { background: rgba(168, 85, 247, 0.1); border-color: var(--color-border-strong); }
 .location-modal__hint {
     font-size: 0.7rem;
     color: var(--color-text-muted);
     margin: 6px 0 0;
 }
+.location-modal__hint--top { margin: 0 0 8px; }
 .location-modal__divider {
     text-align: center;
     color: var(--color-text-muted);
@@ -258,6 +329,7 @@
     margin: 0;
 }
 .location-modal__input {
+    width: 100%;
     height: 42px;
     padding: 0 12px;
     border-radius: 10px;
@@ -271,19 +343,114 @@
     outline-offset: 1px;
     background: rgba(255, 255, 255, 0.1);
 }
+/* Area preset chips (one-tap passport) */
+.location-modal__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+.location-modal__chip {
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--color-border-strong);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--color-text-header);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+.location-modal__chip:hover { background: rgba(168, 85, 247, 0.14); border-color: var(--gold); }
+.location-modal__chip:disabled { opacity: 0.5; cursor: wait; }
+/* Address autosuggest dropdown */
+.location-modal__suggest-wrap { position: relative; }
+.location-modal__suggest {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 20;
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    background: var(--dark-bg, #17131f);
+    border: 1px solid var(--color-border-strong);
+    border-radius: 10px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+    max-height: 220px;
+    overflow-y: auto;
+}
+.location-modal__suggest-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 9px 10px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--color-text-header);
+    font-size: 0.84rem;
+    text-align: left;
+    cursor: pointer;
+}
+.location-modal__suggest-item i { color: var(--gold); font-size: 0.76rem; flex-shrink: 0; }
+.location-modal__suggest-item:hover,
+.location-modal__suggest-item.is-focused { background: rgba(168, 85, 247, 0.14); }
+.location-modal__suggest-empty {
+    padding: 9px 10px;
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+}
+/* Radius chips (tap to apply instantly) */
+.location-modal__radius {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.location-modal__radius-chip {
+    padding: 6px 11px;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.location-modal__radius-chip:hover { color: var(--color-text-header); border-color: var(--color-border-strong); }
+.location-modal__radius-chip.is-active {
+    background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    border-color: transparent;
+    color: #1a1206;
+}
+.location-modal__radius-chip:disabled { opacity: 0.5; cursor: wait; }
 .location-modal__current {
     display: flex;
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
-    margin-top: 14px;
+    margin: 0 0 14px;
     padding: 10px 12px;
     border-radius: 10px;
     background: rgba(168, 85, 247, 0.06);
     border: 1px solid var(--color-border);
     font-size: 0.82rem;
 }
+.location-modal__current i { color: var(--gold); }
 .location-modal__current-label { color: var(--color-text-header); font-weight: 700; }
+.location-modal__current-radius {
+    margin-left: auto;
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+}
+.location-modal__footer {
+    margin-top: 12px;
+    text-align: center;
+}
 .location-modal__message {
     margin-top: 10px;
     padding: 8px 10px;
@@ -298,8 +465,4 @@
     border-color: rgba(74, 222, 128, 0.4);
     color: var(--color-success);
 }
-
-/* ==========================================================================
-   共有メニュー（丸ボタン＋ポップアップ）
-   ========================================================================== */
 </style>

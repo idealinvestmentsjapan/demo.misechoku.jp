@@ -469,6 +469,7 @@ Route::prefix('setting')->name('setting.')->group(function () {
     // 探索拠点（現在地／パスポート）
     Route::post('/location', [\App\Http\Controllers\Common\LocationController::class, 'store'])->name('location.store');
     Route::delete('/location', [\App\Http\Controllers\Common\LocationController::class, 'destroy'])->name('location.destroy');
+    Route::post('/location/radius', [\App\Http\Controllers\Common\LocationController::class, 'updateRadius'])->name('location.radius');
 
     // トーク定型文（キャスト／店舗ともに利用）— トーク画面のモーダルから JSON で操作
     Route::prefix('talk-templates')->name('talk-templates.')->group(function () {

@@ -495,6 +495,41 @@ body.theme-light .location-modal__current {
     border-color: rgba(124, 58, 237, 0.18);
 }
 body.theme-light .location-modal__current-label { color: #4b465c; }
+body.theme-light .location-modal__current-radius { color: #6d6685; }
+body.theme-light .location-modal__btn-ghost-wide {
+    background: rgba(124, 58, 237, 0.05);
+    border-color: rgba(124, 58, 237, 0.22);
+    color: #4b465c;
+}
+body.theme-light .location-modal__btn-ghost-wide:hover { background: rgba(124, 58, 237, 0.10); }
+body.theme-light .location-modal__chip {
+    background: #ffffff;
+    border-color: rgba(124, 58, 237, 0.28);
+    color: #4b465c;
+}
+body.theme-light .location-modal__chip:hover { background: rgba(124, 58, 237, 0.08); }
+body.theme-light .location-modal__suggest {
+    background: #ffffff;
+    border-color: rgba(124, 58, 237, 0.28);
+    box-shadow: 0 12px 32px rgba(76, 29, 149, 0.22);
+}
+body.theme-light .location-modal__suggest-item { color: #4b465c; }
+body.theme-light .location-modal__suggest-item:hover,
+body.theme-light .location-modal__suggest-item.is-focused { background: rgba(124, 58, 237, 0.08); }
+body.theme-light .location-modal__suggest-empty { color: #6d6685; }
+body.theme-light .location-modal__section--radius { border-top-color: rgba(124, 58, 237, 0.18); }
+body.theme-light .location-modal__radius-chip {
+    border-color: rgba(36, 31, 51, 0.22);
+    color: #6d6685;
+}
+body.theme-light .location-modal__radius-chip:hover {
+    color: #4b465c;
+    border-color: rgba(124, 58, 237, 0.34);
+}
+body.theme-light .location-modal__radius-chip.is-active {
+    color: #ffffff;
+    border-color: transparent;
+}
 
 /* おすすめ表示ロジック説明モーダル（modal-readability.css の !important に勝つ） */
 body.theme-light .recommend-info-modal__panel {

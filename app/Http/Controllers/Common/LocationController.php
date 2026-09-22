@@ -22,27 +22,56 @@ class LocationController extends Controller
     /**
      * POST /setting/location
      *
-     * 入力モード：
-     *  - current  : ブラウザの geolocation で取得した {lat, lng} を保存
-     *  - passport : address（住所／駅名）をジオコーディングしてから保存
+     * Modes:
+     *  - current  : browser geolocation {lat, lng}
+     *  - passport : address (or pre-resolved lat/lng from suggest) is geocoded then saved
+     *  - profile  : fall back to the profile address (geocoded on demand)
+     *
+     * The chosen mode is also persisted to cast_search_preferences so that a
+     * previously saved DB mode does not shadow the modal selection.
      */
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'mode' => ['required', 'string', 'in:current,passport'],
+            'mode' => ['required', 'string', 'in:current,passport,profile'],
             'lat' => ['nullable', 'numeric', 'between:-90,90'],
             'lng' => ['nullable', 'numeric', 'between:-180,180'],
             'address' => ['nullable', 'string', 'max:255'],
             'label' => ['nullable', 'string', 'max:80'],
+            'max_distance_km' => ['nullable', 'integer', 'in:0,1,3,5,10,20,30,50,100'],
         ]);
 
         $mode = (string) $data['mode'];
         $lat = isset($data['lat']) ? (float) $data['lat'] : null;
         $lng = isset($data['lng']) ? (float) $data['lng'] : null;
         $label = (string) ($data['label'] ?? '');
+        $address = trim((string) ($data['address'] ?? ''));
+        $maxKm = isset($data['max_distance_km'])
+            ? (int) $data['max_distance_km']
+            : (int) ($this->userLocation->getEffectiveMaxDistanceKm() ?? 0);
+
+        if ($mode === UserLocationService::MODE_PROFILE) {
+            $this->userLocation->clear();
+            $this->userLocation->saveSearchSettings([
+                'mode' => UserLocationService::MODE_PROFILE,
+                'max_distance_km' => $maxKm,
+            ]);
+            $resolved = $this->userLocation->getActiveLocation();
+            if (!$resolved) {
+                // Profile coordinates missing: try geocoding the profile address once.
+                $this->userLocation->geocodeAndSaveProfileLocation($this->geocodingService);
+                $resolved = $this->userLocation->getActiveLocation();
+            }
+            if (!$resolved) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'プロフィール住所が未登録のため拠点にできません。プロフィール編集から住所を登録してください。',
+                ], 422);
+            }
+            return response()->json(['success' => true, 'location' => $resolved]);
+        }
 
         if ($mode === UserLocationService::MODE_PASSPORT && (!isset($lat, $lng))) {
-            $address = trim((string) ($data['address'] ?? ''));
             if ($address === '') {
                 return response()->json([
                     'success' => false,
@@ -71,6 +100,14 @@ class LocationController extends Controller
         }
 
         $this->userLocation->setManualLocation($mode, $lat, $lng, $label);
+        $this->userLocation->saveSearchSettings([
+            'mode' => $mode,
+            'max_distance_km' => $maxKm,
+            'passport_address' => $address !== '' ? $address : ($label !== '' ? $label : null),
+            'passport_latitude' => $lat,
+            'passport_longitude' => $lng,
+            'passport_label' => $label !== '' ? $label : null,
+        ]);
 
         $resolved = $this->userLocation->getActiveLocation();
         return response()->json([
@@ -79,10 +116,40 @@ class LocationController extends Controller
         ]);
     }
 
+    /**
+     * DELETE /setting/location
+     *
+     * Reset to the profile-address origin (also clears the persisted DB mode,
+     * otherwise a saved passport/current mode would survive the reset).
+     */
     public function destroy(): JsonResponse
     {
         $this->userLocation->clear();
+        $this->userLocation->saveSearchSettings([
+            'mode' => UserLocationService::MODE_PROFILE,
+            'max_distance_km' => (int) ($this->userLocation->getEffectiveMaxDistanceKm() ?? 0),
+        ]);
         return response()->json(['success' => true, 'location' => $this->userLocation->getActiveLocation()]);
+    }
+
+    /**
+     * POST /setting/location/radius
+     *
+     * Update only the search radius (works for both cast and shop).
+     */
+    public function updateRadius(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'max_distance_km' => ['required', 'integer', 'in:0,1,3,5,10,20,30,50,100'],
+        ]);
+
+        $this->userLocation->saveMaxDistanceKm((int) $data['max_distance_km']);
+
+        return response()->json([
+            'success' => true,
+            'max_distance_km' => $this->userLocation->getEffectiveMaxDistanceKm(),
+            'location' => $this->userLocation->getActiveLocation(),
+        ]);
     }
 
     /**

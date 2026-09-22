@@ -154,6 +154,18 @@ class CastSearchPreferenceService
     }
 
     /**
+     * Update only the search radius, keeping mode / passport fields untouched.
+     */
+    public function saveMaxDistanceKm(int $km): void
+    {
+        $castId = $this->currentCastId();
+        if ($castId === null || !in_array($km, self::DISTANCE_OPTIONS_KM, true)) {
+            return;
+        }
+        $this->upsert($castId, ['max_distance_km' => $km]);
+    }
+
+    /**
      * 詳細検索フォームの「希望条件」を DB に保存。
      */
     public function savePreferences(array $payload): void

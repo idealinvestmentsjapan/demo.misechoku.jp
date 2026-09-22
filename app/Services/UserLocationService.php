@@ -52,6 +52,18 @@ class UserLocationService
     }
 
     /**
+     * Update only the search radius for the current role.
+     */
+    public function saveMaxDistanceKm(int $km): void
+    {
+        if ($this->isCast()) {
+            $this->cast->saveMaxDistanceKm($km);
+        } else {
+            $this->shop->saveMaxDistanceKm($km);
+        }
+    }
+
+    /**
      * キャストの位置設定（mode / passport / max_km）を保存。
      * ショップから呼び出された場合は何もしない。
      */

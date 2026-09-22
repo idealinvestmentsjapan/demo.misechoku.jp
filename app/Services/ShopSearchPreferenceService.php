@@ -66,6 +66,28 @@ class ShopSearchPreferenceService
     }
 
     /**
+     * Update only the search radius, keeping other preferences untouched.
+     */
+    public function saveMaxDistanceKm(int $km): void
+    {
+        $shopId = $this->currentShopId();
+        if ($shopId === null || !in_array($km, self::DISTANCE_OPTIONS_KM, true)) {
+            return;
+        }
+        $now = now();
+        DB::table('shop_search_preferences')->upsert(
+            [[
+                'shop_id'         => $shopId,
+                'max_distance_km' => $km,
+                'created_at'      => $now,
+                'updated_at'      => $now,
+            ]],
+            ['shop_id'],
+            ['max_distance_km', 'updated_at']
+        );
+    }
+
+    /**
      * 詳細検索フォームの希望条件を保存。
      */
     public function savePreferences(array $payload): void
