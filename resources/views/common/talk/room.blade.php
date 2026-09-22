@@ -10,7 +10,7 @@
 @section('body-class', 'page-talk page-talk-room')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/talk.css') }}?v=20260823-template-popup">
+<link rel="stylesheet" href="{{ asset('assets/css/talk.css') }}?v=20260922-sheet-bottom">
 <link rel="stylesheet" href="{{ asset('assets/css/talk-light.css') }}?v=20260823-template-popup">
 @if($isCast)
 <link rel="stylesheet" href="{{ asset('assets/css/mypage.css') }}">
@@ -272,7 +272,7 @@
                         title="この相手を通報"
                         aria-label="この相手を通報"
                     >
-                        <i class="fas fa-flag"></i>
+                        <i class="fas fa-bullhorn"></i>
                     </button>
                     <form action="{{ $blockUrl }}" method="POST" class="talk-block-inline-form">
                         @csrf
@@ -296,7 +296,7 @@
         <div class="user-report-modal__panel">
             <button type="button" class="user-report-modal__close" data-user-report-close aria-label="閉じる">×</button>
             <h3 id="user-report-title" class="user-report-modal__title">
-                <i class="fas fa-flag"></i> この相手を通報する
+                <i class="fas fa-bullhorn"></i> この相手を通報する
             </h3>
             <p class="user-report-modal__lead">
                 悪質な行為・ルール違反があれば運営にお知らせください。<br>

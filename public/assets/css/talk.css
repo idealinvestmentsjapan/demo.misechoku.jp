@@ -235,7 +235,12 @@
 }
 
 .talk-block-inline-form {
-    margin: 0 0 0 auto;
+    margin: 0;
+}
+
+/* Push report + block buttons together to the right edge (report sits left of block) */
+.talk-block-icon-btn[data-user-report-open] {
+    margin-left: auto;
 }
 
 .talk-block-icon-btn {
@@ -1021,13 +1026,17 @@
     max-width: min(100%, var(--max-content-width));
     border-radius: 22px 22px 0 0;
     border-bottom: none;
-    margin-bottom: var(--footer-height);
+    /* The bottom nav is hidden on the talk room (app-v2: body.page-talk-room),
+       so the sheet sits flush with the viewport bottom. Reserving
+       --footer-height here left the sheet floating 75px above the bottom
+       with a squared-off edge that looked cut off. */
+    margin-bottom: 0;
     padding-bottom: calc(20px + env(safe-area-inset-bottom, 0));
     transform: translateY(100%);
     transition: transform 0.25s ease;
-    /* シートがビューポート高さを超えないように制限し、内側スクロールを許可。 */
-    max-height: calc(100vh - var(--footer-height, 75px) - 16px);
-    max-height: calc(100dvh - var(--footer-height, 75px) - 16px);
+    /* Cap the sheet below the header and allow inner scrolling. */
+    max-height: calc(100vh - var(--header-height, 60px) - 16px);
+    max-height: calc(100dvh - var(--header-height, 60px) - 16px);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
