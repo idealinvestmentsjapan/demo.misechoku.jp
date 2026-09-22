@@ -18,6 +18,6 @@
 
 公開先は通常、次のURLです。
 
-`https://mearin0424-tech.github.io/demo.misechoku.jp/`
+`https://idealinvestmentsjapan.github.io/demo.misechoku.jp/`
 
 以後は対象ファイルを `main` ブランチへ反映するたびに自動更新されます。

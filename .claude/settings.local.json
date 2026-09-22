@@ -136,7 +136,11 @@
       "PowerShell(& \"C:\\\\Users\\\\Lenovo\\\\.config\\\\herd\\\\bin\\\\php.bat\" vendor\\\\phpunit\\\\phpunit\\\\phpunit tests\\\\Feature\\\\Setting\\\\WithdrawFlowTest.php --colors=never 2>&1 | Select-Object -First 50)",
       "PowerShell(& \"C:\\\\Users\\\\Lenovo\\\\.config\\\\herd\\\\bin\\\\php.bat\" vendor\\\\phpunit\\\\phpunit\\\\phpunit tests\\\\Feature\\\\Auth\\\\LastLoginAtTest.php --colors=never 2>&1 | Select-Object -Last 60)",
       "PowerShell(& \"C:\\\\Users\\\\Lenovo\\\\.config\\\\herd\\\\bin\\\\php.bat\" vendor\\\\phpunit\\\\phpunit\\\\phpunit tests\\\\Feature\\\\Auth\\\\LastLoginAtTest.php --colors=never 2>&1 | Select-Object -Last 20)",
-      "PowerShell(& \"C:\\\\Users\\\\Lenovo\\\\.config\\\\herd\\\\bin\\\\php.bat\" vendor\\\\phpunit\\\\phpunit\\\\phpunit tests\\\\Feature\\\\Auth\\\\LastLoginAtTest.php --colors=never --testdox 2>&1 | Select-Object -Last 30)"
+      "PowerShell(& \"C:\\\\Users\\\\Lenovo\\\\.config\\\\herd\\\\bin\\\\php.bat\" vendor\\\\phpunit\\\\phpunit\\\\phpunit tests\\\\Feature\\\\Auth\\\\LastLoginAtTest.php --colors=never --testdox 2>&1 | Select-Object -Last 30)",
+      "Bash(python3 -c ' *)",
+      "PowerShell(python --version; where.exe python)",
+      "Read(//c/c/Users/Lenovo/OneDrive/デスクトップ/mearin0424-tech/demo.misechoku.jp/storage/app/shop-intro-build/**)",
+      "Bash(node *)"
     ]
   }
 }

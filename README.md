@@ -4,7 +4,7 @@
 
 店舗向けの紹介スライド、読み上げ原稿、営業マニュアルは [`docs/public-sales/`](docs/public-sales/) にあります。
 
-[営業資料サイトを開く](https://mearin0424-tech.github.io/demo.misechoku.jp/)
+[営業資料サイトを開く](https://idealinvestmentsjapan.github.io/demo.misechoku.jp/)
 
 ## 自動テスト実行環境
 
