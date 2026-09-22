@@ -114,7 +114,7 @@
 ### 2.5 Premium プラン
 
 - 対象: 店舗のみ
-- 料金（税込）: **月 ¥20,000 / 年 ¥200,000**（`PlanSubscriptionService::PRICES`）
+- 料金（税込）: **月 ¥29,000 / 年 ¥290,000**（`PlanSubscriptionService::PRICES`）
 - フロー:
   1. `/subscription` から `contract`（billing_cycle 選択）→ `shop_plan_subscriptions.status = 1 (PENDING_PAYMENT)`
      請求書番号 `PLN-YYYYMM-xxxx` 発行、期限 = 今日 + 7 日
@@ -440,7 +440,7 @@ composer test:smoke
 | キープ | ブックマーク（旧 LIKE を置き換え） |
 | 「今すぐ入れる」 | 2h/4h/8h の即応可能宣言。Tier A ランキングに使用 |
 | スカウト | 店舗発の新規（既存やりとりなし）1 通目メッセージ |
-| Premium | 店舗向け有料プラン（月 ¥20,000 / 年 ¥200,000） |
+| Premium | 店舗向け有料プラン（月 ¥29,000 / 年 ¥290,000） |
 | オコジョガイド | 画面別の説明文キャラクター（`character_guide_settings`） |
 | プレミアムホワイト | MyPage / プロフィール詳細用の白基調テーマ |
 | デモログイン | `/login/demo`。cast/shop/admin にワンクリックログインするテスト用画面 |

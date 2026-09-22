@@ -304,7 +304,7 @@ database/
 - **キープ**（旧 LIKE から刷新）: `favorites` テーブル。`POST /api/favorites/toggle` でトグル。検索の `keep` タブに統合。
 - **「今すぐ入れる」宣言**: キャスト・店舗の両方に `POST /(cast|shop)/mypage/availability` があり、2h / 4h / 8h の宣言と取消をサポート。店舗ホーム（DISCOVERY）の Tier A ランキングに使用。
 - **DISCOVERY**: `DiscoveryController::getHomeCasts()` が Tier A（今すぐ入れる） / B / C の順で並べる
-- **Premium プラン**（店舗向け・月 ¥20,000 / 年 ¥200,000）: `shop_plan_subscriptions` テーブル。銀行振込 + 運営の目視確認で有効化（`STATUS_PENDING_PAYMENT` → `STATUS_ACTIVE`）
+- **Premium プラン**（店舗向け・月 ¥29,000 / 年 ¥290,000）: `shop_plan_subscriptions` テーブル。銀行振込 + 運営の目視確認で有効化（`STATUS_PENDING_PAYMENT` → `STATUS_ACTIVE`）
   - 提供機能: ①AI レコメンド優先表示（キャストの店舗検索 relevance ソートで上位グループ）、②求人閲覧キャスト一覧（`/shop/mypage/viewers`）、③スカウト送信上限緩和（無料 5 件/日 → Premium 30 件/日、既存やりとりは無制限）
   - 実装: `PlanSubscriptionService`（契約・入金確認・機能ゲート）
   - 請求書番号 `PLN-YYYYMM-xxxx` / 領収書番号 `RCT-YYYYMM-xxxx`

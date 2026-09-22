@@ -20,8 +20,8 @@ class PlanSubscriptionService
 {
     /** プラン料金（税込） */
     public const PRICES = [
-        ShopPlanSubscription::CYCLE_MONTHLY => 20000,
-        ShopPlanSubscription::CYCLE_YEARLY  => 200000,
+        ShopPlanSubscription::CYCLE_MONTHLY => 29000,
+        ShopPlanSubscription::CYCLE_YEARLY  => 290000,
     ];
 
     /** 振込期限（契約から日数） */

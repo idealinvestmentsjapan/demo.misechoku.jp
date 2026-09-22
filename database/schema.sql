@@ -1346,7 +1346,7 @@ CREATE TABLE IF NOT EXISTS `shop_plan_subscriptions` (
   `shop_id` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
   `plan` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'premium',
   `billing_cycle` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'monthly / yearly',
-  `amount` int UNSIGNED NOT NULL COMMENT '請求額（税込円） monthly=20000 / yearly=200000',
+  `amount` int UNSIGNED NOT NULL COMMENT '請求額（税込円） monthly=29000 / yearly=290000',
   `status` tinyint NOT NULL DEFAULT '1' COMMENT '1=入金待ち 2=有効 3=期間満了 4=キャンセル',
   `invoice_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '請求書番号 PLN-YYYYMM-xxxx',
   `invoice_issued_at` datetime DEFAULT NULL COMMENT '請求書発行日時（契約時）',
