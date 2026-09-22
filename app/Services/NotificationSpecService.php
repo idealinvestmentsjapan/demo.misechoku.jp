@@ -61,6 +61,12 @@ class NotificationSpecService
              'default_body' => '{shop_name}より選考結果のご連絡があります。トークから内容をご確認ください。',
              'default_enabled' => true],
 
+            ['key' => 'talk.status_changed', 'group' => 'トーク', 'label' => '選考・勤務ステータス更新',
+             'condition' => '面談キャンセル依頼／承諾、日程再調整、本入店リクエスト、勤務完了報告、ボーナス達成報告などのトークアクションが実行された時',
+             'default_title' => 'トーク更新',
+             'default_body' => 'トーク内容が更新されました。トーク画面でご確認ください。',
+             'default_enabled' => true],
+
             ['key' => 'talk.work_complete_report', 'group' => 'トーク', 'label' => '勤務完了報告（運営宛）',
              'condition' => 'キャスト or 店舗が勤務完了報告／本入店達成報告を送信した時',
              'default_title' => '振込指示が届きました',
@@ -107,6 +113,12 @@ class NotificationSpecService
              'condition' => '運営が店舗の許可書類を差戻した時',
              'default_title' => '店舗書類の再提出のお願い',
              'default_body' => '提出書類について確認できない点がありました。理由：{reason}。マイページから再提出してください。',
+             'default_enabled' => true],
+
+            ['key' => 'review.posted', 'group' => 'レビュー', 'label' => 'レビュー投稿',
+             'condition' => 'キャストが勤務完了後にレビューを投稿した時',
+             'default_title' => 'キャストからレビューが届きました',
+             'default_body' => '{cast_name}からレビューが投稿されました。内容を確認して返信できます。',
              'default_enabled' => true],
 
             ['key' => 'inquiry.received', 'group' => '問合せ', 'label' => '問合せ受付（運営宛）',

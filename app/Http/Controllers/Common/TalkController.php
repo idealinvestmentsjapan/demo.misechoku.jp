@@ -5,8 +5,6 @@ namespace App\Http\Controllers\Common;
 use App\Http\Concerns\ResolvesActor;
 use App\Http\Controllers\Controller;
 use App\Services\MessageTemplateService;
-use App\Services\NotificationPreferenceService;
-use App\Services\PushNotificationService;
 use App\Services\ShopJobApplicationJobSnapshotService;
 use App\Support\ShopJobApplicationView;
 use App\Support\TalkQuickReplyCatalog;
@@ -38,8 +36,6 @@ class TalkController extends Controller
 
     public function __construct(
         private readonly MessageTemplateService $messageTemplateService,
-        private readonly NotificationPreferenceService $notificationPreferenceService,
-        private readonly PushNotificationService $pushNotificationService,
         private readonly ShopJobApplicationJobSnapshotService $shopJobApplicationJobSnapshotService,
         private readonly \App\Services\NotificationService $notificationService,
         private readonly TalkQuickReplyCatalog $quickReplyCatalog,
@@ -1757,13 +1753,24 @@ class TalkController extends Controller
             $body = 'キャストが面談キャンセルを承諾しました。';
         }
 
+        // Map talk actions to distinct notification types so that
+        // per-category user preferences (talk vs selection) can gate delivery.
+        $type = match ($actionType) {
+            'interview_offer' => 'talk.interview_offer',
+            'interview_confirm' => 'talk.interview_confirmed',
+            'hired' => 'talk.hired',
+            'rejected' => 'talk.rejected',
+            default => 'talk.status_changed',
+        };
+
         $this->notifyConversationPartner(
             castId: $castId,
             shopId: $shopId,
             isCastPortal: $isCastPortal,
             title: $title,
             body: $body,
-            url: $isCastPortal ? url('/shop/talk/room/' . $castId) : url('/cast/talk/room/' . $shopId)
+            url: $isCastPortal ? url('/shop/talk/room/' . $castId) : url('/cast/talk/room/' . $shopId),
+            type: $type
         );
     }
 
@@ -1773,8 +1780,11 @@ class TalkController extends Controller
         bool $isCastPortal,
         string $title,
         string $body,
-        string $url
+        string $url,
+        string $type = 'talk.message_received'
     ): void {
+        // Channel gating (push/LINE x category) is handled inside NotificationService;
+        // the in-app inbox record is always created.
         try {
             if ($isCastPortal) {
                 // キャスト→店舗：店舗マネージャー全員に通知
@@ -1782,33 +1792,26 @@ class TalkController extends Controller
                     ->where('shop_id', $shopId)
                     ->pluck('id');
                 foreach ($managerIds as $managerId) {
-                    $prefs = $this->notificationPreferenceService->get('shop_manager', (string) $managerId);
-                    $alsoPush = (bool) ($prefs['push_enabled'] ?? true);
-                    // インボックスへ永続化＋Push（許可時のみ）
                     $this->notificationService->createForShopManager(
                         (string) $managerId,
-                        'talk.message_received',
+                        $type,
                         $title,
                         $body,
                         $url,
-                        ['cast_id' => $castId, 'shop_id' => $shopId],
-                        $alsoPush
+                        ['cast_id' => $castId, 'shop_id' => $shopId]
                     );
                 }
                 return;
             }
 
             // 店舗→キャスト
-            $prefs = $this->notificationPreferenceService->get('cast', $castId);
-            $alsoPush = (bool) ($prefs['push_enabled'] ?? true);
             $this->notificationService->createForCast(
                 $castId,
-                'talk.message_received',
+                $type,
                 $title,
                 $body,
                 $url,
-                ['cast_id' => $castId, 'shop_id' => $shopId],
-                $alsoPush
+                ['cast_id' => $castId, 'shop_id' => $shopId]
             );
         } catch (\Throwable $e) {
             Log::warning('Talk notify failed: ' . $e->getMessage());

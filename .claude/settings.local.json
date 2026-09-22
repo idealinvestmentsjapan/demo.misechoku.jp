@@ -140,7 +140,10 @@
       "Bash(python3 -c ' *)",
       "PowerShell(python --version; where.exe python)",
       "Read(//c/c/Users/Lenovo/OneDrive/デスクトップ/mearin0424-tech/demo.misechoku.jp/storage/app/shop-intro-build/**)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "PowerShell(node --check public/assets/js/talk-room.js)",
+      "PowerShell(php -l app/Services/NotificationPreferenceService.php; php -l app/Services/NotificationService.php; php -l app/Services/NotificationSpecService.php; php -l app/Http/Controllers/Common/TalkController.php; php -l app/Http/Controllers/Common/SettingController.php; php -l app/Console/Commands/RemindCastTransferConfirmation.php)",
+      "PowerShell(php artisan billing:remind-cast-transfer-confirmation --dry-run)"
     ]
   }
 }

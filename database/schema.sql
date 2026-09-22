@@ -851,6 +851,11 @@ CREATE TABLE IF NOT EXISTS `notification_preferences` (
   `user_id` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,
   `push_enabled` tinyint(1) NOT NULL DEFAULT '1',
   `line_enabled` tinyint(1) NOT NULL DEFAULT '1',
+  `notify_talk_enabled` tinyint(1) NOT NULL DEFAULT '1',
+  `notify_selection_enabled` tinyint(1) NOT NULL DEFAULT '1',
+  `notify_billing_enabled` tinyint(1) NOT NULL DEFAULT '1',
+  `notify_verification_enabled` tinyint(1) NOT NULL DEFAULT '1',
+  `notify_review_enabled` tinyint(1) NOT NULL DEFAULT '1',
   `interview_reminder_enabled` tinyint(1) NOT NULL DEFAULT '1',
   `deadline_reminder_enabled` tinyint(1) NOT NULL DEFAULT '1',
   `created_at` timestamp NULL DEFAULT NULL,
@@ -878,16 +883,21 @@ CREATE TABLE IF NOT EXISTS `admin_operation_logs` (
 
 -- -----------------------------------------------------------------------------
 -- admin_notification_settings
+-- Stores admin overrides for the notification/reminder/task spec catalog
+-- managed by NotificationSpecService (NULL column = use catalog default).
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `admin_notification_settings` (
   `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
-  `admin_id` bigint UNSIGNED NOT NULL,
-  `event_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `is_enabled` tinyint(1) NOT NULL DEFAULT '1',
+  `type` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `key` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `enabled` tinyint(1) DEFAULT NULL,
+  `offset_value` int DEFAULT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `body` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `admin_notification_settings_admin_event_unique` (`admin_id`, `event_type`)
+  UNIQUE KEY `admin_notification_settings_type_key_unique` (`type`, `key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------------

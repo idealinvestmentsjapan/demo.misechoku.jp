@@ -281,13 +281,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     time.className = 'msg-time';
                     time.textContent = result.data.time || '';
                     meta.appendChild(time);
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.type = 'button';
-                    deleteBtn.className = 'msg-delete-btn';
-                    deleteBtn.dataset.messageId = messageId;
-                    deleteBtn.setAttribute('aria-label', 'メッセージを削除');
-                    deleteBtn.innerHTML = '<i class="fas fa-trash-alt" aria-hidden="true"></i>';
-                    meta.prepend(deleteBtn);
+                    row.dataset.canDelete = '1';
+                    row.dataset.deletableUntil = String(Date.now() + 10 * 60 * 1000);
                 }
                 if (messageInput.value.trim() === payload.message) messageInput.value = '';
                 pending = null;
@@ -343,36 +338,128 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // メッセージ削除（10分以内の自分のテキストメッセージのみ）
-    chatMessages.addEventListener('click', async function(e) {
-        const btn = e.target.closest('.msg-delete-btn');
-        if (!btn) return;
-        e.preventDefault();
-        const messageId = btn.dataset.messageId;
-        if (!messageId) return;
+    // Message delete: long-press (touch) / right-click (PC) opens a LINE-style
+    // action menu. Server enforces the 10-min / own TEXT-only rule.
+    let msgActionMenu = null;
+    let msgActionMenuOpenedAt = 0;
+
+    function closeMsgActionMenu() {
+        if (msgActionMenu) {
+            msgActionMenu.remove();
+            msgActionMenu = null;
+        }
+    }
+
+    function isRowDeletable(row) {
+        if (!row || row.dataset.canDelete !== '1' || !row.dataset.messageId) return false;
+        const until = Number(row.dataset.deletableUntil || 0);
+        if (until && Date.now() > until) {
+            delete row.dataset.canDelete;
+            return false;
+        }
+        return true;
+    }
+
+    async function deleteMessageRow(row) {
+        const messageId = row.dataset.messageId;
         const deleteUrl = chatMessages.getAttribute('data-delete-url');
-        if (!deleteUrl || !chatForm) return;
+        if (!messageId || !deleteUrl || !chatForm) return;
         const partnerId = chatForm.getAttribute('data-partner-id');
         const token = chatForm.querySelector('input[name="_token"]').value;
-        if (!window.confirm('このメッセージを削除しますか？')) return;
-        const row = btn.closest('.message-row');
-        btn.disabled = true;
         try {
             await postJson(deleteUrl, token, { partner_id: partnerId, message_id: messageId });
-            if (row) {
-                row.remove();
-                if (chatMessages.querySelectorAll('.message-row').length === 0) {
-                    chatMessages.insertAdjacentHTML('afterbegin',
-                        '<div class="text-center text-gray-500 mt-20 talk-empty-state">' +
-                        '<i class="fas fa-comments opacity-10 text-6xl mb-4 block"></i>' +
-                        '<p>メッセージはまだありません</p></div>');
-                }
+            row.remove();
+            if (chatMessages.querySelectorAll('.message-row').length === 0) {
+                chatMessages.insertAdjacentHTML('afterbegin',
+                    '<div class="text-center text-gray-500 mt-20 talk-empty-state">' +
+                    '<i class="fas fa-comments opacity-10 text-6xl mb-4 block"></i>' +
+                    '<p>メッセージはまだありません</p></div>');
             }
         } catch (err) {
             showTalkError(err.message || '削除に失敗しました。');
-            btn.disabled = false;
         }
+    }
+
+    function openMsgActionMenu(row, x, y) {
+        closeMsgActionMenu();
+        const menu = document.createElement('div');
+        menu.className = 'msg-action-menu';
+        menu.setAttribute('role', 'menu');
+
+        const deleteItem = document.createElement('button');
+        deleteItem.type = 'button';
+        deleteItem.className = 'msg-action-item msg-action-delete';
+        deleteItem.setAttribute('role', 'menuitem');
+        deleteItem.innerHTML = '<i class="fas fa-trash-alt" aria-hidden="true"></i>削除';
+        deleteItem.addEventListener('click', function () {
+            closeMsgActionMenu();
+            deleteMessageRow(row);
+        });
+
+        const cancelItem = document.createElement('button');
+        cancelItem.type = 'button';
+        cancelItem.className = 'msg-action-item';
+        cancelItem.setAttribute('role', 'menuitem');
+        cancelItem.innerHTML = '<i class="fas fa-times" aria-hidden="true"></i>キャンセル';
+        cancelItem.addEventListener('click', closeMsgActionMenu);
+
+        menu.appendChild(deleteItem);
+        menu.appendChild(cancelItem);
+        document.body.appendChild(menu);
+
+        const rect = menu.getBoundingClientRect();
+        const left = Math.max(8, Math.min(x, window.innerWidth - rect.width - 8));
+        const top = Math.max(8, Math.min(y, window.innerHeight - rect.height - 8));
+        menu.style.left = left + 'px';
+        menu.style.top = top + 'px';
+        msgActionMenu = menu;
+        msgActionMenuOpenedAt = Date.now();
+    }
+
+    chatMessages.addEventListener('contextmenu', function (e) {
+        const row = e.target.closest('.message-row');
+        if (!isRowDeletable(row)) return;
+        e.preventDefault();
+        openMsgActionMenu(row, e.clientX, e.clientY);
     });
+
+    let msgPressTimer = null;
+    let msgPressStart = null;
+    function cancelMsgPress() {
+        if (msgPressTimer) {
+            clearTimeout(msgPressTimer);
+            msgPressTimer = null;
+        }
+    }
+    chatMessages.addEventListener('touchstart', function (e) {
+        if (e.touches.length !== 1) return;
+        const row = e.target.closest('.message-row');
+        if (!isRowDeletable(row)) return;
+        const touch = e.touches[0];
+        msgPressStart = { x: touch.clientX, y: touch.clientY };
+        cancelMsgPress();
+        msgPressTimer = setTimeout(function () {
+            msgPressTimer = null;
+            openMsgActionMenu(row, msgPressStart.x, msgPressStart.y);
+        }, 500);
+    }, { passive: true });
+    chatMessages.addEventListener('touchmove', function (e) {
+        if (!msgPressTimer || !msgPressStart) return;
+        const touch = e.touches[0];
+        if (Math.abs(touch.clientX - msgPressStart.x) > 10 || Math.abs(touch.clientY - msgPressStart.y) > 10) {
+            cancelMsgPress();
+        }
+    }, { passive: true });
+    chatMessages.addEventListener('touchend', cancelMsgPress);
+    chatMessages.addEventListener('touchcancel', cancelMsgPress);
+
+    document.addEventListener('click', function (e) {
+        if (!msgActionMenu) return;
+        // Ignore the synthetic click fired right after a long-press opens the menu
+        if (Date.now() - msgActionMenuOpenedAt < 350) return;
+        if (!msgActionMenu.contains(e.target)) closeMsgActionMenu();
+    });
+    chatMessages.addEventListener('scroll', closeMsgActionMenu, { passive: true });
 
     // ===============================
     // 面談日候補モーダル（店舗側のみ）

@@ -19,6 +19,7 @@ class NotificationService
     public function __construct(
         private readonly ?PushNotificationService $push = null,
         private readonly ?LineNotificationService $line = null,
+        private readonly ?NotificationPreferenceService $preferences = null,
     ) {
     }
 
@@ -114,10 +115,43 @@ class NotificationService
         }
 
         if ($alsoPush) {
-            $this->tryDispatchPush($n);
+            [$pushAllowed, $lineAllowed] = $this->channelPermissions($userType, $userId, $type);
+            if ($pushAllowed) {
+                $this->tryDispatchPush($n);
+            }
+            if ($lineAllowed) {
+                $this->tryDispatchLine($n);
+            }
         }
 
         return $n;
+    }
+
+    /**
+     * ユーザーの通知設定（チャネル×カテゴリ）から Push / LINE の配信可否を決める。
+     * 設定 OFF でもアプリ内レコードは作成済み（外部配信のみ止める方針）。
+     *
+     * @return array{0: bool, 1: bool} [pushAllowed, lineAllowed]
+     */
+    private function channelPermissions(string $userType, string $userId, string $type): array
+    {
+        if ($userType === Notification::USER_ADMIN) {
+            return [true, false]; // 管理者は設定 UI なし。LINE 連携も無い
+        }
+        if (!$this->preferences) {
+            return [true, true];
+        }
+        try {
+            $prefs = $this->preferences->get($userType, $userId);
+        } catch (Throwable) {
+            return [true, true];
+        }
+        $categoryOk = $this->preferences->categoryEnabled($prefs, $type);
+
+        return [
+            $categoryOk && (bool) ($prefs['push_enabled'] ?? true),
+            $categoryOk && (bool) ($prefs['line_enabled'] ?? true),
+        ];
     }
 
     /**
@@ -140,6 +174,32 @@ class NotificationService
             $n->forceFill(['dispatched_push_at' => now()])->save();
         } catch (Throwable) {
             // Push 失敗は致命的ではない
+        }
+    }
+
+    /**
+     * LINE 連携済みユーザーへ Messaging API 経由で送信を試みる（未連携・失敗は無視）。
+     */
+    private function tryDispatchLine(Notification $n): void
+    {
+        if (!$this->line) {
+            return;
+        }
+        try {
+            $text = $n->title . ($n->body !== null && $n->body !== '' ? "\n" . $n->body : '');
+            if ($n->url) {
+                $text .= "\n" . $n->url;
+            }
+            $result = match ($n->user_type) {
+                Notification::USER_CAST => $this->line->sendToCast($n->user_id, $text),
+                Notification::USER_SHOP => $this->line->sendToShopManager($n->user_id, $text),
+                default => null,
+            };
+            if (is_array($result) && !empty($result['success'])) {
+                $n->forceFill(['dispatched_line_at' => now()])->save();
+            }
+        } catch (Throwable) {
+            // LINE 失敗は致命的ではない
         }
     }
 

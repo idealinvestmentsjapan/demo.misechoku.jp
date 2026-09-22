@@ -832,6 +832,11 @@ CREATE TABLE `notification_preferences` (
   `user_id` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,
   `push_enabled` tinyint(1) NOT NULL DEFAULT '1',
   `line_enabled` tinyint(1) NOT NULL DEFAULT '1',
+  `notify_talk_enabled` tinyint(1) NOT NULL DEFAULT '1',
+  `notify_selection_enabled` tinyint(1) NOT NULL DEFAULT '1',
+  `notify_billing_enabled` tinyint(1) NOT NULL DEFAULT '1',
+  `notify_verification_enabled` tinyint(1) NOT NULL DEFAULT '1',
+  `notify_review_enabled` tinyint(1) NOT NULL DEFAULT '1',
   `interview_reminder_enabled` tinyint(1) NOT NULL DEFAULT '1',
   `deadline_reminder_enabled` tinyint(1) NOT NULL DEFAULT '1',
   `created_at` timestamp NULL DEFAULT NULL,
@@ -844,6 +849,26 @@ CREATE TABLE `notification_preferences` (
 
 INSERT INTO `notification_preferences` (`id`, `user_type`, `user_id`, `push_enabled`, `line_enabled`, `interview_reminder_enabled`, `deadline_reminder_enabled`, `created_at`, `updated_at`) VALUES
 (1, 'cast', 'c00000002', 1, 1, 1, 1, '2026-05-06 12:24:56', '2026-05-06 12:24:56');
+
+-- --------------------------------------------------------
+
+--
+-- テーブルの構造 `admin_notification_settings`
+-- NotificationSpecService の通知・リマインダー・タスク仕様の上書き保存先
+-- （NULL のカラムはカタログのデフォルト値を使用）
+--
+
+CREATE TABLE `admin_notification_settings` (
+  `id` bigint UNSIGNED NOT NULL,
+  `type` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `key` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `enabled` tinyint(1) DEFAULT NULL,
+  `offset_value` int DEFAULT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `body` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -2109,6 +2134,13 @@ ALTER TABLE `notification_preferences`
   ADD UNIQUE KEY `notification_preferences_user_unique` (`user_type`,`user_id`);
 
 --
+-- テーブルのインデックス `admin_notification_settings`
+--
+ALTER TABLE `admin_notification_settings`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `admin_notification_settings_type_key_unique` (`type`,`key`);
+
+--
 -- テーブルのインデックス `password_reset_tokens`
 --
 ALTER TABLE `password_reset_tokens`
@@ -2496,6 +2528,12 @@ ALTER TABLE `notices`
 --
 ALTER TABLE `notification_preferences`
   MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- テーブルの AUTO_INCREMENT `admin_notification_settings`
+--
+ALTER TABLE `admin_notification_settings`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- テーブルの AUTO_INCREMENT `payment_tasks`

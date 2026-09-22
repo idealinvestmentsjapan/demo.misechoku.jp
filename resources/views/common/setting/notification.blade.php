@@ -31,13 +31,14 @@
     </section>
 
     <section class="setting-section">
-        <h2 class="setting-section-title">リマインダー通知</h2>
+        <h2 class="setting-section-title">通知の受け取り設定</h2>
         <form method="POST" action="{{ route('setting.notification.update') }}">
             @csrf
+            <div class="setting-subheading">通知チャンネル</div>
             <div class="setting-row">
                 <div class="setting-row-main">
                     <div class="setting-row-label">通知チャンネル（Push）</div>
-                    <div class="setting-row-desc">PWAのプッシュ通知を使って面接日・期限を通知します。</div>
+                    <div class="setting-row-desc">PWAのプッシュ通知で端末にお知らせします。</div>
                 </div>
                 <label class="setting-check"><input type="checkbox" name="push_enabled" value="1" {{ !empty($notificationPrefs['push_enabled']) ? 'checked' : '' }}> ON</label>
             </div>
@@ -48,6 +49,48 @@
                 </div>
                 <label class="setting-check"><input type="checkbox" name="line_enabled" value="1" {{ !empty($notificationPrefs['line_enabled']) ? 'checked' : '' }}> ON</label>
             </div>
+
+            <div class="setting-subheading">通知カテゴリ</div>
+            <div class="setting-guide">OFFにしたカテゴリは端末への通知（Push・LINE）が止まります。アプリ内のおしらせ一覧には残ります。</div>
+            <div class="setting-row">
+                <div class="setting-row-main">
+                    <div class="setting-row-label">トークメッセージ</div>
+                    <div class="setting-row-desc">新着メッセージが届いたときに通知します。</div>
+                </div>
+                <label class="setting-check"><input type="hidden" name="notify_talk_enabled" value="0"><input type="checkbox" name="notify_talk_enabled" value="1" {{ !empty($notificationPrefs['notify_talk_enabled']) ? 'checked' : '' }}> ON</label>
+            </div>
+            <div class="setting-row">
+                <div class="setting-row-main">
+                    <div class="setting-row-label">面談・採用</div>
+                    <div class="setting-row-desc">面談候補日・日程確定・選考結果・各種報告の通知です。</div>
+                </div>
+                <label class="setting-check"><input type="hidden" name="notify_selection_enabled" value="0"><input type="checkbox" name="notify_selection_enabled" value="1" {{ !empty($notificationPrefs['notify_selection_enabled']) ? 'checked' : '' }}> ON</label>
+            </div>
+            <div class="setting-row">
+                <div class="setting-row-main">
+                    <div class="setting-row-label">請求・入金</div>
+                    <div class="setting-row-desc">請求書発行・入金確認・振込実行の通知です。</div>
+                </div>
+                <label class="setting-check"><input type="hidden" name="notify_billing_enabled" value="0"><input type="checkbox" name="notify_billing_enabled" value="1" {{ !empty($notificationPrefs['notify_billing_enabled']) ? 'checked' : '' }}> ON</label>
+            </div>
+            <div class="setting-row">
+                <div class="setting-row-main">
+                    <div class="setting-row-label">書類審査</div>
+                    <div class="setting-row-desc">{{ $isCast ? '本人確認書類' : '許可書類' }}の承認・差戻しの通知です。</div>
+                </div>
+                <label class="setting-check"><input type="hidden" name="notify_verification_enabled" value="0"><input type="checkbox" name="notify_verification_enabled" value="1" {{ !empty($notificationPrefs['notify_verification_enabled']) ? 'checked' : '' }}> ON</label>
+            </div>
+            @if (!$isCast)
+                <div class="setting-row">
+                    <div class="setting-row-main">
+                        <div class="setting-row-label">レビュー</div>
+                        <div class="setting-row-desc">キャストからレビューが投稿されたときに通知します。</div>
+                    </div>
+                    <label class="setting-check"><input type="hidden" name="notify_review_enabled" value="0"><input type="checkbox" name="notify_review_enabled" value="1" {{ !empty($notificationPrefs['notify_review_enabled']) ? 'checked' : '' }}> ON</label>
+                </div>
+            @endif
+
+            <div class="setting-subheading">リマインダー通知</div>
             <div class="setting-row">
                 <div class="setting-row-main">
                     <div class="setting-row-label">面接リマインダー</div>
@@ -58,7 +101,7 @@
             <div class="setting-row">
                 <div class="setting-row-main">
                     <div class="setting-row-label">期限リマインダー</div>
-                    <div class="setting-row-desc">請求の支払期限（前日/当日/超過）を通知します。</div>
+                    <div class="setting-row-desc">{{ $isCast ? '採用ボーナス振込の受領確認リマインドを通知します。' : '請求の支払期限（前日/当日/超過）を通知します。' }}</div>
                 </div>
                 <label class="setting-check"><input type="checkbox" name="deadline_reminder_enabled" value="1" {{ !empty($notificationPrefs['deadline_reminder_enabled']) ? 'checked' : '' }}> ON</label>
             </div>
@@ -156,6 +199,8 @@
 .setting-row-desc { font-size: 0.78rem; color: #a0a0a0; }
 .setting-check { font-size: 0.86rem; color: #f5f5f5; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
 .setting-check input { width: 16px; height: 16px; }
+.setting-subheading { margin: 14px 4px 2px; font-size: 0.82rem; font-weight: 600; color: #c4b5fd; letter-spacing: 0.04em; }
+.setting-subheading:first-of-type { margin-top: 4px; }
 .setting-alert { padding: 12px 14px; border-radius: 12px; margin-bottom: 16px; }
 .setting-alert-success { background: rgba(22,163,74,0.2); border: 1px solid rgba(22,163,74,0.5); color: #bbf7d0; }
 .setting-alert-error { background: rgba(185,28,28,0.2); border: 1px solid rgba(248,113,113,0.5); color: #fecaca; }

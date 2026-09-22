@@ -538,29 +538,50 @@
     flex-shrink: 0;
 }
 
-/* メッセージ削除ボタン（送信から10分以内の自分のテキストのみ表示） */
-.msg-delete-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    padding: 0;
-    border: none;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.6);
-    cursor: pointer;
-    font-size: 0.7rem;
-    transition: background 0.15s ease, color 0.15s ease;
+/* Message action menu: long-press (touch) / right-click (PC) on own message.
+   Dark panel in both light and dark themes (same policy as appToast). */
+.msg-action-menu {
+    position: fixed;
+    z-index: 1200;
+    min-width: 168px;
+    padding: 6px;
+    border-radius: 12px;
+    background: rgba(23, 23, 28, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
-.msg-delete-btn:hover {
-    background: rgba(239, 68, 68, 0.25);
+.msg-action-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+.msg-action-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+.msg-action-delete {
     color: #fca5a5;
 }
-.msg-delete-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+.msg-action-delete:hover {
+    background: rgba(239, 68, 68, 0.18);
+}
+/* Suppress native long-press text selection / iOS callout on deletable bubbles */
+.message-row[data-can-delete="1"] .message-bubble {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 /* ==========================================================================

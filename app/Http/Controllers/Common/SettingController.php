@@ -34,14 +34,19 @@ class SettingController extends Controller
 
         [$actorType, $actorId] = $this->resolveActor();
 
+        $defaultPrefs = [
+            'push_enabled' => true,
+            'line_enabled' => true,
+            'interview_reminder_enabled' => true,
+            'deadline_reminder_enabled' => true,
+        ];
+        foreach (NotificationPreferenceService::CATEGORY_COLUMNS as $column) {
+            $defaultPrefs[$column] = true;
+        }
+
         $prefs = ($actorType && $actorId)
             ? $this->preferenceService->get($actorType, $actorId)
-            : [
-                'push_enabled' => true,
-                'line_enabled' => true,
-                'interview_reminder_enabled' => true,
-                'deadline_reminder_enabled' => true,
-            ];
+            : $defaultPrefs;
 
         return view('common.setting.notification', [
             'isCast' => $isCast,
@@ -66,6 +71,10 @@ class SettingController extends Controller
             'interview_reminder_enabled' => $request->boolean('interview_reminder_enabled'),
             'deadline_reminder_enabled' => $request->boolean('deadline_reminder_enabled'),
         ];
+        foreach (NotificationPreferenceService::CATEGORY_COLUMNS as $column) {
+            // Checkboxes not rendered for a role (e.g. review for casts) stay enabled.
+            $prefs[$column] = $request->has($column) ? $request->boolean($column) : true;
+        }
 
         $this->preferenceService->save($actorType, $actorId, $prefs);
 

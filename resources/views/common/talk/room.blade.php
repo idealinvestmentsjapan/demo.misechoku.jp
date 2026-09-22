@@ -10,7 +10,7 @@
 @section('body-class', 'page-talk page-talk-room')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/talk.css') }}?v=20260922-sheet-bottom">
+<link rel="stylesheet" href="{{ asset('assets/css/talk.css') }}?v=20260922-msg-action-menu">
 <link rel="stylesheet" href="{{ asset('assets/css/talk-light.css') }}?v=20260823-template-popup">
 @if($isCast)
 <link rel="stylesheet" href="{{ asset('assets/css/mypage.css') }}">
@@ -201,7 +201,7 @@
     window.talkAllQuickReplies = @json($allQuickReplySuggestions ?? []);
     window.talkNgPayload = @json($ngWordPayload ?? ['patterns' => [], 'words' => []]);
 </script>
-<script src="{{ asset('assets/js/talk-room.js') }}?v=20260913-uiux"></script>
+<script src="{{ asset('assets/js/talk-room.js') }}?v=20260922-msg-action-menu"></script>
 @endpush
 
 @section('content')
@@ -359,7 +359,7 @@
                 $renderAsIncoming = $isAutoTypeMessage || $isAutoTextMessage;
                 $isMineForLayout = $msg->is_mine && !$renderAsIncoming;
             @endphp
-            <div class="message-row {{ $isMineForLayout ? 'msg-right' : 'msg-left' }}" data-message-id="{{ $msg->id }}">
+            <div class="message-row {{ $isMineForLayout ? 'msg-right' : 'msg-left' }}" data-message-id="{{ $msg->id }}"@if(!empty($msg->can_delete)) data-can-delete="1" data-deletable-until="{{ $msg->created_at->copy()->addMinutes(10)->getTimestamp() * 1000 }}"@endif>
                 @if(!$isMineForLayout)
                     <div class="msg-avatar-wrap">
                         @if($renderAsIncoming)
@@ -375,9 +375,6 @@
                     <div class="message-inline">
                         @if($isMineForLayout)
                             <div class="msg-meta">
-                                @if(!empty($msg->can_delete))
-                                    <button type="button" class="msg-delete-btn" data-message-id="{{ $msg->id }}" title="削除" aria-label="メッセージを削除"><i class="fas fa-trash-alt"></i></button>
-                                @endif
                                 @if($msg->is_mine)
                                     <span class="msg-status"><i class="fas fa-check"></i></span>
                                 @endif
