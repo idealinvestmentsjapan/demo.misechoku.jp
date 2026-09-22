@@ -372,6 +372,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
 Route::get('/login/demo', [DemoLoginController::class, 'show'])->name('login.demo');
 Route::post('/login/demo', [DemoLoginController::class, 'login'])->name('login.demo.post');
 
+// Opt-in sales fixtures. Each handler checks demo mode, environment and host before any work.
+Route::get('/demo/sales', [\App\Http\Controllers\Common\SalesDemoController::class, 'show'])->name('demo.sales');
+Route::post('/demo/sales/prepare', [\App\Http\Controllers\Common\SalesDemoController::class, 'prepare'])
+    ->middleware('throttle:6,1')->name('demo.sales.prepare');
+Route::post('/demo/sales/enter', [\App\Http\Controllers\Common\SalesDemoController::class, 'enter'])
+    ->middleware('throttle:30,1')->name('demo.sales.enter');
+
 // パスワードリセット（キャスト・店舗共通）
 Route::prefix('password')->name('password.')->group(function () {
     Route::get('/forgot', [PasswordReset::class, 'showForgotForm'])->name('forgot.show');
@@ -442,7 +449,7 @@ Route::prefix('notifications')->name('notifications.')->group(function () {
 });
 
 Route::prefix('share')->name('share.')->group(function () {
-    Route::get('/recruit/{id}', [CastRecruit::class, 'publicShow'])->name('recruit.show');
+    Route::get('/recruit/{id}', [CastRecruit::class, 'publicShow'])->whereNumber('id')->name('recruit.show');
     Route::get('/cast/{id}', [CastProfile::class, 'publicShow'])->name('cast.show');
 });
 
@@ -557,7 +564,7 @@ Route::prefix('shop')->name('shop.')->middleware('shop.auth')->group(function ()
     Route::get('/home', [DiscoveryHome::class, 'index'])->name('home');
     Route::get('/search', [ShopSearch::class, 'index'])->name('search.index');
 
-    Route::get('/search/{tab}', fn ($tab) => redirect()->route('shop.search.index', $tab === 'keep' ? ['tab' => 'keep'] : []))->where('tab', 'timeline|list|keep');
+    Route::get('/search/{tab}', fn ($tab) => redirect()->route('shop.search.index', array_merge(request()->query(), ['tab' => $tab === 'keep' ? 'keep' : 'list'])))->where('tab', 'timeline|list|keep');
     Route::post('/search-preferences', [ShopSearch::class, 'savePreferences'])->name('search-preferences.save');
 
     // 繝医・繧ｯ
@@ -597,6 +604,7 @@ Route::prefix('shop')->name('shop.')->middleware('shop.auth')->group(function ()
     Route::prefix('recruits')->name('recruits.')->group(function () {
         Route::post('/application/hired-wage', [ShopRecruit::class, 'updateApplicationHiredWage'])->name('application-hired-wage');
         Route::middleware('shop.owner')->group(function () {
+            Route::get('/preview', [ShopRecruit::class, 'preview'])->name('preview');
             Route::get('/edit', [ShopRecruit::class, 'edit'])->name('edit');
             Route::put('/update', [ShopRecruit::class, 'update'])->name('update');
             Route::post('/toggle-status', [ShopRecruit::class, 'toggleStatus'])->name('toggle-status');
@@ -670,7 +678,7 @@ Route::prefix('cast')->name('cast.')->middleware('member.auth')->group(function 
     Route::get('/profile/edit', [CastProfile::class, 'edit'])->name('profile.edit');
     Route::post('/profile/update', [CastProfile::class, 'update'])->name('profile.update');
     Route::post('/profile/personality-type', [CastProfile::class, 'updatePersonalityType'])->name('profile.personality-type');
-    Route::get('/search', fn () => redirect()->route('cast.search.index', ['tab' => 'list']));
+    Route::get('/search', fn () => redirect()->route('cast.search.index', array_merge(request()->query(), ['tab' => 'list'])));
     Route::get('/search/{tab}', [CastSearch::class, 'index'])->name('search.index')->where('tab', 'search|ai|timeline|list|keep');
     Route::post('/search-preferences', [CastSearch::class, 'savePreferences'])->name('search-preferences.save');
     Route::post('/search/ai-chat', [CastAiChat::class, 'respond'])->name('search.ai-chat');

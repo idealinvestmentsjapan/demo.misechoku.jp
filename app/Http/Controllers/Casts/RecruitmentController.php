@@ -21,13 +21,13 @@ class RecruitmentController extends Controller
      * - 数値ID (1, 2, 3, ...)
      * - 店舗ID文字列 (s00000001 など)
      *
-     * 求人（shop_jobs）が未登録／非公開であっても、店舗プロフィールが存在すれば表示する。
+     * キャスト向け画面では公開中の求人だけを表示する。
      */
     public function show(Request $request, $id)
     {
         $numericId = $this->normalizeRouteIdToNumeric($id);
-        $data = $this->getRecruitDataFromDatabase($numericId, false);
-        abort_if(empty($data['shop']), 404);
+        $data = $this->getRecruitDataFromDatabase($numericId, true);
+        abort_if(empty($data['recruit']), 404);
 
         // キャストによる店舗プロフィール閲覧を記録
         if (auth()->guard('member')->check()) {

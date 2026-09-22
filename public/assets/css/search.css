@@ -2401,10 +2401,10 @@ li.connection-item.tl-row a.tl-row__link {
     min-height: 14px;
 }
 .tl-row__time {
-    font-size: 10px;
+    font-size: 13px;
     font-weight: 500;
     letter-spacing: 0.04em;
-    color: rgba(196, 181, 253, 0.40);
+    color: var(--color-text-sub);
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
 }
@@ -2414,7 +2414,7 @@ li.connection-item.tl-row a.tl-row__link {
     border: 1px solid rgba(168, 85, 247, .35);
     border-radius: 999px;
     padding: 1px 8px;
-    font-size: 10px;
+    font-size: 13px;
     font-weight: 700;
     letter-spacing: 0.02em;
     display: inline-flex;

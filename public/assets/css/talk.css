@@ -2371,6 +2371,39 @@ body.page-talk-room .btn-chat-action:hover,
     background: #232323 !important;
 }
 
+/* Composer row buttons (2026-08-23): template popup trigger + interview calendar (shop).
+   The always-visible quick-reply panel under the input was removed; these reuse the
+   .btn-chat-action round-button base. Keep them bottom-aligned with the input pill. */
+body.page-talk-room .btn-chat-action--template,
+#talk-room-container .btn-chat-action--template,
+body.page-talk-room .btn-chat-action--interview,
+#talk-room-container .btn-chat-action--interview {
+    flex: 0 0 auto;
+    align-self: flex-end;
+    transition: background 0.12s ease, border-color 0.12s ease, transform 0.1s ease;
+}
+body.page-talk-room .btn-chat-action--template,
+#talk-room-container .btn-chat-action--template {
+    color: #c4b5fd !important;
+    border-color: rgba(167, 139, 250, 0.35) !important;
+}
+body.page-talk-room .btn-chat-action--interview,
+#talk-room-container .btn-chat-action--interview {
+    color: #5eead4 !important;
+    border-color: rgba(20, 184, 166, 0.40) !important;
+}
+body.page-talk-room .btn-chat-action--template:active,
+#talk-room-container .btn-chat-action--template:active,
+body.page-talk-room .btn-chat-action--interview:active,
+#talk-room-container .btn-chat-action--interview:active {
+    transform: scale(0.94);
+}
+/* Tighten the row a little so two buttons + input + send fit on 360px screens */
+@media (max-width: 420px) {
+    body.page-talk-room .chat-input-row,
+    #talk-room-container .chat-input-row { gap: 8px; }
+}
+
 /* 送信ボタン：他画面の primary CTA と同じ mauve グラデ（既に統一済み）。
    IG だと "send" 文字 + 矢印アイコンだが、現状の paper-plane アイコンで OK。 */
 body.page-talk-room .btn-send,

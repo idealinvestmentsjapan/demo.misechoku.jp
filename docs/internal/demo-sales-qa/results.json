@@ -1,0 +1,37 @@
+{
+  "viewports": [
+    {
+      "width": 320,
+      "height": 700,
+      "actions": 11,
+      "overflow": false
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "actions": 11,
+      "overflow": false
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "actions": 11,
+      "overflow": false
+    },
+    {
+      "width": 820,
+      "height": 1180,
+      "actions": 11,
+      "overflow": false
+    },
+    {
+      "width": 1180,
+      "height": 820,
+      "actions": 11,
+      "overflow": false
+    }
+  ],
+  "remoteRequestsSent": 0,
+  "errors": [],
+  "passed": true
+}

@@ -35,6 +35,10 @@
         }
     },
     "scripts": {
+        "test:uiux": [
+            "@php tests/Support/check-uiux-syntax.php",
+            "@php vendor/bin/phpunit tests/Feature/UiUx"
+        ],
         "test:prepare": [
             "@php -r \"file_exists('database/testing.sqlite') || touch('database/testing.sqlite');\""
         ],

@@ -49,7 +49,8 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         auth()->guard('admin')->logout();
-        $request->session()->invalidate();
+        // 同じブラウザで利用中のキャスト／店舗ガードの認証状態は保持する。
+        $request->session()->regenerate();
         $request->session()->regenerateToken();
 
         return redirect()->route('admin.login')->with('status', 'ログアウトしました。');

@@ -322,7 +322,7 @@
     </div>
 
     {{-- グローバル トースト：alert() の置き換えに使う window.appToast(msg, variant) --}}
-    <script src="{{ asset('assets/js/app-toast.js') }}" defer></script>
+    <script src="{{ asset('assets/js/app-toast.js') }}?v=20260913-uiux" defer></script>
 
     <script>
         (function () {

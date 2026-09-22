@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
 {
@@ -166,15 +167,15 @@ class ProfileController extends Controller
             'name'         => 'nullable|string|max:100',
             'birth_date'   => 'required|date',
             'zip'          => ['nullable', 'regex:/^\d{3}-?\d{4}$/'],
-            'pref'         => 'nullable|string|max:50',
+            'pref'         => ['nullable', Rule::in(CommonConsts::PREFS)],
             'city'         => 'nullable|string|max:50',
             'addr1'        => 'nullable|string|max:255',
             'intro'        => 'nullable|string',
-            'height'       => 'nullable|string|max:10',
-            'weight'       => 'nullable|string|max:10',
-            'bust'         => 'nullable|string|max:10',
-            'waist'        => 'nullable|string|max:10',
-            'hip'          => 'nullable|string|max:10',
+            'height'       => 'nullable|integer|min:100|max:250',
+            'weight'       => 'nullable|integer|min:30|max:200',
+            'bust'         => 'nullable|integer|min:40|max:200',
+            'waist'        => 'nullable|integer|min:30|max:200',
+            'hip'          => 'nullable|integer|min:40|max:200',
             'my_field'     => 'nullable|string|max:255',
             'my_inner_skills' => 'nullable|string|max:500',
             'profession'   => 'nullable|string',

@@ -55,8 +55,17 @@ class FavoriteController extends Controller
             return response()->json(['error' => 'Unauthenticated'], 401);
         }
 
-        if (empty($castId) && empty($shopId)) {
+        $validCombination = ($senderType === Favorite::SENDER_SHOP && $itemType === 'cast')
+            || ($senderType === Favorite::SENDER_CAST && $itemType === 'shop');
+        if (!$validCombination || empty($castId) || empty($shopId)) {
             return response()->json(['error' => 'Invalid target combination'], 422);
+        }
+
+        $targetExists = $itemType === 'cast'
+            ? DB::table('casts')->where('id', $castId)->exists()
+            : DB::table('shops')->where('id', $shopId)->exists();
+        if (!$targetExists) {
+            return response()->json(['error' => 'Target not found'], 422);
         }
 
         // 自分が同じ向きで打った既存レコード

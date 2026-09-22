@@ -28,18 +28,22 @@ class AdminOperationLogService
     ): void {
         $admin = Auth::guard('admin')->user();
         $request = request();
-        $row = [
-            'operator_id' => $admin?->id,
+        $detail = [
             'operator_email' => $admin?->email,
             'operator_role' => $admin?->role,
+            'summary' => $summary !== null ? mb_substr($summary, 0, 255) : null,
+            'payload' => $payload !== [] ? $payload : null,
+            'user_agent' => $request ? mb_substr((string) $request->userAgent(), 0, 255) : null,
+        ];
+        $row = [
+            'admin_id' => $admin?->id,
             'action' => $action,
             'target_type' => $targetType,
             'target_id' => $targetId,
-            'summary' => $summary !== null ? mb_substr($summary, 0, 255) : null,
-            'payload' => !empty($payload) ? json_encode($payload, JSON_UNESCAPED_UNICODE) : null,
+            'detail' => json_encode($detail, JSON_UNESCAPED_UNICODE),
             'ip_address' => $request?->ip(),
-            'user_agent' => $request ? mb_substr((string) $request->userAgent(), 0, 255) : null,
             'created_at' => now(),
+            'updated_at' => now(),
         ];
 
         try {
@@ -48,10 +52,13 @@ class AdminOperationLogService
                 return;
             }
         } catch (\Throwable $e) {
-            // フォールスルーしてログに流す
+            Log::error('運営操作ログをDBへ保存できませんでした。', [
+                'action' => $action,
+                'exception' => $e->getMessage(),
+            ]);
         }
 
-        Log::channel(config('logging.default'))->info('[admin-op] ' . $action, $row);
+        Log::channel(config('logging.default'))->info('[admin-op] ' . $action, $row + $detail);
     }
 
     /**
@@ -67,6 +74,7 @@ class AdminOperationLogService
                 ->orderByDesc('id')
                 ->limit($limit)
                 ->get()
+                ->map(fn ($row) => $this->normalizeRow($row))
                 ->all();
         } catch (\Throwable $e) {
             return [];
@@ -91,7 +99,9 @@ class AdminOperationLogService
             if ($targetType !== null && $targetType !== '') {
                 $q->where('target_type', $targetType);
             }
-            return $q->limit($limit)->get()->all();
+            return $q->limit($limit)->get()
+                ->map(fn ($row) => $this->normalizeRow($row))
+                ->all();
         } catch (\Throwable $e) {
             return [];
         }
@@ -116,5 +126,21 @@ class AdminOperationLogService
             'verification.shop.reject' => '店舗書類 差戻し',
             default => $action,
         };
+    }
+
+    private function normalizeRow(object $row): object
+    {
+        $detail = json_decode((string) ($row->detail ?? ''), true);
+        $detail = is_array($detail) ? $detail : [];
+        $row->operator_id = $row->admin_id ?? null;
+        $row->operator_email = $detail['operator_email'] ?? null;
+        $row->operator_role = $detail['operator_role'] ?? null;
+        $row->summary = $detail['summary'] ?? null;
+        $row->payload = isset($detail['payload'])
+            ? json_encode($detail['payload'], JSON_UNESCAPED_UNICODE)
+            : null;
+        $row->user_agent = $detail['user_agent'] ?? null;
+
+        return $row;
     }
 }

@@ -1057,6 +1057,7 @@ CREATE TABLE `reviews` (
   `contents` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `eva` decimal(3,1) NOT NULL DEFAULT '0.0',
   `is_anonymous` tinyint(1) NOT NULL DEFAULT '1',
+  `release` tinyint(1) NOT NULL DEFAULT '0' COMMENT '0:非公開, 1:公開',
   `reply_body` text COLLATE utf8mb4_unicode_ci COMMENT '店舗からの返信本文（1件のみ）',
   `reply_at` timestamp NULL DEFAULT NULL COMMENT '返信投稿日時',
   `created_at` timestamp NULL DEFAULT NULL,
@@ -2933,3 +2934,31 @@ INSERT INTO `character_guide_settings` (`id`, `route_name`, `screen_label`, `is_
 (26, 'shop.mypage.staff.index', '店舗：スタッフ管理', 1, '1つのお店で複数のログインアカウントを使えます。追加・削除ができるのはオーナー権限のみです。', '2026-07-19 00:00:00', '2026-07-19 00:00:00'),
 (27, 'shop.mypage.staff.create', '店舗：スタッフを追加', 1, '新しい店舗ログインアカウントを発行します。メールアドレスとパスワードは追加するスタッフ本人に共有してください。', '2026-07-19 00:00:00', '2026-07-19 00:00:00'),
 (28, 'shop.mypage.viewers.index', '店舗：閲覧キャスト一覧', 1, 'あなたのお店を閲覧したキャストの一覧です。気になるキャストにはスカウトを送ってみましょう！', '2026-07-19 00:00:00', '2026-07-19 00:00:00');
+
+--
+-- 運営権限・監査ログ（管理画面の権限制御と操作証跡）
+--
+
+CREATE TABLE IF NOT EXISTS `admin_role_permissions` (
+  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
+  `role` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `permission` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `admin_role_permissions_role_permission_unique` (`role`, `permission`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `admin_operation_logs` (
+  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
+  `admin_id` bigint UNSIGNED NOT NULL,
+  `action` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `target_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `target_id` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `detail` json DEFAULT NULL,
+  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `admin_operation_logs_admin_id_index` (`admin_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -68,7 +68,7 @@
             try {
                 var data = {};
                 form.querySelectorAll('input[name], select[name], textarea[name]').forEach(function (el) {
-                    if (el.type === 'password' || el.type === 'file' || el.type === 'hidden') return;
+                    if (/password/i.test(el.name) || el.type === 'password' || el.type === 'file' || el.type === 'hidden') return;
                     var key = el.name;
                     if (el.type === 'checkbox') {
                         if (/\[\]$/.test(key)) {
@@ -91,11 +91,18 @@
                 var raw = sessionStorage.getItem(STORAGE_KEY);
                 if (!raw) return false;
                 var payload = JSON.parse(raw);
-                if (!payload || !payload.data || (Date.now() - (payload.ts || 0)) > 24 * 3600 * 1000) return false;
+                if (!payload || !payload.data || (Date.now() - (payload.ts || 0)) > 24 * 3600 * 1000) {
+                    sessionStorage.removeItem(STORAGE_KEY);
+                    return false;
+                }
                 var data = payload.data;
+                Object.keys(data).forEach(function (key) { if (/password/i.test(key)) delete data[key]; });
+                sessionStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+                // サーバーが返した入力値を古いドラフトで上書きしない。
+                if (form.querySelector('.register-alert-error')) return false;
                 var did = false;
                 form.querySelectorAll('input[name], select[name], textarea[name]').forEach(function (el) {
-                    if (el.type === 'password' || el.type === 'file' || el.type === 'hidden') return;
+                    if (/password/i.test(el.name) || el.type === 'password' || el.type === 'file' || el.type === 'hidden') return;
                     var key = el.name;
                     if (el.type === 'checkbox') {
                         if (/\[\]$/.test(key)) {
@@ -283,7 +290,7 @@
 
         // ============================ Enter で次のフィールドへ自動フォーカス ============================
         form.addEventListener('keydown', function (e) {
-            if (e.key !== 'Enter') return;
+            if (e.key !== 'Enter' || e.isComposing || e.keyCode === 229) return;
             var t = e.target;
             if (!t || t.tagName === 'TEXTAREA') return;
             if (['submit', 'button'].indexOf(t.type) !== -1) return;
@@ -304,8 +311,7 @@
         });
 
         // ============================ ステップウィザード本体 ============================
-        // エラー再表示時はウィザード化せず全展開（サーバの old と一緒に見せる）
-        if (form.querySelector('.register-alert-error')) return;
+        // サーバーエラー後もステップ構成を維持し、該当する入力へ案内する。
 
         var cards = Array.prototype.slice.call(form.querySelectorAll('.register-card'));
         if (cards.length < 2) return;
@@ -314,6 +320,8 @@
         var actions = form.querySelector('.register-actions');
         if (!actions) return;
         actions.classList.add('register-actions--wizard-hidden');
+        // 非表示ステップの項目にブラウザが先にフォーカスしないよう、送信時にまとめて検証する。
+        form.noValidate = true;
 
         Array.prototype.forEach.call(form.querySelectorAll('[required]'), function (el) {
             el.removeAttribute('required');
@@ -329,13 +337,13 @@
             '<span class="rw-step-title" data-rw-title></span>' +
             '<span class="rw-fill-pct" data-rw-fill hidden></span>' +
             '</div>' +
-            '<p class="rw-draft-hint"><i class="fas fa-cloud"></i> 入力内容は自動的に一時保存されます</p>';
+            '<p class="rw-draft-hint">入力した文章はこのタブで24時間一時保存されます。画像・書類・パスワードは保存されません。</p>';
         form.insertBefore(header, form.firstElementChild);
 
         var nav = document.createElement('div');
         nav.className = 'rw-nav';
         nav.innerHTML =
-            '<p class="rw-error" data-rw-error hidden><i class="fas fa-circle-exclamation"></i> <span></span></p>' +
+            '<p class="rw-error" data-rw-error role="alert" hidden><i class="fas fa-circle-exclamation"></i> <span></span></p>' +
             '<div class="rw-nav__buttons">' +
             '  <button type="button" class="rw-btn rw-btn--back" data-rw-back><i class="fas fa-chevron-left"></i> 戻る</button>' +
             '  <button type="button" class="rw-btn rw-btn--next" data-rw-next>次へ <i class="fas fa-chevron-right"></i></button>' +
@@ -354,6 +362,45 @@
         var barEl = header.querySelector('.rw-progress__bar');
 
         var step = 0;
+        var serverErrors = {};
+        try { serverErrors = JSON.parse(form.dataset.validationErrors || '{}'); } catch (_) {}
+        var errorFields = [];
+        Object.keys(serverErrors).forEach(function (name, index) {
+            var inputs = Array.from(form.elements).filter(function (el) { return el.name === name || el.name === name.replace(/\.(\d+)$/, '[]') || el.name === name + '[]'; });
+            if (!inputs.length) return;
+            var input = inputs[0];
+            var field = input.closest('.register-field, .register-check, label') || input.parentElement;
+            var hint = document.createElement('span');
+            hint.id = 'register-server-error-' + index;
+            hint.className = 'rw-inline-hint';
+            hint.textContent = [].concat(serverErrors[name]).join(' ');
+            field.appendChild(hint);
+            inputs.forEach(function (el) {
+                el.setAttribute('aria-invalid', 'true');
+                el.setAttribute('aria-describedby', ((el.getAttribute('aria-describedby') || '') + ' ' + hint.id).trim());
+                el.addEventListener('input', function () { el.removeAttribute('aria-invalid'); hint.hidden = true; });
+            });
+            errorFields.push(input);
+        });
+        if (errorFields.length) {
+            var errorStep = stepCards.indexOf(errorFields[0].closest('.register-card'));
+            step = errorStep >= 0 ? errorStep : stepCards.length - 1;
+            var summary = form.querySelector('.register-alert-error');
+            if (summary) errorFields.forEach(function (input) {
+                var link = document.createElement('button');
+                link.type = 'button';
+                link.className = 'btn-secondary-cta';
+                var field = input.closest('.register-field, label');
+                var label = field && field.querySelector('span');
+                link.textContent = (label ? label.textContent.trim() : '該当項目') + 'を確認';
+                link.addEventListener('click', function () {
+                    var targetStep = stepCards.indexOf(input.closest('.register-card'));
+                    step = targetStep >= 0 ? targetStep : stepCards.length - 1;
+                    render(); input.focus();
+                });
+                summary.appendChild(link);
+            });
+        }
 
         function cardTitle(card) { var h = card.querySelector('.register-card-head h2'); return h ? h.textContent.trim() : ''; }
         function isVisible(el) { return el.offsetParent !== null; }
@@ -378,12 +425,11 @@
         }
         function cardFillRate(card) {
             var total = 0, filled = 0;
-            card.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"]), select, textarea').forEach(function (el) {
-                if (!isVisible(el)) return;
+            card.querySelectorAll('.register-field, .register-check, .metric-field, .bwh-field').forEach(function (field) {
+                var required = field.hasAttribute('data-required') || !!field.querySelector('[data-was-required]') || Array.from(field.querySelectorAll('em')).some(function (em) { return em.textContent.includes('必須'); });
+                if (!required || !isVisible(field)) return;
                 total++;
-                if (el.type === 'file' && el.files && el.files.length) filled++;
-                else if ((el.type === 'checkbox' || el.type === 'radio') && el.checked) filled++;
-                else if (el.value && String(el.value).trim() !== '') filled++;
+                if (fieldFilled(field)) filled++;
             });
             return total ? Math.round(filled / total * 100) : 100;
         }
@@ -400,13 +446,13 @@
             titleEl.textContent = cardTitle(stepCards[step]);
             barEl.style.width = Math.round(((step + 1) / stepCards.length) * 100) + '%';
             var pct = cardFillRate(stepCards[step]);
-            if (pct > 0 && pct < 100) { fillEl.hidden = false; fillEl.textContent = '入力 ' + pct + '%'; }
+            if (pct < 100) { fillEl.hidden = false; fillEl.textContent = '必須入力 ' + pct + '%'; }
             else { fillEl.hidden = true; }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
         form.addEventListener('input', function () {
             var pct = cardFillRate(stepCards[step]);
-            if (pct > 0 && pct < 100) { fillEl.hidden = false; fillEl.textContent = '入力 ' + pct + '%'; }
+            if (pct < 100) { fillEl.hidden = false; fillEl.textContent = '必須入力 ' + pct + '%'; }
             else { fillEl.hidden = true; }
         });
 
@@ -436,6 +482,34 @@
                 return;
             }
         });
+        form.addEventListener('submit', function (event) {
+            for (var i = 0; i < stepCards.length; i++) {
+                var card = stepCards[i];
+                var wasHidden = card.hidden;
+                card.hidden = false;
+                var missing = requiredMissing(card);
+                var invalid = Array.from(card.querySelectorAll('input, select, textarea')).find(function (el) {
+                    return isVisible(el) && !el.disabled && el.willValidate && !el.validity.valid;
+                });
+                card.hidden = wasHidden;
+                if (!missing.length && !invalid) continue;
+                event.preventDefault();
+                step = i; render();
+                errBox.hidden = false;
+                errTxt.textContent = invalid ? invalid.validationMessage : '必須項目を入力してください（' + missing.length + '件）';
+                var target = invalid || missing[0].querySelector('input, select, textarea');
+                if (target) target.focus();
+                return;
+            }
+            var terms = form.querySelector('input[name="terms"]');
+            if (terms && !terms.checked) {
+                event.preventDefault();
+                step = stepCards.length - 1; render();
+                errBox.hidden = false; errTxt.textContent = '利用規約とプライバシーポリシーに同意してください';
+                terms.focus();
+            }
+        }, true);
         render();
+        if (errorFields.length) errorFields[0].focus({ preventScroll: true });
     });
 })();

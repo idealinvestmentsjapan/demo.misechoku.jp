@@ -51,7 +51,7 @@ class PlanSubscriptionController extends Controller
                 'active' => $rows->where('status', ShopPlanSubscription::STATUS_ACTIVE)->count(),
                 'overdue' => $rows->filter(fn ($s) => (int) $s->status === ShopPlanSubscription::STATUS_PENDING_PAYMENT
                     && $s->payment_due_date !== null
-                    && $s->payment_due_date->isPast())->count(),
+                    && $s->payment_due_date->lt(today()))->count(),
             ],
         ]);
     }

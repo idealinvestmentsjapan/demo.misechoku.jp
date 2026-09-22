@@ -34,8 +34,8 @@ class BillingManagementService
 
     public function normalizeBankAccountData(array $data): array
     {
-        $bankCode = substr(preg_replace('/\D+/', '', (string) ($data['bank_code'] ?? '')) ?? '', 0, 4);
-        $branchCode = substr(preg_replace('/\D+/', '', (string) ($data['branch_code'] ?? '')) ?? '', 0, 3);
+        $bankCode = preg_replace('/\D+/', '', (string) ($data['bank_code'] ?? '')) ?? '';
+        $branchCode = preg_replace('/\D+/', '', (string) ($data['branch_code'] ?? '')) ?? '';
         $bank = $this->bankLookupService->findBankByCode($bankCode);
         $branch = $this->bankLookupService->findBranchByCode($bankCode, $branchCode);
         $accountName = trim((string) ($data['account_name'] ?? ''));
@@ -52,8 +52,8 @@ class BillingManagementService
             'branch_code' => $branchCode,
             'branch_name' => trim((string) ($branch['name'] ?? ($data['branch_name'] ?? ''))),
             'branch_name_kana' => trim((string) ($branch['kana'] ?? ($data['branch_name_kana'] ?? ''))),
-            'account_type' => $accountType === 'current' ? 'current' : 'ordinary',
-            'account_number' => substr(preg_replace('/\D+/', '', (string) ($data['account_number'] ?? '')) ?? '', 0, 8),
+            'account_type' => $accountType,
+            'account_number' => preg_replace('/\D+/', '', (string) ($data['account_number'] ?? '')) ?? '',
             'account_name' => $accountName,
             'account_holder_name' => $accountName,
         ];
@@ -774,18 +774,38 @@ class BillingManagementService
             return ['success' => false, 'message' => '振込完了画面のスクリーンショット（証跡画像）をアップロードしてください。'];
         }
 
-        DB::table('application_deposits')
-            ->where('id', $depositId)
-            ->update($this->filterExistingColumns('application_deposits', [
-                'status' => self::STATUS_CAST_TRANSFERRED,
-                'cast_transferred_at' => Carbon::parse($payload['transferred_at']),
-                'cast_transfer_reference' => $payload['reference'] ?? null,
-                'cast_transfer_note' => $payload['note'] ?? null,
-                'cast_transfer_evidence_path' => $evidenceFilePath,
-                'updated_at' => now(),
-            ]));
+        $transferredAt = Carbon::parse($payload['transferred_at']);
+        $now = now();
+        DB::transaction(function () use ($depositId, $payload, $evidenceFilePath, $transferredAt, $now) {
+            DB::table('application_deposits')
+                ->where('id', $depositId)
+                ->update($this->filterExistingColumns('application_deposits', [
+                    'status' => self::STATUS_CAST_TRANSFERRED,
+                    'cast_transferred_at' => $transferredAt,
+                    'cast_transfer_reference' => $payload['reference'] ?? null,
+                    'cast_transfer_note' => $payload['note'] ?? null,
+                    'cast_transfer_evidence_path' => $evidenceFilePath,
+                    'updated_at' => $now,
+                ]));
+
+            if (Schema::hasTable('payment_tasks')) {
+                $task = $this->getPaymentTaskForDeposit($depositId);
+                if ($task) {
+                    DB::table('payment_tasks')->where('id', $task->id)->update([
+                        'status' => PaymentTask::STATUS_PAID,
+                        'transferred_at' => $transferredAt,
+                        'completed_at' => $now,
+                        'evidence_file_path' => $evidenceFilePath,
+                        'checklist_confirmed_account' => true,
+                        'checklist_confirmed_amount' => true,
+                        'updated_at' => $now,
+                    ]);
+                }
+            }
+        });
 
         $this->appendHistory($depositId, self::STATUS_CAST_TRANSFERRED);
+        $this->notifyCastTransferred($depositId);
 
         return ['success' => true, 'message' => 'キャストへの振込手続きを記録しました。キャストの入金確認待ちです。'];
     }

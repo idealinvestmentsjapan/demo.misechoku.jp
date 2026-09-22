@@ -17,6 +17,10 @@ return [
     // Master switch for the demo-only helpers below.
     'enabled' => filter_var(env('DEMO_MODE', false), FILTER_VALIDATE_BOOLEAN),
 
+    // Sales fixtures are opt-in and also require a non-production environment/allowed host.
+    'sales_enabled' => filter_var(env('DEMO_SALES_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
+    'sales_hosts' => ['demo.misechoku.jp', 'localhost', '127.0.0.1'],
+
     // Skip Mail::raw and mark casts/shop_managers.email_verified_at immediately
     // when the user requests a verification mail.
     'auto_verify_email' => filter_var(env('DEMO_AUTO_VERIFY_EMAIL', true), FILTER_VALIDATE_BOOLEAN),

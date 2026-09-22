@@ -135,6 +135,7 @@
                         <th>登録日</th>
                         <th>最終ログイン</th>
                         <th>書類提出</th>
+                        <th>求人公開</th>
                         <th>状態</th>
                     </tr>
                 </thead>
@@ -197,6 +198,11 @@
                                     <span class="admin-status-badge is-warning"><i class="fas fa-hourglass-half"></i> 未確認</span>
                                 @endif
                             </td>
+                            <td data-label="求人公開">
+                                <span class="admin-status-badge {{ ($shop['job_status_key'] ?? 'inactive') === 'active' ? 'is-success' : 'is-inactive' }}">
+                                    {{ $shop['job_status'] ?? '未設定' }}
+                                </span>
+                            </td>
                             <td data-label="状態">
                                 @if($isSuspended)
                                     <span class="admin-status-badge is-danger"><i class="fas fa-ban"></i> 停止中</span>
@@ -209,11 +215,11 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center">店舗アカウントがありません。</td>
+                            <td colspan="6" class="text-center">店舗アカウントがありません。</td>
                         </tr>
                     @endforelse
                     <tr id="shop-empty-row" hidden>
-                        <td colspan="5" class="text-center text-muted">条件に一致する店舗はありません。</td>
+                        <td colspan="6" class="text-center text-muted">条件に一致する店舗はありません。</td>
                     </tr>
                 </tbody>
             </table>

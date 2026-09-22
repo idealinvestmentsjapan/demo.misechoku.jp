@@ -40,6 +40,11 @@ final class ShopJobApplicationView
             && trim((string) $row->hired_regular_hourly_wage) !== '') {
             return (string) $row->hired_regular_hourly_wage;
         }
+        if (property_exists($row, 'hourly_wage_regular')
+            && $row->hourly_wage_regular !== null
+            && trim((string) $row->hourly_wage_regular) !== '') {
+            return (string) $row->hourly_wage_regular;
+        }
 
         return null;
     }

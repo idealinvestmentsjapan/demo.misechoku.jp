@@ -29,8 +29,8 @@
         form.addEventListener('input', markDirty, { passive: true });
         form.addEventListener('change', markDirty, { passive: true });
 
-        form.addEventListener('submit', function () {
-            isSubmitting = true;
+        form.addEventListener('submit', function (event) {
+            queueMicrotask(function () { isSubmitting = !event.defaultPrevented; });
         });
 
         window.addEventListener('beforeunload', function (e) {
@@ -68,6 +68,9 @@
         if (el.hasAttribute('data-meter-ignore')) return false;
         // CSRF などの Laravel 内部フィールド
         if (el.name === '_token' || el.name === '_method') return false;
+        if (el.closest('[hidden]')) return false;
+        var visibleHost = el.closest('label, .register-field, .form-group') || el;
+        if (visibleHost.getClientRects().length === 0) return false;
         return true;
     }
 
@@ -125,10 +128,21 @@
             var keys = Object.keys(groups);
             var total = keys.length;
             if (total === 0) { meter.hidden = true; return; }
+            meter.hidden = false;
             var filled = 0;
             keys.forEach(function (k) { if (isGroupFilled(groups[k])) filled++; });
-            var pct = Math.round((filled / total) * 100);
-            valueEl.textContent = filled + ' / ' + total + ' 項目（' + pct + '%）';
+            var requiredKeys = keys.filter(function (key) {
+                return groups[key].some(function (el) {
+                    var field = el.closest('.register-field, .form-group, label');
+                    return el.required || el.hasAttribute('data-was-required') || el.getAttribute('aria-required') === 'true' ||
+                        (field && (field.hasAttribute('data-required') || Array.from(field.querySelectorAll('em')).some(function (em) { return em.textContent.includes('必須'); })));
+                });
+            });
+            var requiredFilled = requiredKeys.filter(function (key) { return isGroupFilled(groups[key]); }).length;
+            var pct = requiredKeys.length ? Math.round(requiredFilled / requiredKeys.length * 100) : Math.round(filled / total * 100);
+            valueEl.textContent = requiredKeys.length
+                ? '必須 ' + requiredFilled + ' / ' + requiredKeys.length + '・任意 ' + (filled - requiredFilled) + ' / ' + (total - requiredKeys.length)
+                : '入力済み ' + filled + ' / ' + total + ' 項目';
             fillEl.style.width = pct + '%';
             fillEl.classList.toggle('is-complete', pct >= 100);
             meter.classList.toggle('is-complete', pct >= 100);
@@ -152,7 +166,8 @@
             if (!msg) return;
             var variant = el.getAttribute('data-flash-toast') || 'success';
             window.appToast(msg, variant);
-            el.hidden = true;
+            // エラー・保存結果はページ内にも残し、通知を読み逃しても確認できるようにする。
+            el.setAttribute('role', variant === 'error' ? 'alert' : 'status');
         });
     }
 

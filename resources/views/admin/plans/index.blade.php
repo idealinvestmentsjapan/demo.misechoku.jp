@@ -79,7 +79,7 @@
                         @php
                             $isPending = (int) $sub->status === SPS::STATUS_PENDING_PAYMENT;
                             $isActive = (int) $sub->status === SPS::STATUS_ACTIVE;
-                            $isOverdue = $isPending && $sub->payment_due_date !== null && $sub->payment_due_date->isPast();
+                            $isOverdue = $isPending && $sub->payment_due_date !== null && $sub->payment_due_date->lt(today());
                         @endphp
                         <tr>
                             <td>{{ $sub->shop_display_name }}<br><small style="color:#8b8b96;">{{ $sub->shop_id }} / {{ $sub->invoice_number }}</small></td>

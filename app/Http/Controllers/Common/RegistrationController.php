@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class RegistrationController extends Controller
@@ -48,7 +49,7 @@ class RegistrationController extends Controller
             'name' => ['required', 'string', 'max:100'],
             'birth_date' => ['required', 'date'],
             'zip' => ['required', 'regex:/^\d{3}-?\d{4}$/'],
-            'pref' => ['required', 'string', 'max:20'],
+            'pref' => ['required', Rule::in(CommonConsts::PREFS)],
             'city' => ['required', 'string', 'max:100'],
             'addr1' => ['nullable', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:20'],
@@ -195,6 +196,7 @@ class RegistrationController extends Controller
 
         return redirect()
             ->route('cast.tutorial')
+            ->with('registration_completed', 'cast')
             ->with('message', 'キャストアカウントを登録しました。ご登録のメールアドレス宛に認証リンクをお送りしましたのでご確認ください。');
     }
 
@@ -205,7 +207,7 @@ class RegistrationController extends Controller
             'shop_name' => ['required', 'string', 'max:100'],
             'contact_name' => ['required', 'string', 'max:100'],
             'zip' => ['required', 'regex:/^\d{3}-?\d{4}$/'],
-            'pref' => ['required', 'string', 'max:20'],
+            'pref' => ['required', Rule::in(CommonConsts::PREFS)],
             'city' => ['required', 'string', 'max:100'],
             'addr' => ['required', 'string', 'max:255'],
             'building' => ['nullable', 'string', 'max:255'],
@@ -356,6 +358,7 @@ class RegistrationController extends Controller
 
         return redirect()
             ->route('shop.tutorial')
+            ->with('registration_completed', 'shop')
             ->with('message', '店舗アカウントを登録しました。ご登録のメールアドレス宛に認証リンクをお送りしましたのでご確認ください。許可証の提出は「許可証提出ページ」からどうぞ。');
     }
 
@@ -386,6 +389,7 @@ class RegistrationController extends Controller
         $lastId = DB::table($table)
             ->where('id', 'like', $prefix . '%')
             ->orderByDesc('id')
+            ->lockForUpdate()
             ->value('id');
 
         $nextNumber = $lastId

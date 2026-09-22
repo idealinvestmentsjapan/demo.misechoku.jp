@@ -14,7 +14,7 @@
     $searchLocationSettings = $searchLocationSettings ?? [];
     $loc = is_array($searchLocationSettings) ? $searchLocationSettings : [];
     $reqLocationMode = (string) request('location_mode', '');
-    $allowedLocationModes = ['', 'profile', 'passport', 'current'];
+    $allowedLocationModes = ['', 'none', 'profile', 'passport', 'current'];
     if (!in_array($reqLocationMode, $allowedLocationModes, true)) {
         $reqLocationMode = '';
     }
@@ -58,7 +58,7 @@
     }
 
     // 保存済み検索条件（cast_search_preferences）。フォーム未送信時は保存値をデフォルトに使う。
-    $savedPrefs = $savedPreferences ?? [];
+    $savedPrefs = request()->boolean('filters_applied') ? [] : ($savedPreferences ?? []);
     $savedIndustryIds = array_map('intval', $savedPrefs['industry_ids'] ?? []);
     $savedShiftFrequency = (string) ($savedPrefs['shift_frequency'] ?? '');
     $savedWorkPeriods = array_values(array_filter((array) ($savedPrefs['work_periods'] ?? []), 'is_string'));
@@ -183,6 +183,10 @@
 
                     <fieldset class="detail-search-location-modes">
                         <legend class="sr-only">基準となる拠点</legend>
+                        <label class="detail-search-location-card" data-mode-card="none">
+                            <input type="radio" name="location_mode" value="none" @checked($detailLocationMode === 'none')>
+                            <span class="detail-search-location-card__row">距離で絞り込まない</span>
+                        </label>
 
                         {{-- 登録住所（プロフィール住所）は廃止：拠点はマイページの「探索拠点の設定」で管理 --}}
                         {{-- 指定地 --}}
@@ -532,7 +536,7 @@
     if (lookupBtn) lookupBtn.addEventListener('click', performLookup);
     if (passportInput) {
         passportInput.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') { e.preventDefault(); performLookup(); }
+            if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); performLookup(); }
         });
         passportInput.addEventListener('input', function () {
             if (passportStatus && passportStatus.getAttribute('data-state') === 'resolved') {

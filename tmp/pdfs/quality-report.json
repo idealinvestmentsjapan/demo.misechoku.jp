@@ -1,0 +1,16 @@
+{
+  "pages": 42,
+  "sourceTextMissing": [],
+  "linksChecked": 69,
+  "linksValid": true,
+  "characterBoundsIssues": [
+    [
+      16,
+      "、",
+      276.9,
+      373.0
+    ]
+  ],
+  "replacementGlyph": false,
+  "sizeBytes": 1208124
+}

@@ -23,6 +23,7 @@
     $businessHours   = trim((string) ($recruit['business_hours'] ?? $shop['business_hours_shop'] ?? ''));
     $nearestStation  = trim((string) ($shop['nearest_station'] ?? ''));
     $workingHours    = trim((string) ($recruit['working_hours'] ?? ''));
+    $distanceText    = trim((string) ($distanceLabel ?? ''));
 
     // ----- 店舗プロファイル系の追加情報 -----
     $industryName    = trim((string) ($shop['industry_name'] ?? ''));
@@ -118,6 +119,11 @@
                 @endif
                 @if($areaChip !== '')
                     <span class="inline-flex items-center gap-1"><i class="fas fa-map-marker-alt text-[10px]"></i>{{ $areaChip }}</span>
+                @endif
+                @if($distanceText !== '')
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/10 border border-line-accent/40 text-text-main font-bold text-[10.5px]">
+                        <i class="fas fa-route text-[9px]"></i>現在地から {{ $distanceText }}
+                    </span>
                 @endif
                 @if($industryName !== '')
                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/10 border border-line-accent/40 text-accent-text font-bold tracking-wide text-[10.5px]">

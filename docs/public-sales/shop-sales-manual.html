@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="ja" data-theme="amethyst">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="description" content="ミセチョクの考え方から、タブレットでの機能説明、店舗登録のお手伝いまで。営業担当者のための実践マニュアル。">
+<title>ミセチョク｜店舗営業マニュアル</title>
+<style>
+/* Standalone document: local copies of the project's amethyst / premium-white tokens. */
+:root{--base:#f5f2fb;--surface:#fff;--ink:#241f33;--sub:#5f5876;--line:rgba(124,58,237,.16);--accent:#7c3aed;--accent-soft:#ede5fb;--deep:#581c87;--deep-end:#3b0764;--on-accent:#f4f2fa;--gold:#b8860b;--gold-soft:#fcf6e7;--good:#047857;--good-soft:#ecfdf5;--warn:#92400e;--warn-soft:#fff7ed;--radius:20px;--header-h:80px;--side-w:236px;--font:"Noto Sans JP","Yu Gothic UI","Hiragino Kaku Gothic ProN",Meiryo,sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:105px}body{margin:0;background:var(--base);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.8;overflow-wrap:anywhere}button,input{font:inherit}button,a,input,summary{-webkit-tap-highlight-color:transparent}button{cursor:pointer}button:disabled{cursor:default;opacity:.5}a{color:var(--accent);text-underline-offset:4px}button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:4px}p{margin:0 0 1em}p:last-child{margin-bottom:0}h1,h2,h3,h4{line-height:1.5;margin:0 0 .6em;letter-spacing:.01em}h1{font-size:clamp(25px,3vw,38px)}h2{font-size:clamp(21px,2.2vw,28px)}h3{font-size:19px}h4{font-size:16px}ul,ol{padding-left:1.4em;margin:.7em 0}li+li{margin-top:.5em}strong{font-weight:750}small,.small{font-size:13px;color:var(--sub)}.sub{color:var(--sub)}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}.skip{position:fixed;top:-100px;left:16px;z-index:100;background:var(--surface);padding:12px 20px}.skip:focus{top:12px}[hidden]{display:none!important}
+.topbar{height:var(--header-h);position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:24px;padding:0 28px;background:var(--surface);border-bottom:1px solid var(--line)}.brand{color:var(--deep);text-decoration:none;display:flex;align-items:center;gap:11px;white-space:nowrap}.brand-mark{display:grid;place-items:center;width:36px;height:40px;border-radius:10px 10px 10px 2px;background:var(--deep);color:var(--on-accent);font-family:Georgia,serif;font-size:26px;font-weight:bold}.brand-name{font-size:22px;letter-spacing:.06em;font-weight:800}.brand-meta{font-size:12px;color:var(--sub);line-height:1.3}.header-tools{margin-left:auto;display:flex;align-items:center;gap:10px}.search-wrap{position:relative;width:310px}.search-wrap input{width:100%;min-height:46px;border:1px solid var(--line);border-radius:10px;background:var(--base);padding:10px 43px 10px 14px;color:var(--ink);font-size:14px}.search-clear{position:absolute;right:2px;top:2px;width:42px;height:42px;border:0;background:transparent;color:var(--sub);font-size:23px}.search-results{position:absolute;top:calc(100% + 12px);right:0;width:440px;max-height:65vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 35px rgba(36,31,51,.14);padding:12px}.search-result{display:block;width:100%;text-align:left;border:0;border-radius:9px;background:transparent;padding:13px;color:var(--ink)}.search-result:hover{background:var(--base)}.search-result strong,.search-result span{display:block}.search-result span{font-size:13px;color:var(--sub)}.search-empty{padding:12px}.search-count{padding:2px 12px 9px;font-size:13px;color:var(--sub)}
+.btn{display:inline-flex;justify-content:center;align-items:center;gap:8px;min-height:46px;padding:10px 18px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-size:14px;font-weight:700;text-decoration:none;line-height:1.5}.btn:hover{background:var(--base)}.btn-primary{background:var(--deep);color:var(--on-accent);border-color:var(--deep);box-shadow:0 3px 0 var(--deep-end)}.btn-primary:hover{background:var(--deep-end)}.btn-quiet{background:transparent;color:var(--sub)}.btn-sm{padding:8px 12px;min-height:44px;font-size:13px}.btn-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.pill{display:inline-flex;padding:4px 10px;border-radius:999px;background:var(--accent-soft);color:var(--deep);font-size:12px;font-weight:750;line-height:1.6}.pill-gold{background:var(--gold-soft);color:var(--warn)}.pill-good{background:var(--good-soft);color:var(--good)}
+.sidebar{position:fixed;top:var(--header-h);left:0;bottom:0;width:var(--side-w);padding:29px 16px 20px;border-right:1px solid var(--line);display:flex;flex-direction:column;overflow-y:auto;background:var(--base)}.nav-caption{margin:0 14px 12px;font-size:12px;font-weight:700;color:var(--sub);letter-spacing:.1em}.nav-list{display:flex;flex-direction:column;gap:6px}.nav-link{display:flex;align-items:center;gap:12px;padding:12px 14px;min-height:49px;border-radius:10px;color:var(--sub);font-size:14px;font-weight:650;text-decoration:none;white-space:nowrap}.nav-num{font-family:Georgia,serif;font-size:16px;opacity:.8;min-width:20px}.nav-link:hover{background:var(--surface)}.nav-link[aria-current="page"]{background:var(--deep);color:var(--on-accent)}.sidebar-foot{margin-top:auto;padding:28px 14px 0;font-size:12px;color:var(--sub)}.sidebar-foot strong{display:block;margin-bottom:5px;color:var(--ink)}.main{margin-left:var(--side-w);padding:36px 40px 64px;min-height:calc(100vh - var(--header-h))}.content{max-width:1110px;margin:auto}.page-kicker{display:flex;gap:12px;align-items:center;font-size:12px;color:var(--accent);font-weight:750;letter-spacing:.12em;margin-bottom:13px}.kicker-rule{display:inline-block;width:28px;height:1px;background:var(--accent)}.page-head{margin-bottom:26px}.page-head p{max-width:760px;color:var(--sub)}.section-block{margin-top:30px}.section-title{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:15px}.section-title h2{margin:0;font-size:22px}.card{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);padding:25px}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.two-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.stack{display:grid;gap:16px}.card-num{font-family:Georgia,serif;color:var(--accent);font-size:32px;margin-bottom:10px;line-height:1}.card p{font-size:15px}.callout{border-left:4px solid var(--accent);background:var(--accent-soft);padding:18px 20px;border-radius:0 12px 12px 0}.callout p{font-size:15px}.callout strong{color:var(--deep)}.callout-warn{border-color:var(--gold);background:var(--gold-soft)}.callout-warn strong{color:var(--warn)}.callout-good{border-color:var(--good);background:var(--good-soft)}.callout-good strong{color:var(--good)}.section-foot{margin-top:30px;border-top:1px solid var(--line);padding-top:20px;color:var(--sub);font-size:13px}.jump-card{display:flex;align-items:center;justify-content:space-between;gap:14px;text-decoration:none;color:var(--ink)}.jump-card strong{display:block;font-size:17px}.jump-card span{display:block;font-size:13px;color:var(--sub)}.jump-card b{color:var(--accent);font-size:23px}.jump-card:hover{border-color:var(--accent)}
+.hero{display:grid;grid-template-columns:1.3fr 1fr;gap:30px;background:var(--surface);border:1px solid var(--line);border-radius:24px;overflow:hidden}.hero-copy{padding:38px 0 36px 34px}.hero h1{font-size:clamp(30px,3.1vw,45px);line-height:1.55;letter-spacing:.035em;margin:17px 0 20px}.hero h1 em{font-style:normal;color:var(--deep)}.hero-copy>p{color:var(--sub);font-size:15px;max-width:430px}.hero-art{position:relative;background:var(--deep);color:var(--on-accent);padding:35px 27px;display:flex;flex-direction:column;justify-content:center;min-width:0}.hero-art h2{font-size:17px;font-weight:600;margin-bottom:24px}.route-point{display:flex;align-items:center;gap:14px;padding:15px 0}.route-point b{display:grid;place-items:center;border:1px solid rgba(244,242,250,.4);border-radius:50%;height:38px;min-width:38px;font-family:Georgia,serif;font-size:20px;font-weight:400}.route-point strong{display:block;font-size:19px}.route-point span{font-size:12px;color:var(--on-accent)}.route-line{height:17px;width:1px;background:rgba(244,242,250,.4);margin-left:19px}.hero-art .art-note{border-top:1px solid rgba(244,242,250,.3);padding-top:18px;margin-top:18px;font-size:12px;color:var(--on-accent)}.stat-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border:1px solid var(--line);border-radius:15px;background:var(--surface);margin-top:20px;padding:19px 0}.stat{padding:0 23px;border-right:1px solid var(--line)}.stat:last-child{border:0}.stat span{display:block;font-size:12px;color:var(--sub)}.stat strong{font-size:24px;line-height:1.7;letter-spacing:.02em}.stat strong small{font-size:14px;font-weight:500;margin-left:5px}.flow{display:flex;align-items:stretch;gap:10px}.flow-box{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:13px;padding:18px 14px;text-align:center}.flow-box b{color:var(--deep);display:block;font-size:17px}.flow-box span{font-size:13px;color:var(--sub)}.flow-arrow{align-self:center;color:var(--accent);font-size:24px}.flow-note{font-size:13px;color:var(--sub);margin-top:13px}.quote{position:relative;margin:0;border:0;border-left:3px solid var(--accent);padding:19px 22px;background:var(--base);border-radius:0 12px 12px 0;font-size:18px;line-height:1.9}.quote p+p{margin-top:16px}.quote .quote-end{font-size:15px;color:var(--sub)}.quote-label{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;font-size:13px;font-weight:750;color:var(--deep)}.quote-label .btn{font-weight:500}.fine{font-size:12px;color:var(--sub);margin-top:12px}.success-list{list-style:none;padding:0;margin:12px 0 0}.success-list li{display:flex;gap:12px}.success-list li::before{content:'✓';color:var(--good);font-weight:800}.data-table{width:100%;border-collapse:collapse;border:1px solid var(--line);background:var(--surface);font-size:14px}.data-table th,.data-table td{border-bottom:1px solid var(--line);padding:15px 17px;text-align:left;vertical-align:top}.data-table th{background:var(--base);font-size:13px;color:var(--sub);font-weight:750}.data-table td:first-child{font-weight:700}.data-table th:first-child{width:25%}.table-wrap{border-radius:15px;overflow:hidden;border:1px solid var(--line)}.table-wrap .data-table{border:0}
+.script-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px;flex-wrap:wrap}.segmented{display:inline-flex;padding:4px;border:1px solid var(--line);background:var(--surface);border-radius:12px;gap:4px}.segmented button{padding:10px 19px;min-height:46px;border:0;border-radius:8px;background:transparent;color:var(--sub);font-size:15px;font-weight:750}.segmented button[aria-pressed="true"]{background:var(--deep);color:var(--on-accent)}.step-nav{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px;margin-bottom:18px}.step-nav button{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 6px;min-height:63px;font-size:12px;color:var(--sub);line-height:1.55}.step-nav button span{display:block;font-family:Georgia,serif;font-size:19px}.step-nav button[aria-current="step"]{border-color:var(--accent);color:var(--deep);background:var(--accent-soft);font-weight:750}.script-step{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:20px}.step-head{display:flex;justify-content:space-between;gap:20px;align-items:start;padding:24px 28px;border-bottom:1px solid var(--line)}.step-head h3{font-size:23px;margin:5px 0 0}.step-eyebrow{font-size:12px;letter-spacing:.08em;color:var(--accent);font-weight:750}.step-time{white-space:nowrap;color:var(--sub);font-size:13px;border:1px solid var(--line);border-radius:7px;padding:6px 10px}.step-body{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(210px,.85fr);gap:28px;padding:28px}.step-aside{border-left:1px solid var(--line);padding-left:23px;font-size:14px}.step-aside h4{font-size:13px;color:var(--deep);margin-bottom:9px}.step-aside p,.step-aside li{font-size:14px}.step-aside section+section{margin-top:23px}.step-aside ol{padding-left:1.2em}.ask{margin-top:20px;padding:17px 19px;border:1px solid var(--line);border-radius:12px}.ask-label{font-size:12px;color:var(--accent);font-weight:750;margin-bottom:6px}.ask p{font-size:16px}.step-bottom{padding:16px 28px;border-top:1px solid var(--line);background:var(--base);font-size:14px}.step-bottom strong{color:var(--deep);margin-right:10px}.step-controls{display:flex;justify-content:space-between;align-items:center;gap:10px}.step-controls .step-indicator{font-size:13px;color:var(--sub)}.deck-title{margin:20px 0}.js-ready .deck-title{display:none}.script-tip{font-size:13px;color:var(--sub);margin:16px 0}.speech-only .step-aside,.speech-only .step-bottom{display:none}.speech-only .step-body{display:block}.speech-only .quote{font-size:clamp(20px,2.2vw,25px)}.speech-only .step-head{padding-bottom:18px}.detail-note{margin-top:18px}details{border:1px solid var(--line);border-radius:13px;background:var(--surface);overflow:hidden}details+details{margin-top:12px}summary{cursor:pointer;list-style:none;min-height:58px;padding:16px 48px 16px 20px;position:relative;font-weight:700;font-size:15px}summary::-webkit-details-marker{display:none}summary::after{content:'＋';position:absolute;right:18px;top:15px;color:var(--accent)}details[open]>summary::after{content:'−'}details[open]>summary{border-bottom:1px solid var(--line)}.detail-body{padding:18px 20px;font-size:15px}.detail-body h4{margin-top:17px}.detail-body h4:first-child{margin-top:0}.faq-answer{font-size:17px;line-height:1.9;margin-bottom:16px}.next-action{border-top:1px solid var(--line);padding-top:13px;font-size:14px;color:var(--sub)}.next-action strong{color:var(--deep)}
+.check-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.check-progress{display:flex;align-items:center;gap:14px;color:var(--good);font-size:13px;font-weight:750;margin:15px 0}.check-track{height:6px;border-radius:10px;flex:1;overflow:hidden;background:var(--accent-soft)}.check-fill{height:100%;background:var(--good);width:0;transition:width .2s}.checklist{list-style:none;padding:0;margin:0}.checklist li{margin:0;border-top:1px solid var(--line)}.checklist label{display:flex;gap:13px;padding:16px 3px;cursor:pointer;align-items:flex-start;font-size:15px}.checklist input{accent-color:var(--accent);width:22px;height:22px;flex:0 0 22px;margin:3px 0}.checklist label:has(input:checked){color:var(--sub)}.checklist label:has(input:checked) strong{color:var(--good)}.checklist small{display:block;margin-top:3px}.numbered{list-style:none;counter-reset:item;padding:0;margin:0}.numbered>li{position:relative;counter-increment:item;padding:23px 25px 23px 77px;background:var(--surface);border:1px solid var(--line);border-radius:15px;margin-top:14px}.numbered>li:first-child{margin-top:0}.numbered>li::before{content:counter(item,decimal-leading-zero);position:absolute;left:23px;top:21px;font-family:Georgia,serif;font-size:26px;color:var(--accent)}.numbered h3{font-size:18px}.numbered p,.numbered li{font-size:15px}.roles{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}.role-item{padding:15px;border-radius:10px;background:var(--base);font-size:14px}.role-item strong{display:block;margin-bottom:6px;font-size:12px;color:var(--deep)}.mini-label{font-size:12px;font-weight:750;color:var(--accent);letter-spacing:.07em;display:block;margin-bottom:5px}.money-flow{border:1px solid var(--line);border-radius:16px;background:var(--surface);padding:23px}.money-origin{text-align:center;padding-bottom:17px;font-weight:750}.money-branches{display:grid;grid-template-columns:1.3fr 1fr;gap:16px}.money-branch{position:relative;border-top:3px solid var(--gold);background:var(--gold-soft);padding:18px;border-radius:0 0 10px 10px}.money-branch:last-child{border-color:var(--accent);background:var(--base)}.money-branch strong{display:block;font-size:18px}.money-branch p{font-size:13px;color:var(--sub);margin-top:6px}.glossary{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0}.glossary>div{background:var(--surface);border:1px solid var(--line);padding:21px;border-radius:14px}.glossary dt{font-size:17px;font-weight:750;color:var(--deep)}.glossary dd{margin:8px 0 0;font-size:14px}.record-template{background:var(--base);padding:22px;border-radius:12px;white-space:pre-wrap;font-family:var(--font);font-size:14px;line-height:2;overflow-wrap:anywhere}.toast{position:fixed;bottom:25px;left:50%;transform:translateX(-50%);z-index:100;background:var(--ink);color:var(--on-accent);border-radius:10px;padding:13px 20px;font-size:14px;max-width:calc(100% - 32px);box-shadow:0 4px 16px rgba(36,31,51,.15)}.print-only{display:none}.copy-fallback{position:fixed;inset:0;background:rgba(36,31,51,.55);z-index:100;display:grid;place-items:center;padding:20px}.copy-fallback-card{width:100%;max-width:640px;background:var(--surface);border-radius:20px;padding:26px;max-height:85vh;overflow:auto}.copy-fallback textarea{width:100%;min-height:230px;resize:vertical;border:1px solid var(--line);border-radius:10px;padding:15px;font:inherit;color:var(--ink);background:var(--base)}.highlight-target{outline:3px solid var(--accent);outline-offset:5px}.no-script{margin:16px;padding:16px;background:var(--gold-soft);color:var(--warn)}.use-note{display:flex;gap:12px;align-items:baseline;margin:18px 0 0;font-size:13px;color:var(--sub)}
+@media(min-width:901px){.panel{scroll-margin-top:105px}}
+@media(max-width:1150px){:root{--side-w:214px}.main{padding:30px 25px 55px}.topbar{padding:0 22px;gap:15px}.brand-meta{display:none}.search-wrap{width:260px}.hero{grid-template-columns:1.2fr 1fr;gap:20px}.hero-copy{padding:30px 0 30px 25px}.hero-art{padding:28px 22px}.hero h1{font-size:33px}.cards{gap:12px}.card{padding:21px}.step-body{gap:22px;padding:23px}.step-aside{padding-left:20px}}
+@media(max-width:900px){:root{--header-h:76px}.topbar{height:auto;min-height:76px;padding:12px 20px;flex-wrap:wrap;gap:12px}.brand-name{font-size:21px}.header-tools{gap:8px}.search-wrap{width:250px}.sidebar{position:relative;top:auto;width:100%;bottom:auto;display:block;padding:10px 18px;border-right:0;border-bottom:1px solid var(--line)}.nav-caption,.sidebar-foot{display:none}.nav-list{flex-direction:row;overflow-x:auto;gap:7px;padding:3px 2px 8px}.nav-link{padding:10px 13px;font-size:13px;min-height:44px}.nav-num{font-size:14px;min-width:15px}.main{margin-left:0;padding:26px 25px 50px}.hero h1{font-size:clamp(30px,4.5vw,39px)}.hero-copy{padding:31px 0 31px 28px}.step-body{grid-template-columns:1.5fr 1fr}.print-btn{padding:10px 12px}.quote{font-size:17px}}
+@media(max-width:620px){html{scroll-padding-top:150px}.topbar{padding:10px 15px;gap:8px}.brand-name{font-size:20px}.brand-mark{height:33px;width:30px;font-size:22px}.brand-meta{display:none}.header-tools{gap:6px}.header-tools>.btn{padding:8px 11px;font-size:12px;min-height:40px}.search-wrap{width:100%;order:3}.search-wrap input{min-height:43px}.search-results{width:100%;max-height:60vh;left:0;right:auto}.search-clear{height:39px}.sidebar{padding:6px 12px}.main{padding:24px 16px 42px}.page-head{margin-bottom:20px}.page-head p{font-size:14px}.hero{grid-template-columns:1fr;gap:0;border-radius:19px}.hero-copy{padding:27px 24px}.hero h1{font-size:32px;line-height:1.55;margin:14px 0 17px}.hero-art{padding:24px}.hero-art h2{margin-bottom:9px}.hero-art .route-point{padding:8px 0}.route-line{height:10px}.hero-art .art-note{margin-top:12px;padding-top:12px}.stat-row{padding:15px 0;gap:0}.stat{padding:0 12px}.stat strong{font-size:20px}.stat span{font-size:11px}.stat strong small{font-size:12px;margin-left:3px}.cards,.two-col,.glossary{grid-template-columns:1fr}.card{padding:21px}.section-block{margin-top:25px}.section-title{align-items:start}.section-title h2{font-size:20px}.section-title .small{font-size:12px}.flow{flex-direction:column;gap:7px}.flow-arrow{transform:rotate(90deg);line-height:1}.flow-box{text-align:left;padding:15px 18px}.flow-box b{display:inline;margin-right:10px}.flow-box span{display:inline}.step-nav{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.step-nav button{min-height:56px;padding:7px 4px;font-size:11px}.step-nav button span{font-size:17px}.step-head{padding:20px;gap:10px}.step-head h3{font-size:21px}.step-time{font-size:11px;padding:5px 7px}.step-body{grid-template-columns:1fr;padding:20px;gap:23px}.step-aside{border-left:0;border-top:1px solid var(--line);padding:20px 0 0}.step-aside section+section{margin-top:17px}.step-bottom{padding:15px 20px}.quote{padding:17px;font-size:17px}.script-toolbar{gap:12px}.segmented button{padding:9px 14px;min-height:44px;font-size:14px}.speech-btn{font-size:12px;padding:8px 11px}.ask{padding:15px}.step-controls{flex-wrap:wrap}.step-controls .btn{padding:11px 14px}.step-indicator{order:3;flex-basis:100%;text-align:center}.roles,.money-branches{grid-template-columns:1fr}.numbered>li{padding:20px 19px 20px 63px}.numbered>li::before{left:18px;font-size:23px;top:18px}.numbered h3{font-size:17px}.check-head{align-items:start}.check-head h3{font-size:18px}.data-table,.data-table tbody,.data-table tr,.data-table td{display:block;width:100%}.data-table thead{display:none}.data-table tr{padding:15px 17px;border-bottom:1px solid var(--line)}.data-table td{border:0;padding:5px 0}.data-table td:first-child{color:var(--deep);font-size:15px}.data-table td[data-label]::before{content:attr(data-label) '：';font-size:12px;font-weight:750;color:var(--sub)}.data-table tr:last-child{border-bottom:0}.section-foot{font-size:12px}.use-note{display:block}.use-note .pill{margin-bottom:6px}.checklist label{font-size:14px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important;animation:none!important}}
+.search-clear{width:44px;height:44px;top:0;right:0}.search-wrap input{min-height:46px}.header-tools>.btn{min-height:44px}
+.skip{opacity:0;pointer-events:none}.skip:focus{opacity:1;pointer-events:auto}
+@media(max-width:900px){.sidebar{position:sticky;top:var(--actual-header-h,76px);z-index:25}.nav-list{scrollbar-width:thin}}
+body.large-type .main p,body.large-type .main li,body.large-type .data-table,body.large-type .glossary dd,body.large-type .detail-body{font-size:18px}body.large-type .main .quote{font-size:22px}body.large-type .main .quote p{font-size:inherit}body.large-type .main .fine,body.large-type .main .small,body.large-type .main small{font-size:14px}body.large-type .step-aside p,body.large-type .step-aside li{font-size:16px}
+@media print{@page{size:A4;margin:16mm 15mm}html{scroll-behavior:auto}body{font-size:10pt;line-height:1.7;background:#fff;color:#241f33}.topbar,.sidebar,.no-print,.step-controls,.step-nav,.script-toolbar,.search-results,.toast,.copy-fallback,.skip,.no-script{display:none!important}.main{margin:0;padding:0;min-height:0}.content{max-width:none}.panel[hidden],.script-deck[hidden],.script-step[hidden]{display:block!important}.panel{break-before:page}.panel#start{break-before:auto}.print-only,.deck-title,.js-ready .deck-title{display:block!important}.print-title{font-size:10pt;color:var(--sub);border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:15px}.hero{grid-template-columns:1.3fr 1fr;gap:15px;border-color:var(--line);break-inside:avoid}.hero-copy{padding:22px}.hero h1{font-size:25pt;margin:10px 0}.hero-art{padding:20px;background:var(--base);color:var(--ink)}.hero-art span,.hero-art .art-note{color:var(--sub)}.route-point b{border-color:var(--line)}.route-line{background:var(--line)}.hero-art .art-note{border-color:var(--line)}.hero-copy>.btn-row{display:none}.card,.callout,.flow,.stat-row,.money-flow,.glossary>div{break-inside:avoid}.card{padding:16px}.cards{gap:10px}.card p,.numbered p,.numbered li,.callout p,.detail-body{font-size:10pt}.stat-row{margin-top:15px;padding:13px 0}.stat strong{font-size:19pt}.section-block{margin-top:21px}.section-title h2,h2{font-size:16pt}h1{font-size:22pt}h3{font-size:13pt}h2,h3,h4{break-after:avoid}.script-step{break-inside:avoid;overflow:visible;border-radius:10px;margin-bottom:18px}.step-head{padding:14px 18px}.step-head h3{font-size:16pt}.step-body{grid-template-columns:1fr;padding:17px;gap:15px}.step-aside,.speech-only .step-aside{display:block;border:0;border-top:1px solid var(--line);padding:13px 0 0;columns:2;column-gap:20px}.step-aside section{break-inside:avoid}.step-aside section+section{margin-top:12px}.step-aside h4,.step-aside p,.step-aside li{font-size:9pt}.quote,.speech-only .quote{font-size:11pt;line-height:1.8;padding:12px 16px}.quote p+p{margin-top:8px}.quote-label{font-size:9pt}.quote-label .btn{display:none}.step-bottom,.speech-only .step-bottom{display:block;font-size:9pt;padding:11px 17px}.ask{margin-top:12px;padding:12px}.ask p{font-size:10pt}.step-time{font-size:9pt}.numbered>li{break-inside:avoid;padding:18px 18px 18px 60px}.numbered>li::before{left:18px;top:17px}.roles{gap:12px}.role-item{font-size:9pt;padding:12px}.data-table{font-size:9pt}.data-table th,.data-table td{padding:10px}.data-table tr{break-inside:avoid}details{break-inside:avoid;margin-bottom:10px}summary{padding:12px 16px;font-size:11pt;min-height:0}summary::after{display:none}.detail-body{padding:13px 16px}.faq-answer{font-size:11pt}.checklist label{font-size:10pt;padding:12px 0}.checklist small{font-size:9pt}.check-head .btn{display:none}.btn-row.no-print{display:none}.record-template{font-size:9pt;line-height:1.8;padding:15px}.fine,.small,small{font-size:9pt}.glossary{gap:10px}.glossary>div{padding:14px}.glossary dt{font-size:11pt}.glossary dd{font-size:9pt}.highlight-target{outline:0}.page-head{margin-bottom:20px}.page-head p{font-size:10pt}.flow-box{padding:13px 10px}.flow-box b{font-size:12pt}.flow-box span{font-size:9pt}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+@media print{
+  @page{@bottom-center{content:"ミセチョク 店舗営業マニュアル · " counter(page);font-family:sans-serif;font-size:9px;color:#5f5876}}
+  .panel{break-before:auto;margin-top:24px}.panel#start{margin-top:0}.page-head{break-inside:avoid;break-after:avoid}
+  #start .section-block{margin-top:16px}#start .section-block:last-child{display:none}
+  #start .card{padding:12px}#start .card-num{display:none}#start .quote{font-size:10pt;line-height:1.7;padding:10px 14px}
+  #start .callout{padding:12px 15px}#start .money-flow{padding:15px}#start .money-branch{padding:12px}
+  .card-num{font-size:22px;margin-bottom:5px}.cards .card{padding:12px}.cards .card h3{font-size:12pt}
+  .numbered>li{padding-top:14px;padding-bottom:14px}.numbered>li::before{top:13px}
+  .section-foot{margin-top:15px;padding-top:12px}.section-title{margin-bottom:10px}
+}
+.reader-dock,.reader-hint{display:none}
+html.js-ready{scroll-behavior:auto}
+#manual-search::-webkit-search-cancel-button{-webkit-appearance:none}
+.step-nav button .step-name{font-family:var(--font);font-size:inherit}
+.reader-sheet{width:min(640px,calc(100% - 40px));max-height:calc(100vh - 48px);max-height:calc(100dvh - 48px);padding:24px;border:1px solid var(--line);border-radius:22px;background:var(--surface);color:var(--ink);overscroll-behavior:contain;overflow:auto}
+.reader-sheet::backdrop{background:rgba(36,31,51,.5)}
+body.reader-sheet-open{overflow:hidden}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:20px}.sheet-head h2{font-size:22px;margin:0}.sheet-head .btn{flex-shrink:0}.sheet-head .mini-label{font-size:13px}
+.menu-links{display:grid;gap:8px}.menu-link{display:flex;align-items:center;gap:14px;min-height:72px;padding:13px 16px;text-decoration:none;color:var(--ink);background:var(--base);border:1px solid transparent;border-radius:12px}.menu-link[aria-current="page"]{border-color:var(--accent);background:var(--accent-soft);color:var(--deep)}.menu-link .nav-num{font-size:22px;color:var(--accent)}.menu-label{display:block}.menu-label strong{font-size:16px;display:block}.menu-label small{font-size:13px;display:block;margin-top:2px}.sheet-foot{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-top:20px;border-top:1px solid var(--line);padding-top:18px}.sheet-foot p{font-size:14px;color:var(--sub);margin:0}.sheet-foot .btn{flex-shrink:0}
+.search-sheet .search-wrap{width:100%;order:initial}.search-sheet input{font-size:16px;min-height:52px;padding:12px 50px 12px 14px}.search-sheet .search-clear{height:52px;width:48px}.search-sheet .search-results{position:static;width:100%;max-height:none;margin-top:14px;padding:0;border:0;box-shadow:none;overflow:visible}.search-sheet .search-result{padding:16px 4px;border-radius:0;border-bottom:1px solid var(--line)}.search-result strong{font-size:16px}.search-result span{font-size:14px;margin-top:5px}.search-help{font-size:14px;color:var(--sub);margin:16px 0 0}.search-wrap:has(.search-results:not([hidden]))+.search-help{display:none}
+@media screen and (max-width:1180px),screen and (hover:none) and (pointer:coarse){
+  :root{--dock-h:70px;--header-h:68px;--reader-bottom:calc(var(--dock-h) + env(safe-area-inset-bottom,0px))}
+  html{-webkit-text-size-adjust:100%;scroll-padding-bottom:calc(var(--reader-bottom) + 88px)}
+  .js-ready .sidebar{display:none}.sidebar{position:static;top:auto;width:100%;border-right:0}.sidebar .nav-list{flex-direction:row;overflow-x:auto}.sidebar .nav-caption,.sidebar-foot{display:none}
+  .topbar{height:auto;min-height:68px;padding:calc(10px + env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) 10px max(20px,env(safe-area-inset-left,0px));flex-wrap:nowrap;gap:12px}.brand-meta{display:none}.header-tools{gap:8px;margin-left:auto}.header-tools .btn{min-height:48px;font-size:14px;padding:10px 14px}.header-tools .print-btn{display:none}
+  .main{margin-left:0;padding:26px max(24px,env(safe-area-inset-right,0px)) calc(var(--reader-bottom) + 30px) max(24px,env(safe-area-inset-left,0px))}.content{max-width:1040px}.panel{scroll-margin-top:0}.page-head p,.card p,.callout p,.numbered p,.numbered li,.step-aside p,.step-aside li,.checklist label,.detail-body,.next-action,.role-item,.glossary dd,.money-branch p,.record-template{font-size:16px}.fine,.small,small,.flow-note,.section-foot,.use-note,.script-tip{font-size:14px;line-height:1.8}.step-aside h4,.role-item strong,.quote-label{font-size:14px}.quote{font-size:19px;line-height:1.95}.faq-answer{font-size:18px;line-height:1.95}.data-table{font-size:16px}.btn,.btn-sm{min-height:48px;font-size:14px}.checklist label{padding:18px 3px}.section-block{margin-top:28px}
+  .reader-hint{display:block;color:var(--sub);font-size:14px;margin:-3px 0 16px}.reader-dock{position:fixed;z-index:40;bottom:0;left:0;right:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));height:var(--reader-bottom);padding:5px max(12px,env(safe-area-inset-right,0px)) calc(5px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));border-top:1px solid var(--line);background:var(--surface);box-shadow:0 -4px 20px rgba(36,31,51,.06)}
+  .reader-dock a,.reader-dock button{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px;min-height:54px;border:0;border-radius:10px;padding:3px;background:transparent;color:var(--sub);text-decoration:none;font-size:13px;font-weight:750;line-height:1.4}.reader-dock [aria-current="page"]{background:var(--accent-soft);color:var(--deep)}.dock-symbol{height:25px;line-height:25px;font-size:25px;font-weight:400}.dock-text-symbol{font-size:20px;font-weight:750}.dock-search-icon{position:relative;width:24px}.dock-search-icon::before{content:'';position:absolute;left:2px;top:2px;width:13px;height:13px;border:2px solid currentColor;border-radius:50%}.dock-search-icon::after{content:'';position:absolute;left:17px;top:17px;width:8px;height:2px;border-radius:1px;background:currentColor;transform:rotate(45deg);transform-origin:left center}
+  body[data-active-panel="demo"] .main{padding-bottom:calc(var(--reader-bottom) + 98px)}.step-controls{position:fixed;z-index:39;bottom:var(--reader-bottom);left:0;right:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:12px;max-width:none;margin:0;padding:10px max(24px,env(safe-area-inset-right,0px)) 12px max(24px,env(safe-area-inset-left,0px));border-top:1px solid var(--line);background:var(--base)}.step-controls .step-indicator{display:none}.step-controls .btn{min-height:48px;font-size:16px}.step-nav{display:flex;overflow-x:auto;gap:8px;padding:3px 2px 10px;scrollbar-width:thin;scroll-snap-type:x proximity;overscroll-behavior-x:contain}.step-nav button{display:flex;align-items:center;gap:9px;flex:0 0 auto;min-height:52px;padding:10px 14px;font-size:14px;scroll-snap-align:start;white-space:nowrap}.step-nav button .step-number{font-size:21px}.step-nav button .step-name{font-size:14px}.step-head h3{font-size:24px}.step-body{grid-template-columns:minmax(0,1.45fr) minmax(250px,1fr)}
+  .reader-sheet{width:min(680px,calc(100% - 32px));max-height:calc(100dvh - 32px);padding:24px}.menu-links{grid-template-columns:repeat(2,minmax(0,1fr))}.search-sheet{margin:calc(16px + env(safe-area-inset-top,0px)) auto auto}.search-sheet .sheet-head{margin-bottom:18px}
+  .toast{bottom:calc(var(--reader-bottom) + 86px)}.copy-fallback-card{max-height:calc(100dvh - 40px)}.copy-fallback textarea{font-size:16px}
+}
+@media screen and (max-width:900px){
+  .step-body{grid-template-columns:1fr;padding:24px;gap:24px}.step-aside{border-left:0;border-top:1px solid var(--line);padding:23px 0 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}.step-aside section+section{margin-top:0}.step-bottom{font-size:16px}.speech-only .step-aside{display:none}
+  .data-table,.data-table tbody,.data-table tr,.data-table td{display:block;width:100%}.data-table thead{display:none}.data-table tr{padding:17px 20px;border-bottom:1px solid var(--line)}.data-table td{border:0;padding:5px 0;font-size:16px}.data-table td:first-child{color:var(--deep);font-size:17px;margin-bottom:6px}.data-table td[data-label]::before{content:attr(data-label) '：';font-size:14px;font-weight:750;color:var(--sub)}.data-table tr:last-child{border-bottom:0}
+}
+@media screen and (max-width:620px){
+  .topbar{min-height:64px;padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));gap:8px}.header-search{display:none}.header-tools .btn{padding:10px;white-space:nowrap}.brand-name{font-size:20px}.brand-mark{width:29px;height:33px}.brand{gap:9px}
+  .main{padding:20px max(14px,env(safe-area-inset-right,0px)) calc(var(--reader-bottom) + 28px) max(14px,env(safe-area-inset-left,0px))}.page-kicker{font-size:12px;margin-bottom:12px;letter-spacing:.06em}.reader-hint{font-size:13px}.hero-copy{padding:25px 20px}.hero h1{font-size:clamp(27px,7.8vw,36px);line-height:1.65;letter-spacing:0;margin:14px 0 18px}.hero-copy>p{font-size:16px}.hero-copy>p br{display:none}.hero-copy .btn-row{display:grid;grid-template-columns:1fr;gap:10px}.hero-copy .btn{min-height:52px;font-size:16px}.hero-art{padding:22px 20px}.hero-art h2{font-size:17px}.hero-art .route-point{padding:10px 0}.route-point span,.hero-art .art-note{font-size:14px}.stat{padding:0 10px}.stat span{font-size:12px}.stat strong{font-size:21px}.stat strong small{display:block;font-size:12px;margin:0}.stat-row{padding:15px 0}.use-note{font-size:14px}
+  .cards,.two-col,.glossary{grid-template-columns:1fr}.card{padding:20px 18px}.callout{padding:18px 16px}.section-title{flex-wrap:wrap;gap:8px}.section-title h2{font-size:21px}.section-title .small{font-size:14px}.money-flow{padding:18px}.money-branch{padding:17px}.card-num{font-size:28px;margin-bottom:8px}
+  .script-toolbar{display:grid;grid-template-columns:1fr;gap:10px}.segmented{display:grid;grid-template-columns:1fr 1fr}.segmented button{min-height:48px;font-size:16px;padding:10px}.speech-btn{width:100%;min-height:48px;font-size:14px}.step-head{display:block;padding:20px 18px}.step-head h3{font-size:23px;line-height:1.6}.step-time{display:inline-block;font-size:13px;margin-top:12px}.step-eyebrow{font-size:13px;letter-spacing:.04em}.step-body{padding:20px 16px;gap:22px}.step-aside{display:block;padding-top:21px}.step-aside section+section{margin-top:22px}.step-bottom{padding:17px 18px;font-size:16px}.step-bottom strong{display:block;margin-bottom:4px}.quote{padding:17px 14px;font-size:18px;line-height:2}.quote-label{font-size:14px;gap:8px}.quote-label .btn{min-height:48px}.ask{padding:17px 15px}.ask-label{font-size:14px}.ask p{font-size:17px}.step-controls{padding:8px max(14px,env(safe-area-inset-right,0px)) 10px max(14px,env(safe-area-inset-left,0px));gap:10px}
+  .numbered>li{padding:54px 18px 20px}.numbered>li::before{left:18px;top:15px;font-size:23px}.numbered h3{font-size:19px}.roles{grid-template-columns:1fr;gap:12px}.role-item{padding:17px}.role-item strong{font-size:14px}.check-head{flex-wrap:wrap;align-items:center}.checklist small{font-size:14px}.checklist label{font-size:16px}.check-progress{font-size:14px}.data-table tr{padding:18px}.glossary>div{padding:20px}summary{font-size:17px;padding:18px 44px 18px 18px;min-height:64px}.detail-body{padding:19px 18px}.record-template{padding:18px;font-size:16px}
+  .reader-sheet{width:100%;max-width:none;max-height:calc(100dvh - 20px - env(safe-area-inset-top,0px));margin:auto 0 0;border-radius:22px 22px 0 0;padding:22px max(18px,env(safe-area-inset-right,0px)) calc(22px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px))}.sheet-head h2{font-size:21px}.sheet-head .mini-label{font-size:12px}.menu-links{grid-template-columns:1fr;gap:8px}.menu-link{min-height:72px;padding:12px 14px;gap:13px}.menu-label small{font-size:13px}.sheet-foot{flex-wrap:wrap}.sheet-foot .btn{width:100%}.search-sheet{margin:calc(10px + env(safe-area-inset-top,0px)) auto auto;width:calc(100% - 20px);border-radius:19px;max-height:calc(100dvh - 20px - env(safe-area-inset-top,0px));padding:20px 16px}.search-sheet .sheet-head h2{font-size:22px}
+}
+@media screen and (max-height:500px) and (max-width:1180px){
+  :root{--dock-h:58px}.topbar{position:static}.reader-dock a,.reader-dock button{min-height:46px;flex-direction:row;gap:8px;font-size:14px}.step-controls{padding-top:6px;padding-bottom:6px}.step-controls .btn{min-height:44px}.reader-sheet{max-height:calc(100dvh - 16px);margin:8px auto}.menu-links{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media print{.reader-dock,.reader-sheet,.reader-hint{display:none!important}}
+@media screen{
+  .search-sheet{max-height:calc(var(--reader-viewport-height,100dvh) - 32px - env(safe-area-inset-top,0px))}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">本文へ進む</a>
+<header class="topbar">
+  <a class="brand" href="#start" aria-label="ミセチョク 営業マニュアルのはじめに"><span class="brand-mark" aria-hidden="true">M</span><span><span class="brand-name">ミセチョク</span><span class="brand-meta">　店舗営業マニュアル</span></span></a>
+  <div class="header-tools no-print"><button class="btn btn-quiet" id="font-toggle" type="button" aria-pressed="false">文字を大きく</button><button class="btn print-btn" id="print-button" type="button">全編を印刷</button><button class="btn header-search" type="button" data-open-search aria-haspopup="dialog" aria-controls="search-dialog">検索</button></div>
+</header>
+<aside class="sidebar no-print"><div class="nav-caption">使う場面から選ぶ</div><nav class="nav-list" aria-label="マニュアルの目次">
+<a class="nav-link" href="#start" aria-current="page"><span class="nav-num">01</span>はじめに</a>
+<a class="nav-link" href="#demo"><span class="nav-num">02</span>商談で使う台本</a>
+<a class="nav-link" href="#prepare"><span class="nav-num">03</span>訪問前の準備</a>
+<a class="nav-link" href="#register"><span class="nav-num">04</span>登録のお手伝い</a>
+<a class="nav-link" href="#help"><span class="nav-num">05</span>困ったとき</a>
+<a class="nav-link" href="#after"><span class="nav-num">06</span>商談のあと</a>
+<a class="nav-link" href="#words"><span class="nav-num">07</span>言葉の早見表</a>
+<a class="nav-link" href="#team"><span class="nav-num">08</span>営業責任者の確認</a>
+</nav><div class="sidebar-foot"><strong>採用のお金を、働く本人へ。</strong>説明する人のための手引き<br>第1版 · 2026年9月12日<br><span class="small">このファイルだけで閲覧できます</span></div></aside>
+<noscript><style>.header-tools,.search-wrap,.script-toolbar,.step-controls,.reader-dock,.reader-hint,[data-copy],[data-reset-checks],#faq-expand{display:none!important}</style><div class="no-script">すべての章を続けて表示しています。目次から移動できます。検索・台本の切り替え・チェックの保存には、ブラウザのJavaScriptを有効にしてください。</div></noscript>
+<main class="main" id="main" tabindex="-1"><div class="content">
+<div class="print-only print-title">ミセチョク｜店舗営業マニュアル　　第1版 · 2026年9月12日</div>
+
+<section class="panel" id="start" data-panel data-title="はじめに">
+<div class="page-kicker"><span class="kicker-rule"></span>01 / はじめに</div>
+<p class="reader-hint no-print">下のメニューから、台本・登録手順をすぐに開けます。</p>
+<div class="hero">
+<div class="hero-copy"><span class="pill">店舗営業マニュアル</span><h1>採用のお金を、<br><em>働く本人の力に。</em></h1><p>ミセチョクが目指す採用のあり方を伝え、<br>「使ってみたい」を、その場の登録につなげる。</p><p>初めて担当する方も、準備から商談、登録のお手伝いまで、この順番で進めれば大丈夫です。</p><div class="btn-row" style="margin-top:24px"><a class="btn btn-primary" href="#demo">商談の台本を開く <span aria-hidden="true">→</span></a><a class="btn" href="#prepare">訪問前の準備へ</a></div></div>
+<div class="hero-art" aria-label="ミセチョクの仕組み。直接出会う、本人に還元する、届くまで確かめる。"><h2>この思想を、仕組みで実現する。</h2><div class="route-point"><b>1</b><div><strong>直接、出会う。</strong><span>お店とキャストが、自分で相手を選ぶ</span></div></div><div class="route-line"></div><div class="route-point"><b>2</b><div><strong>本人に、還元する。</strong><span>採用費を、入店ボーナスに充てる</span></div></div><div class="route-line"></div><div class="route-point"><b>3</b><div><strong>届くまで、確かめる。</strong><span>申請から受領まで、進み具合を確認する</span></div></div><p class="art-note">本人への報酬と運営手数料は、分けて説明します。</p></div>
+</div>
+<div class="stat-row"><div class="stat"><span>機能を見せる時間</span><strong>8<small>分</small></strong></div><div class="stat"><span>登録のお手伝い</span><strong>5〜8<small>分</small></strong></div><div class="stat"><span>忙しい店舗には</span><strong>3<small>分版も用意</small></strong></div></div>
+<div class="use-note"><span class="pill">営業担当者用</span><span>お店には実際のアプリ画面を見せます。このマニュアルは、話す順番と操作を確認するために使ってください。時間は目安です。</span></div>
+<section class="section-block" id="purpose" data-search-title="なぜミセチョクをつくったのか・スカウトバックの思想"><div class="section-title"><h2>最初に、この考え方を覚える</h2></div><div class="card"><div class="quote-label">30秒で伝える言葉 <button type="button" class="btn btn-sm no-print" data-copy="mission-copy">言葉をコピー</button></div><blockquote class="quote" id="mission-copy"><p>ミセチョクが変えたいのは、高額なスカウトバックに頼ることが当たり前になっている採用のあり方です。</p><p>お店とキャストが直接つながり、採用にかけるお金を、働く本人への採用報酬として還元できるようにしたい。そのために、出会いから本人が報酬を受け取るまでを、一つのサービスにしています。</p></blockquote><p class="fine">運営のメッセージを踏まえた営業用の言い方です。運営者の原文引用ではありません。</p></div><div class="callout" style="margin-top:16px"><strong>説明の主役は「迎え入れるキャスト本人」です。</strong><p>お店が直接相手を選び、その人のために採用費を使えることを伝えます。個々のスカウト会社を非難する説明にはせず、費用負担や紹介への依存を変える選択肢として紹介します。</p></div></section>
+<section class="section-block" id="money-story" data-search-title="採用のお金の流れ・ボーナスと運営手数料"><div class="section-title"><h2>お金の流れは、分けて伝える</h2></div><div class="money-flow"><div class="money-origin">店舗が採用にかけるお金</div><div class="money-branches"><div class="money-branch"><span class="mini-label">働く本人へ</span><strong>入店ボーナス・採用報酬</strong><p>求人で金額と条件を伝え、条件を満たした本人への報酬に充てます。</p></div><div class="money-branch"><span class="mini-label">サービスの運営へ</span><strong>運営手数料など</strong><p>本人への報酬と区別し、発生条件と店舗の支払総額を料金表で説明します。</p></div></div><p class="flow-note">報酬の受け取りには条件があります。採用費の全額が本人に渡る、という意味ではありません。</p></div></section>
+<section class="section-block" id="today-goal" data-search-title="今日のゴール・仮登録と求人公開の違い"><div class="section-title"><h2>今日のゴールは、この3つ</h2></div><div class="cards"><div class="card"><div class="card-num">01</div><h3>使う場面が浮かぶ</h3><p>店長から「この人に声をかけたい」「うちでも使えそう」という反応をもらう。</p></div><div class="card"><div class="card-num">02</div><h3>店舗登録を手伝う</h3><p>必要な情報と写真を入力し、店舗自身で使えるアカウントを作る。</p></div><div class="card"><div class="card-num">03</div><h3>次の作業が決まる</h3><p>書類の提出や求人条件の入力について、担当者と次回の日時を決める。</p></div></div><div class="callout-warn callout" style="margin-top:16px"><strong>「仮登録」は、求人を非公開にしたまま店舗アカウントを作ること。</strong><p>メールアドレスだけの登録ではありません。店舗情報と写真が必要です。求人を公開するのは、条件を整え、必要な許可証の承認が済んでからです。</p></div></section>
+<section class="section-block"><div class="section-title"><h2>初めて使う方へ</h2></div><div class="two-col"><a class="card jump-card" href="#prepare"><div><strong>訪問する前に</strong><span>実演画面・写真・料金表を用意する</span></div><b aria-hidden="true">→</b></a><a class="card jump-card" href="#words"><div><strong>知らない言葉が出たら</strong><span>キャスト、KEEP、認証などの意味を確認</span></div><b aria-hidden="true">→</b></a></div><p class="fine">「検索」から言葉を探せます。スマホ・タブレットでは、下の「目次」から全8章を選べます。「全編を印刷」では、すべての章と両方の台本を印刷できます。チェックはこの端末に保存できる場合だけ引き継がれます。</p></section>
+</section>
+
+<section class="panel" id="demo" data-panel data-title="商談で使う台本">
+<div class="page-head"><div class="page-kicker"><span class="kicker-rule"></span>02 / 商談で使う台本</div><h1>ひとつの出会いを、採用まで。</h1><p>実演用の候補者を一人選び、最後まで同じ人の話として進めます。「話す言葉」は、そのまま読んで使えます。</p></div>
+<div class="script-toolbar no-print"><div class="segmented" role="group" aria-label="台本の長さ"><button type="button" data-mode="full" aria-pressed="true">標準 8分</button><button type="button" data-mode="short" aria-pressed="false">短縮 3分</button></div><button class="btn speech-btn" id="speech-toggle" type="button" aria-pressed="false">話す言葉を大きく表示</button></div>
+<nav class="step-nav no-print" id="step-nav" aria-label="実演の場面"></nav>
+<div class="script-deck" id="deck-full" data-mode="full"><h2 class="deck-title">標準8分の台本</h2>
+
+<article class="script-step" id="full-1" data-step data-title="思想を伝える" data-time="0:00〜1:15" data-search-title="標準台本1 思想を伝える・採用の困りごと">
+<header class="step-head"><div><div class="step-eyebrow">場面 01 / 思想への共感</div><h3>なぜ、この仕組みをつくったのか。</h3></div><span class="step-time">0:00〜1:15</span></header>
+<div class="step-body"><div><div class="quote-label">話す言葉 <button class="btn btn-sm no-print" type="button" data-copy="speech-full-1">コピー</button></div><blockquote class="quote" id="speech-full-1"><p>ミセチョクが変えたいのは、高額なスカウトバックに頼ることが当たり前になっている採用のあり方です。</p><p>お店とキャストが直接つながり、採用にかけるお金を、働く本人への採用報酬として還元できるようにしたい。そのために、出会いから本人が報酬を受け取るまでを、一つのサービスにしています。</p><p>御店でどう使えるか、8分ほどでお見せします。表示するのは、実演用の店舗とキャストです。</p></blockquote><div class="ask"><div class="ask-label">相手に聞く</div><p>「いまの採用で一番負担に感じるのは、費用、出会える人数、条件の合い方、やり取りの手間のどのあたりでしょうか？」</p></div></div><aside class="step-aside"><section><h4>見せる画面</h4><p>店舗向け案内の「運営のメッセージ」。続けて、実演用店舗の写真を開く。</p></section><section><h4>すること</h4><ol><li>運営の文章は読み上げず、この台本で短く伝える。</li><li>相手の答えを一つ覚える。</li><li>「〇〇が負担なのですね」と受け止める。</li></ol></section><section><h4>会話が広がったら</h4><p>説明を急いで重ねない。採用条件は次の検索画面で聞けば大丈夫。</p></section></aside></div><div class="step-bottom"><strong>次へつなぐ</strong>「まず、キャストからお店がどう見えるかをご覧ください。」</div></article>
+
+<article class="script-step" id="full-2" data-step data-title="お店の魅力" data-time="1:15〜2:00" data-search-title="標準台本2 店舗写真・待遇・店長メッセージ">
+<header class="step-head"><div><div class="step-eyebrow">場面 02 / 自店に置き換える</div><h3>「うちの魅力も、こう伝えたい」。</h3></div><span class="step-time">1:15〜2:00</span></header><div class="step-body"><div><div class="quote-label">話す言葉 <button class="btn btn-sm no-print" type="button" data-copy="speech-full-2">コピー</button></div><blockquote class="quote" id="speech-full-2"><p>キャストには、こういう形でお店の写真や募集条件が伝わります。雰囲気に加えて、体験入店の条件や待遇、店長さんの考え方まで載せられます。</p><p>御店ならではの良さを、この写真とメッセージで伝えられます。</p></blockquote><div class="ask"><div class="ask-label">相手に聞く</div><p>「御店で、キャストさんからよく喜ばれる点は何ですか？」</p></div><div class="detail-note"><span class="mini-label">「客層が落ち着いている」と答えたら</span><p>「それは、写真と店長メッセージで伝えたいですね。どんな接客ができるかが、声をかけた相手にも伝わります。」</p></div></div><aside class="step-aside"><section><h4>見せる画面</h4><p>実演用店舗の共有ページ。写真、求人条件、店長メッセージ。</p></section><section><h4>すること</h4><ol><li>写真を一枚だけ切り替える。</li><li>下へゆっくり動かして待遇を見せる。</li><li>相手が話したお店の良さと結び付ける。</li></ol></section><section><h4>覚えておくこと</h4><p>全部の項目を説明しなくてよい。強みを一つ見つける。</p></section></aside></div><div class="step-bottom"><strong>次へつなぐ</strong>「お店からも、合いそうな方を探して声をかけられます。」</div></article>
+
+<article class="script-step" id="full-3" data-step data-title="候補者を探す" data-time="2:00〜3:30" data-search-title="標準台本3 キャスト検索・おすすめ・KEEP・接客タイプ">
+<header class="step-head"><div><div class="step-eyebrow">場面 03 / 候補者との出会い</div><h3>「この人と、話してみたい」。</h3></div><span class="step-time">2:00〜3:30</span></header><div class="step-body"><div><div class="quote-label">話す言葉 <button class="btn btn-sm no-print" type="button" data-copy="speech-full-3">コピー</button></div><blockquote class="quote" id="speech-full-3"><p>今、どんな働き方の方が一人加わると、一番助かりますか。</p><p>その条件を入れて、おすすめ順で見てみます。出勤の頻度や時間帯、経験など、登録された条件との一致を参考に、候補者を見比べられます。</p><p>気になる方はプロフィールを開いてみてください。ひとことや自己紹介にも、声をかけるきっかけがあります。</p></blockquote><div class="ask"><div class="ask-label">相手に一度、触ってもらう</div><p>「候補に残すなら、このKEEP〈キープ〉を押します。後から見返せますので、一人保存してみましょう。」</p></div></div><aside class="step-aside"><section><h4>見せる画面</h4><p>SEARCH〈検索〉 → 詳細検索 → おすすめ順 → プロフィール → KEEP〈保存〉。</p></section><section><h4>すること</h4><ol><li>条件は二〜三つから設定する。</li><li>並び順を「おすすめ（マッチ度が高い順）」にする。</li><li>用意した候補者を一人開く。</li></ol></section><section><h4>説明のポイント</h4><p>接客タイプや性格は理解の手がかり。おすすめ順は条件の一致を参考にした順番で、相性や採用成功の保証ではない。</p></section></aside></div><div class="step-bottom"><strong>次へつなぐ</strong>「では、この方に声をかける場面です。」</div></article>
+
+<article class="script-step" id="full-4" data-step data-title="直接話す" data-time="3:30〜4:45" data-search-title="標準台本4 トーク・定型文・面談候補日・直接スカウト">
+<header class="step-head"><div><div class="step-eyebrow">場面 04 / 直接つながる</div><h3>本人と条件を確かめ、面談へ。</h3></div><span class="step-time">3:30〜4:45</span></header><div class="step-body"><div><div class="quote-label">話す言葉 <button class="btn btn-sm no-print" type="button" data-copy="speech-full-4">コピー</button></div><blockquote class="quote" id="speech-full-4"><p>御店から本人に直接声をかけ、希望や条件を確かめられます。用意された文例を使い、相手のプロフィールに合わせた一文を添えると、声をかける理由も伝わります。</p><p>話が進んだら、体験入店・本入店・ヘルプのどの話かを選び、面談の候補日時を送ります。候補は最大三つ。キャストが一つ選ぶと、確定した日時がトークに残ります。</p></blockquote><div class="ask"><div class="ask-label">相手に聞く</div><p>「普段、面談の日時はどなたが調整されていますか？」</p></div><details class="detail-note"><summary>実演で使う、最初のメッセージ例</summary><div class="detail-body"><p>「はじめまして、デモ店舗の採用担当です。プロフィールの『落ち着いた接客が好き』というお話を拝見しました。当店の雰囲気をご紹介したいと思い、ご連絡しました。まずは体験入店の条件について、このトークでお話しできればと思います。」</p><p class="fine">この自己紹介がある実演用の相手に使います。連絡先や外部サイトへの誘導は入れません。</p></div></details></div><aside class="step-aside"><section><h4>見せる画面</h4><p>「トークする」 → 定型文〈用意された文例〉 → 面談候補日の入力。</p></section><section><h4>すること</h4><ol><li>文例を開いて、相手に合わせる一文を見せる。</li><li>求人の種別を先に選ぶ。</li><li>訪問日より後の日程を二つ見せる。</li></ol></section><section><h4>送信する前に</h4><p>実演専用の相手か確認する。返信や確定は準備済みの画面で見せてもよい。普通の会員に練習メッセージを送らない。</p></section></aside></div><div class="step-bottom"><strong>次へつなぐ</strong>「ここからは、この方の採用が決まった後の場面です。」</div></article>
+
+<article class="script-step" id="full-5" data-step data-title="本人へ還元" data-time="4:45〜6:00" data-search-title="標準台本5 入店ボーナス・採用報酬・申請・受領・お金の流れ">
+<header class="step-head"><div><div class="step-eyebrow">場面 05 / 思想を仕組みで見せる</div><h3>採用のお金が、働く本人に届く。</h3></div><span class="step-time">4:45〜6:00</span></header><div class="step-body"><div><div class="quote-label">話す言葉 <button class="btn btn-sm no-print" type="button" data-copy="speech-full-5">コピー</button></div><blockquote class="quote" id="speech-full-5"><p>ここが、最初にお話しした「採用のお金を、働く本人に還元する」部分です。御店が迎えたいこの方に、入店ボーナスとして金額と条件を提示できます。</p><p>採用後、条件を満たした本人から申請が届いたら、御店で確認・承認します。請求・入金・運営からの振込を経て、本人が受け取るところまで進み具合を確認できます。</p><p>採用にかけるお金が、これからお店で働く方への後押しになる。そういう採用の選択肢を、店舗の皆さまと広げていきたいと考えています。</p></blockquote></div><aside class="step-aside"><section><h4>見せる画面</h4><p>求人のボーナス金額・条件 → MYPAGE〈マイページ〉の「採用・入金管理」。</p></section><section><h4>指で示す3点</h4><ol><li>いくら、どんな条件で支払うか。</li><li>店舗の確認がどこで必要か。</li><li>本人の受領まで確認できること。</li></ol></section><section><h4>ここを明確に</h4><p>本人への報酬と運営手数料は分けて説明する。実際の入金・振込には、担当者の確認や操作がある。</p></section></aside></div><div class="step-bottom"><strong>次へつなぐ</strong>「続いて、御店にかかる費用と始め方をご説明します。」</div></article>
+
+<article class="script-step" id="full-6" data-step data-title="費用を伝える" data-time="6:00〜7:00" data-search-title="標準台本6 Basic無料プラン・1日5件・運営手数料・求人公開">
+<header class="step-head"><div><div class="step-eyebrow">場面 06 / 費用と始め方</div><h3>何に、いくらかかるかを明確に。</h3></div><span class="step-time">6:00〜7:00</span></header><div class="step-body"><div><div class="quote-label">話す言葉 <button class="btn btn-sm no-print" type="button" data-copy="speech-full-6">コピー</button></div><blockquote class="quote" id="speech-full-6"><p>まずはBasic〈ベーシック〉で始められます。基本利用料は0円で、求人掲載・応募管理・トークが使えます。新しい相手へのスカウトは1日5件までです。</p><p>本人へのボーナスや運営手数料など、採用に伴う費用はこちらです。どの条件で、いくら発生するかを確認してから進めていただきます。</p><p>アカウントを作った後に求人条件を整え、許可証の提出・承認を経て公開します。今日は、店舗アカウントを作るところをお手伝いできます。</p></blockquote></div><aside class="step-aside"><section><h4>見せる画面・資料</h4><p>Basicのプラン画面と、運営が確認した最新の料金表。</p></section><section><h4>指で示す4点</h4><ol><li>本人へのボーナス額。</li><li>運営手数料などの内訳。</li><li>店舗の支払総額。</li><li>費用が発生する条件。</li></ol></section><section><h4>使わない言い方</h4><p>「全部無料」「どのプランでも、採用しない限り費用ゼロ」。有料プランは希望が出てから説明する。</p></section></aside></div><div class="step-bottom"><strong>次へつなぐ</strong>相手が一番反応した画面に戻り、登録の提案へ。</div></article>
+
+<article class="script-step" id="full-7" data-step data-title="登録を提案" data-time="7:00〜8:00" data-search-title="標準台本7 登録を提案・クロージング・同意">
+<header class="step-head"><div><div class="step-eyebrow">場面 07 / 使ってみたいを一歩先へ</div><h3>御店でも、この採用を始めませんか。</h3></div><span class="step-time">7:00〜8:00</span></header><div class="step-body"><div><div class="quote-label">話す言葉 <button class="btn btn-sm no-print" type="button" data-copy="speech-full-7">コピー</button></div><blockquote class="quote" id="speech-full-7"><p>御店では、先ほどの「〇〇」のところが、一番使えそうでしたね。</p><p>御店が選んだ方と直接話して、迎え入れる本人への報酬に採用費を使える。そういう採用を、御店でも始めていただけたらと思っています。</p><p>まずBasicで、店舗アカウントを作っておきませんか。店舗情報や写真の入力は、こちらでお手伝いします。パスワードと最後の内容確認・同意は、ご自身でお願いしています。</p><p>今日は登録と、掲載までの次の作業を決めるところまで進められます。</p></blockquote><div class="ask"><div class="ask-label">迷っていたら、一問だけ</div><p>「始めるうえで、まだ確認しておきたいのはどの点ですか？」</p></div></div><aside class="step-aside"><section><h4>見せる画面</h4><p>相手が反応した画面。了承を得てから、実際に店舗登録を受け付けるページへ移る。</p></section><section><h4>すること</h4><ol><li>〇〇を、相手が話した言葉に置き換える。</li><li>返答を待つ。</li><li>登録する意思を確認して入力へ進む。</li></ol></section><section><h4>今日登録できなければ</h4><p>不足しているものと、次に支援する日時を決める。「検討中」と「登録済み」を分ける。</p></section></aside></div><div class="step-bottom"><strong>次へつなぐ</strong>「登録のお手伝い」の手順で進めます。</div></article>
+</div>
+
+<div class="script-deck" id="deck-short" data-mode="short"><h2 class="deck-title">忙しい店舗向け・3分の台本</h2>
+<article class="script-step" id="short-1" data-step data-title="思想を伝える" data-time="0:00〜0:30" data-search-title="短縮3分台本1 運営の思想"><header class="step-head"><div><div class="step-eyebrow">短縮版 / 場面 01</div><h3>採用のお金を、働く本人へ。</h3></div><span class="step-time">0:00〜0:30</span></header><div class="step-body"><div><div class="quote-label">話す言葉 <button class="btn btn-sm no-print" type="button" data-copy="speech-short-1">コピー</button></div><blockquote class="quote" id="speech-short-1"><p>3分で、候補者に声をかけるところまでお見せします。</p><p>採用にかけるお金を、働くキャスト本人に還元できる仕組みをつくっています。お店と本人が直接つながる、その使い方をご覧ください。今日は実演用の画面を使います。</p></blockquote></div><aside class="step-aside"><section><h4>見せるもの</h4><p>運営のメッセージから店舗写真へ。</p></section><section><h4>すること</h4><p>理念を短く話し、すぐ実演へ。登録のお手伝いには別途時間が必要。</p></section></aside></div><div class="step-bottom"><strong>次へ</strong>欲しいキャスト像を聞く。</div></article>
+<article class="script-step" id="short-2" data-step data-title="候補者を探す" data-time="0:30〜1:20" data-search-title="短縮3分台本2 検索・プロフィール"><header class="step-head"><div><div class="step-eyebrow">短縮版 / 場面 02</div><h3>条件に合いそうな、一人を探す。</h3></div><span class="step-time">0:30〜1:20</span></header><div class="step-body"><div><div class="quote-label">話す言葉 <button class="btn btn-sm no-print" type="button" data-copy="speech-short-2">コピー</button></div><blockquote class="quote" id="speech-short-2"><p>今は、どんな方が入ると一番助かりますか。</p><p>その条件を参考に、候補者を比較できます。自己紹介まで確認し、気になる方はKEEP〈保存〉して、後から見返せます。</p></blockquote></div><aside class="step-aside"><section><h4>見せるもの</h4><p>検索画面と、用意した一人のプロフィール。</p></section><section><h4>すること</h4><p>条件を増やしすぎない。結果がなければ準備済みの画面に移る。</p></section></aside></div><div class="step-bottom"><strong>次へ</strong>その人とのトークへ進む。</div></article>
+<article class="script-step" id="short-3" data-step data-title="直接話す" data-time="1:20〜2:10" data-search-title="短縮3分台本3 トーク・面談"><header class="step-head"><div><div class="step-eyebrow">短縮版 / 場面 03</div><h3>お店から直接、声をかける。</h3></div><span class="step-time">1:20〜2:10</span></header><div class="step-body"><div><div class="quote-label">話す言葉 <button class="btn btn-sm no-print" type="button" data-copy="speech-short-3">コピー</button></div><blockquote class="quote" id="speech-short-3"><p>ここから本人に直接声をかけ、条件を確かめられます。文例を使えるので、最初の文章も作りやすくなっています。</p><p>面談の候補日時を送り、キャストが選んで確定すると、日時がトークに残ります。</p></blockquote></div><aside class="step-aside"><section><h4>見せるもの</h4><p>トークの文例、面談候補日。</p></section><section><h4>すること</h4><p>実際の返信待ちはしない。準備したやり取りの場面で説明する。</p></section></aside></div><div class="step-bottom"><strong>次へ</strong>本人へのボーナスと費用を説明。</div></article>
+<article class="script-step" id="short-4" data-step data-title="還元と費用" data-time="2:10〜2:40" data-search-title="短縮3分台本4 ボーナスと料金"><header class="step-head"><div><div class="step-eyebrow">短縮版 / 場面 04</div><h3>本人への報酬と、費用を示す。</h3></div><span class="step-time">2:10〜2:40</span></header><div class="step-body"><div><div class="quote-label">話す言葉 <button class="btn btn-sm no-print" type="button" data-copy="speech-short-4">コピー</button></div><blockquote class="quote" id="speech-short-4"><p>入店ボーナスは、条件を満たした本人への報酬になります。</p><p>Basicの基本利用料は0円、新しい相手へのスカウトは1日5件までです。本人への報酬と運営手数料などは、こちらの料金表で分けて確認できます。</p></blockquote></div><aside class="step-aside"><section><h4>見せるもの</h4><p>ボーナスの金額・条件と、正式な料金表。</p></section><section><h4>すること</h4><p>支払総額と発生条件まで示す。追加説明が必要なら時間を取る。</p></section></aside></div><div class="step-bottom"><strong>次へ</strong>登録のお手伝いを提案。</div></article>
+<article class="script-step" id="short-5" data-step data-title="登録を提案" data-time="2:40〜3:00" data-search-title="短縮3分台本5 登録提案"><header class="step-head"><div><div class="step-eyebrow">短縮版 / 場面 05</div><h3>始める準備を、一緒に。</h3></div><span class="step-time">2:40〜3:00</span></header><div class="step-body"><div><div class="quote-label">話す言葉 <button class="btn btn-sm no-print" type="button" data-copy="speech-short-5">コピー</button></div><blockquote class="quote" id="speech-short-5"><p>店舗情報や写真の入力は、こちらでお手伝いできます。あと5〜8分ほど取れれば、店舗アカウントの作成を一緒に進めませんか。</p><p>求人の公開は、条件の準備と許可証の承認が済んでからです。</p></blockquote></div><aside class="step-aside"><section><h4>見せるもの</h4><p>了承後に、実際の店舗登録ページ。</p></section><section><h4>時間がなければ</h4><p>登録に必要な写真・連絡先を案内し、登録を手伝う日時を決める。</p></section></aside></div><div class="step-bottom"><strong>次へ</strong>登録の手順へ。難しければ次回の約束へ。</div></article>
+</div>
+<div class="step-controls no-print"><button class="btn" id="step-prev" type="button">← 前の場面</button><span class="step-indicator" id="step-indicator" aria-live="polite"></span><button class="btn btn-primary" id="step-next" type="button">次の場面 →</button></div>
+<p class="script-tip">時間が足りなくなったら短縮3分版へ。相手の質問が出たら、その場で答えてから戻れます。台本内の「〇〇」は、相手の言葉に置き換えてください。</p>
+<div class="two-col no-print"><a class="card jump-card" href="#register"><div><strong>登録に進む</strong><span>何を聞き、どこを本人に任せるか</span></div><b aria-hidden="true">→</b></a><a class="card jump-card" href="#help"><div><strong>質問・トラブルに答える</strong><span>費用、許可証、メールが届かないとき</span></div><b aria-hidden="true">→</b></a></div>
+</section>
+
+<section class="panel" id="prepare" data-panel data-title="訪問前の準備">
+<div class="page-head"><div class="page-kicker"><span class="kicker-rule"></span>03 / 訪問前の準備</div><h1>当日は、説明に集中できるように。</h1><p>画面を探す時間や返信を待つ時間をつくらず、最初から最後まで一度通して練習します。</p></div>
+<div class="card" id="visit-check" data-check-group="visit" data-search-title="訪問前チェックリスト・持ち物・タブレットの準備"><div class="check-head"><h2>出発前のチェック</h2><button class="btn btn-sm no-print" type="button" data-reset-checks="visit">次の訪問用にリセット</button></div><div class="check-progress"><span data-check-count>0 / 9 完了</span><div class="check-track" role="progressbar" aria-label="出発前の準備" aria-valuemin="0" aria-valuemax="9" aria-valuenow="0"><div class="check-fill"></div></div></div><ul class="checklist">
+<li><label><input type="checkbox" data-check="visit-1"><span><strong>話す相手と時間を確認した</strong><small>登録を決められるオーナー・店長・担当者か。説明と登録で15〜20分程度取れるか。</small></span></label></li>
+<li><label><input type="checkbox" data-check="visit-2"><span><strong>実演用の店舗としてログインした</strong><small>ログインは、登録された利用者として画面を開くこと。普通の会員の画面で練習しない。</small></span></label></li>
+<li><label><input type="checkbox" data-check="visit-3"><span><strong>候補者とトークの場面を用意した</strong><small>訪問先に近い業態・地域で、プロフィール、文例、面談、採用後の場面まで確認。</small></span></label></li>
+<li><label><input type="checkbox" data-check="visit-4"><span><strong>送信相手と、今日送れる件数を確認した</strong><small>送信先と通知の宛先は実演専用。Basicの新規スカウトは1日5件まで。</small></span></label></li>
+<li><label><input type="checkbox" data-check="visit-5"><span><strong>最新の料金表を持った</strong><small>本人へのボーナス、運営手数料、店舗の合計支払額、発生条件を説明できる。</small></span></label></li>
+<li><label><input type="checkbox" data-check="visit-6"><span><strong>実際に登録を受け付けるページを確認した</strong><small>実演用のページとの違いを把握し、運営が指定した登録先を開けるようにする。</small></span></label></li>
+<li><label><input type="checkbox" data-check="visit-7"><span><strong>写真を準備できるか確認した</strong><small>登録には店舗のメイン写真が一枚必要。使用できる写真を選んでもらうか、その場で用意する。</small></span></label></li>
+<li><label><input type="checkbox" data-check="visit-8"><span><strong>充電・通信・文字の見やすさを確認した</strong><small>充電器も携帯。画面の向きを決め、通知の割り込みを止める。キーボードを閉じる操作も練習する。</small></span></label></li>
+<li><label><input type="checkbox" data-check="visit-9"><span><strong>通信が止まったときの画面を保存した</strong><small>実演用の画面を端末に画像として保存する。マニュアルは通信なしで読めるが、アプリの検索・登録には通信が必要。</small></span></label></li>
+</ul><p class="fine storage-note">チェック状態は、この端末のブラウザに保存します。次の訪問ではリセットしてください。</p></div>
+<section class="section-block" id="demo-cast" data-search-title="実演用データ・候補者・返信待ちをしない準備"><div class="section-title"><h2>実演に登場する人を決める</h2></div><div class="table-wrap"><table class="data-table"><thead><tr><th>用意するもの</th><th>そろえる内容</th></tr></thead><tbody><tr><td>実演用店舗</td><td data-label="内容">訪問先と近い業態。写真・求人条件・店長メッセージ・ボーナス条件を入力済みにする。求人公開に必要な承認も確認。</td></tr><tr><td>候補者A<br>「デモ・あかり」</td><td data-label="内容">架空の実演用の名前。出勤頻度・時間帯・経験と、声かけの理由になる自己紹介を用意する。</td></tr><tr><td>比較する候補者B・C</td><td data-label="内容">Aとは条件が違い、選ぶ理由を説明できる人。実際の会員数として紹介しない。</td></tr><tr><td>面談・採用後の場面</td><td data-label="内容">同じAの話として進むことが分かる保存画面。切り替えるときは「ここからは採用後の場面です」と伝える。</td></tr></tbody></table></div><p class="fine">これは準備する内容の見本です。このHTMLには実際のアプリ画面や会員データは入っていません。運営が用意した実演画面を使います。</p></section>
+<section class="section-block" id="screen-order" data-search-title="実演で開く画面の順番・タブレット操作"><div class="section-title"><h2>画面は、この順に開く</h2></div><ol class="numbered"><li><h3>運営のメッセージ → 店舗写真</h3><p>理念を短く話し、実演用店舗の「キャストからの見え方」へ。ログインの切り替えが要らない共有ページや保存画像を使う。</p></li><li><h3>キャスト検索 → 一人のプロフィール</h3><p>SEARCH〈検索〉を開き、条件を入れる。候補者の写真や名前を押してプロフィールへ進む。</p></li><li><h3>トーク → 面談 → 採用・入金管理</h3><p>用意したやり取りを見せ、採用後の場面へ移る。管理画面では「本人に届くまで」を指で示す。</p></li><li><h3>プラン・料金表 → 登録ページ</h3><p>費用を説明し、了承を得てから実際の受付ページへ。実演用店舗の情報を、訪問先の情報で上書きしない。</p></li></ol></section>
+<section class="section-block"><div class="two-col"><div class="card"><h3>タブレットの持ち方</h3><ul><li>相手と二人で見られる位置に置く。</li><li>触った後は指を離してから話す。</li><li>一画面で伝えることは一つにする。</li><li>相手に触ってもらうのは一回で十分。</li></ul></div><div class="card"><h3>8分の練習で確認すること</h3><ul><li>理念を30秒で話せる。</li><li>画面を探さず、次へ進める。</li><li>お金の受取人と費用を説明できる。</li><li>最後に登録と次回の約束を提案できる。</li></ul></div></div></section>
+<div class="section-foot">登録ページ・料金表・許可証の案内が用意できないときは、訪問前に営業責任者へ確認します。</div>
+</section>
+
+<section class="panel" id="register" data-panel data-title="登録のお手伝い">
+<div class="page-head"><div class="page-kicker"><span class="kicker-rule"></span>04 / 登録のお手伝い</div><h1>入力を支え、店舗自身で使える状態に。</h1><p>目安は5〜8分。店舗が登録する意思を確認してから進めます。この章は手順の説明で、実際の登録フォームではありません。</p></div>
+<div class="callout" id="register-meaning" data-search-title="仮登録の意味・アカウント作成と公開の違い"><strong>この場で作るのは、Basicの店舗アカウントです。</strong><p>アカウントは「店舗用の利用登録」のこと。求人は非公開の状態で作られます。登録が済んでも、その場で求人の公開が完了するわけではありません。</p></div>
+<section class="section-block" id="required-info" data-search-title="登録に必要な情報・会社名・写真・メール・パスワード"><div class="section-title"><h2>先に、そろっているか確認する</h2><span class="small">写真も必須です</span></div><div class="cards"><div class="card"><span class="mini-label">店舗について</span><h3>店舗情報</h3><p>運営会社名／店舗名／担当者名／郵便番号／都道府県／市区町村／番地。建物名は必要に応じて入力。</p></div><div class="card"><span class="mini-label">連絡先について</span><h3>電話とメール</h3><p>電話番号と、店舗側が継続して管理できるメールアドレス。今、そのメールを受け取れるかも確認。</p></div><div class="card"><span class="mini-label">お店の見え方</span><h3>店舗写真、一枚</h3><p>使用してよい店舗の写真。画面案内に沿い、縦長4:5の見える範囲を調整する。最大2MB。</p></div></div><details class="detail-note"><summary>写真の「2MB」「4:5」が分からないとき</summary><div class="detail-body"><p><strong>2MB</strong>は画像のデータの大きさです。大きすぎると登録できません。選択後にエラーが出たら、端末の画像編集でサイズを小さくするか、小さい画像を選びます。</p><p><strong>4:5</strong>は縦長の形です。写真を選ぶと見える範囲を調整する画面になるので、看板や店内の見せたい部分が枠の中に入るように動かします。</p><p>使える形式はJPEG・PNG・GIF・WebPです。HEICなどで受け付けない場合は、対応した形式の写真を用意します。写真の内容を勝手に変更せず、担当者と見え方を確認してください。</p></div></details></section>
+<section class="section-block" id="registration-steps" data-search-title="登録の7手順・営業と店舗の役割分担"><div class="section-title"><h2>順番に、7つの手順で進める</h2></div><ol class="numbered">
+<li><h3>登録する担当者を確認する</h3><p>新規登録はオーナー権限になります。店舗情報や求人、支払いに関わる操作ができる立場です。</p><div class="roles"><div class="role-item"><strong>営業がすること</strong>「店舗として登録を進めてよいご担当者さまでしょうか」と確認する。</div><div class="role-item"><strong>店舗側がすること</strong>登録する意思と、アカウントを管理する担当者を決める。</div></div></li>
+<li><h3>店舗情報を聞いて入力する</h3><p>運営が指定した実際の登録ページを開き、「店舗情報」を入力します。郵便番号から住所が入っても、番地・建物名まで見直します。</p><div class="roles"><div class="role-item"><strong>営業がすること</strong>運営会社名、店舗名、担当者名、住所を聞いて入力する。</div><div class="role-item"><strong>店舗側がすること</strong>正式な表記と住所が合っているか確認する。</div></div></li>
+<li><h3>店舗写真を一枚設定する</h3><p>「店舗プロフィール画像」で写真を選び、縦長の枠で見える範囲を調整します。</p><div class="roles"><div class="role-item"><strong>営業がすること</strong>写真を選ぶ操作と、見える範囲の調整を補助する。</div><div class="role-item"><strong>店舗側がすること</strong>使用できる実際の店舗写真を選び、見え方を確認する。</div></div><p class="fine">写真が用意できない場合、現在のフォームでは登録を完了できません。写真の準備と登録支援の日時を決めます。</p></li>
+<li><h3>連絡先とパスワードを設定する</h3><p>「アカウント情報」に電話番号とメールを入力します。プランはBasic。パスワードは8文字以上で、確認欄にも同じものを入力します。</p><div class="roles"><div class="role-item"><strong>営業がすること</strong>連絡先の入力を補助したら、端末を店舗担当者に渡す。</div><div class="role-item"><strong>店舗側がすること</strong>自分でパスワードを決め、二つの欄に入力する。</div></div><p class="fine">営業のメールや共有パスワードで登録しません。営業のタブレットにパスワードを保存しないでください。</p></li>
+<li><h3>内容を確認し、店舗側で同意・登録する</h3><p>店舗名、住所、写真、連絡先、プランを一緒に見直します。利用規約とプライバシーポリシーの場所を案内します。</p><div class="roles"><div class="role-item"><strong>営業がすること</strong>確認する項目を示し、質問に答える。</div><div class="role-item"><strong>店舗側がすること</strong>内容と規約を確認し、同意のチェックと「登録する」の操作を行う。</div></div></li>
+<li><h3>メールを確認し、店舗の端末でログインする</h3><p>登録完了の案内が出たら、店舗側のスマートフォンなどで認証メールを開きます。認証は「このメールを使っている本人です」と確認する操作です。</p><div class="roles"><div class="role-item"><strong>営業がすること</strong>メール内のリンクを開く手順を案内し、店舗端末で使えることを確認する。</div><div class="role-item"><strong>店舗側がすること</strong>自分でメールを開き、リンクを押す。その後、店舗ログイン画面で登録したメールとパスワードを使う。</div></div><p class="fine">認証リンクは60分有効。期限切れ・メール未着の場合は「困ったとき」を確認。認証が済まなくても、アカウント自体は作成されていることがあります。</p></li>
+<li><h3>次の作業を決め、営業端末からログアウトする</h3><p>求人公開に向け、許可証提出や求人条件入力のどちらを次に進めるか決めます。最後に、営業のタブレットから店舗アカウントをログアウトします。</p><div class="roles"><div class="role-item"><strong>営業がすること</strong>完了したこと・残りの作業・次回日時を記録し、端末の引き継ぎを終える。</div><div class="role-item"><strong>店舗側がすること</strong>次に準備するものと担当者を決める。</div></div></li>
+</ol></section>
+<section class="section-block" id="handoff-check" data-check-group="handoff" data-search-title="登録完了の確認・引き継ぎ・ログアウト"><div class="card"><div class="check-head"><h2>「登録できました」の確認</h2><button class="btn btn-sm no-print" type="button" data-reset-checks="handoff">チェックをリセット</button></div><div class="check-progress"><span data-check-count>0 / 5 完了</span><div class="check-track" role="progressbar" aria-label="登録後の引き継ぎ" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0"><div class="check-fill"></div></div></div><ul class="checklist"><li><label><input type="checkbox" data-check="handoff-1"><span>登録完了の案内を確認した。</span></label></li><li><label><input type="checkbox" data-check="handoff-2"><span>店舗側でメールの認証を完了した。</span></label></li><li><label><input type="checkbox" data-check="handoff-3"><span>店舗自身の端末でログインできた。</span></label></li><li><label><input type="checkbox" data-check="handoff-4"><span>残る作業・担当者・次回日時が決まった。</span></label></li><li><label><input type="checkbox" data-check="handoff-5"><span>営業のタブレットから店舗アカウントをログアウトした。</span></label></li></ul><p class="fine storage-note">チェック状態は、この端末のブラウザに保存します。</p></div></section>
+<div class="card section-block"><div class="quote-label">最後に伝える言葉 <button type="button" class="btn btn-sm no-print" data-copy="handoff-speech">コピー</button></div><blockquote class="quote" id="handoff-speech"><p>店舗アカウントができました。今日はここまで完了です。求人はまだ非公開です。</p><p>次は〇〇を進めると、掲載開始に近づきます。次回は〇日の〇時に、一緒に進める形でいかがでしょうか。</p></blockquote><p class="fine">完了した事実だけを伝えます。メール認証がまだなら「登録は完了、メールの確認が残っています」と説明します。</p></div>
+</section>
+
+<section class="panel" id="help" data-panel data-title="困ったとき">
+<div class="page-head"><div class="page-kicker"><span class="kicker-rule"></span>05 / 困ったとき</div><h1>迷ったら、ここから答える。</h1><p>質問を押すと「返す言葉」と「次にすること」が開きます。分からないことは、その場で作って答えず、確認する担当と日時を伝えます。</p></div>
+<div class="section-title"><h2>費用・仕組みへの質問</h2><button class="btn btn-sm no-print" type="button" id="faq-expand" aria-expanded="false">回答をすべて開く</button></div>
+<details class="faq" id="faq-fee" data-search-title="手数料 結局ミセチョクも手数料を取るのか"><summary>結局、ミセチョクも手数料を取るんでしょう？</summary><div class="detail-body"><p class="faq-answer">「はい、サービスを運営するための手数料があります。キャスト本人への採用報酬と、運営への手数料は分けてご案内します。誰に何のために支払うかを確認したうえで、御店から直接採用を進めていただける仕組みです。」</p><p class="next-action"><strong>次にすること：</strong>正式な料金表で、本人への報酬・手数料・店舗の総額・発生条件を指す。一律に「今より安くなる」とは約束しない。</p></div></details>
+<details class="faq" id="faq-scout" data-search-title="スカウト会社が悪いのか スカウトバックの問題"><summary>スカウト会社が悪いと言いたいの？</summary><div class="detail-body"><p class="faq-answer">「運営が問題にしているのは、高額な費用や紹介への依存で、お店の採用の選択肢が狭くなってしまうことです。御店自身で候補者とつながり、働く本人に還元できる方法を増やしたいと考えています。」</p><p class="next-action"><strong>次にすること：</strong>店舗が直接相手を選べる画面と、本人へのボーナスに話を戻す。</p></div></details>
+<details class="faq" id="faq-cost" data-search-title="お金が不安 無料 採用費 料金"><summary>お金がかかるのが不安です。</summary><div class="detail-body"><p class="faq-answer">「Basicの基本利用料と、採用に伴う費用を分けてご説明します。この条件なら店舗のお支払いはいくらかを、料金表で一緒に確認しましょう。」</p><p class="next-action"><strong>次にすること：</strong>無料の範囲を限定して説明する。料金表がなければ金額を約束せず、確認して案内する日時を決める。</p></div></details>
+<details class="faq" id="faq-other" data-search-title="別の求人サービス 併用 乗り換え"><summary>もう別の求人サービスを使っています。</summary><div class="detail-body"><p class="faq-answer">「今の採用活動と併用して、御店から直接声をかける接点として使えます。いまの採用で足りていないのは、どの部分ですか？」</p><p class="next-action"><strong>次にすること：</strong>相手が答えた不足部分に合う画面だけを見せる。現在の契約の解約を勧める必要はない。</p></div></details>
+<details class="faq" id="faq-hire" data-search-title="本当に人が来る 採用できる 会員数 返信率"><summary>本当に人が来るの？</summary><div class="detail-body"><p class="faq-answer">「御店のエリアと条件で、声をかける相手を見つけられるかが大切です。今日の画面は実演用なので、実際の候補者の状況とは分けてご案内します。採用や返信をお約束するものではありません。」</p><p class="next-action"><strong>次にすること：</strong>実際の人数を案内するなら、確認日時・条件が分かる資料を使う。デモの人数を会員実績として見せない。</p></div></details>
+<section class="section-block"><div class="section-title"><h2>登録に進めないとき</h2></div>
+<details class="faq" id="faq-busy" data-search-title="登録が面倒 忙しい 時間がない"><summary>忙しいし、登録が面倒です。</summary><div class="detail-body"><p class="faq-answer">「店舗情報と写真の設定は、こちらでお手伝いできます。ご自身では、内容確認とパスワードの設定、最後の同意をお願いします。求人の詳細は後で整えられます。」</p><p class="next-action"><strong>次にすること：</strong>その場で難しければ、写真と連絡先を準備してもらい、登録を手伝う日時を決める。3分版に登録時間は含まれない。</p></div></details>
+<details class="faq" id="faq-license" data-search-title="許可証がない 未提出 審査 求人公開"><summary>許可証が今、手元にありません。</summary><div class="detail-body"><p class="faq-answer">「許可証はアカウント作成後に提出できます。公開には承認が必要なので、まず登録して、書類をご用意いただく日時を決めることはできます。」</p><p class="next-action"><strong>次にすること：</strong>必要な書類を持つ担当者と、提出を支援する日時を決める。対象業態に必要な書類は運営の案内を使う。</p></div></details>
+<details class="faq" id="faq-photo" data-search-title="写真がない 写真エラー 大きすぎる 2MB HEIC"><summary>写真がない／画像を登録できません。</summary><div class="detail-body"><p class="faq-answer">「登録には店舗の写真が一枚必要です。使用できる店内写真を、一枚ご用意できますか。大きすぎる場合は、画面の案内に合わせて調整をお手伝いします。」</p><p class="next-action"><strong>次にすること：</strong>最大2MB、JPEG・PNG・GIF・WebPを確認。写真がなければ、準備と登録支援の日時を決める。架空の店舗写真で代用しない。</p><p class="fine"><a href="#required-info">写真の形式・サイズの説明を読む →</a></p></div></details>
+<details class="faq" id="faq-mail" data-search-title="メールが届かない 認証 再送 60分 期限切れ"><summary>認証メールが届かない／リンクの期限が切れました。</summary><div class="detail-body"><p class="faq-answer">「まずメールアドレスと、迷惑メールのフォルダーを確認しましょう。必要なら再送できます。登録そのものは完了している場合がありますので、状態を分けて確認します。」</p><p class="next-action"><strong>次にすること：</strong>店舗本人がメールを確認する。ログイン中の未認証案内から再送し、新しいメールのリンクを60分以内に開く。解決しなければ「登録済み・メール認証待ち」と記録し、運営へ確認する。</p></div></details>
+<details class="faq" id="faq-duplicate" data-search-title="メールが登録済み 二重登録 パスワード ログインできない"><summary>「このメールは登録済み」と出た／ログインできません。</summary><div class="detail-body"><p class="faq-answer">「すでに店舗登録があるかもしれません。新しく作る前に、店舗のログイン画面で確認しましょう。パスワードをお忘れなら、再設定の案内を使えます。」</p><p class="next-action"><strong>次にすること：</strong>店舗用のログイン画面か、メールの入力ミスがないかを確認。本人が再設定する。営業が別のメールで二重登録しない。</p></div></details>
+<details class="faq" id="faq-decision" data-search-title="今日は決められない 判断者不在 オーナー不在 検討"><summary>今日は決められません／判断する人がいません。</summary><div class="detail-body"><p class="faq-answer">「確認が必要なのは、費用、機能、社内のご判断のどの点でしょうか。必要な点を整理して、次回はその確認から進めましょう。」</p><p class="next-action"><strong>次にすること：</strong>判断者に見せる日時、または必要資料を確認する日時を決める。了承前に登録を始めない。</p></div></details>
+</section>
+<section class="section-block"><div class="section-title"><h2>実演が止まったとき</h2></div>
+<details class="faq" id="faq-offline" data-search-title="画面が開かない 通信が切れた オフライン"><summary>画面が開かない／通信が切れました。</summary><div class="detail-body"><p class="faq-answer">「通信の状況がよくないため、同じ流れの保存画面でご説明します。実際の登録は、通信が戻ってから確実に進めましょう。」</p><p class="next-action"><strong>次にすること：</strong>準備済みの画面画像へ切り替える。登録ボタンを押した後で止まった場合は、連打せず、登録済みか確認する。</p></div></details>
+<details class="faq" id="faq-zero" data-search-title="検索がゼロ件 候補者がいない 条件を変える"><summary>検索しても候補者が出ません。</summary><div class="detail-body"><p class="faq-answer">「条件を一つ緩めて、候補を広げてみます。実演用に用意した画面でも、比較の仕方をご覧いただけます。」</p><p class="next-action"><strong>次にすること：</strong>条件を一つずつ見直す。位置の情報がないと距離が出ない場合もある。結果を実在会員の人数と混同させない。</p></div></details>
+<details class="faq" id="faq-limit" data-search-title="スカウト上限 送信できない 1日5件 NGワード"><summary>メッセージを送れません。</summary><div class="detail-body"><p class="faq-answer">「画面の案内を確認します。今日は準備したやり取りの画面で、面談までの進め方をご覧ください。」</p><p class="next-action"><strong>次にすること：</strong>新規送信の上限、入力内容、送信先を確認。電話番号・外部への連絡先誘導などが含まれると送れない場合がある。上限を避けるためにアカウントを作り直さない。</p></div></details>
+</section>
+<section class="section-block" id="extra-demo" data-search-title="追加デモ Premium 閲覧キャスト AI スタッフ管理 ヘルプ"><div class="section-title"><h2>もっと見たいと言われたら</h2><span class="small">一つだけ、30〜60秒</span></div><div class="table-wrap"><table class="data-table"><thead><tr><th>関心</th><th>見せるもの・伝えること</th></tr></thead><tbody><tr><td>スカウトバックの負担</td><td data-label="説明">本人へのボーナスと請求の内訳。「誰に何のために払うかを確認できます。」</td></tr><tr><td>条件・人柄の合い方</td><td data-label="説明">プロフィール・接客タイプ。「話す前に確認できる手がかりがあります。」</td></tr><tr><td>対応を分担したい</td><td data-label="説明">スタッフ管理。「メッセージや面談などの日常対応を分担できます。求人や店舗情報の編集はオーナーが管理します。」</td></tr><tr><td>人手が足りない日</td><td data-label="説明">ヘルプの求人設定。「募集目的と条件を伝えられます。働いてもらえるかは、本人との合意次第です。」</td></tr><tr><td>もっと声をかけたい</td><td data-label="説明">Premium〈追加の有料プラン〉の新規送信枠。提供状況を確認できた場合に案内する。</td></tr><tr><td>お店を見た人を知りたい</td><td data-label="説明">Premiumの閲覧キャスト一覧。閲覧は興味の手がかりで、応募の約束ではない。</td></tr><tr><td>AIで何ができる？</td><td data-label="説明">キャストが条件を相談して店を探す入口。店舗側のおすすめ順とは区別する。実演できる状態を確認した場合だけ見せる。</td></tr></tbody></table></div></section>
+</section>
+
+<section class="panel" id="after" data-panel data-title="商談のあと">
+<div class="page-head"><div class="page-kicker"><span class="kicker-rule"></span>06 / 商談のあと</div><h1>次に進む約束まで、ひとつの営業。</h1><p>登録した件数だけで終わらせず、店舗が実際に使い始められるようにつなぎます。</p></div>
+<section id="next-appointment" data-search-title="次回の約束 許可証 求人条件 未登録 連絡方法"><div class="section-title"><h2>次回は「何をするか」を決める</h2></div><div class="table-wrap"><table class="data-table"><thead><tr><th>今日の状態</th><th>次に決めること</th><th>伝える言葉</th></tr></thead><tbody><tr><td>許可証が手元にある</td><td data-label="次の作業">提出を手伝う日時</td><td data-label="言葉">「次回は許可証の提出を、一緒に進めましょう。」</td></tr><tr><td>書類は別の担当者が持っている</td><td data-label="次の作業">書類を用意する人と期限</td><td data-label="言葉">「どなたがご用意できますか。〇日に提出をお手伝いします。」</td></tr><tr><td>求人条件がまだ決まっていない</td><td data-label="次の作業">時給・勤務日・募集形態を決める日時</td><td data-label="言葉">「次回は本入店・体験入店・ヘルプのどれを募集するかから整理しましょう。」</td></tr><tr><td>メール認証・ログインが未完了</td><td data-label="次の作業">店舗自身の端末で確認する日時</td><td data-label="言葉">「登録は済んでいます。残っているメールの確認を一緒に進めます。」</td></tr><tr><td>判断者が不在</td><td data-label="次の作業">判断者への説明日時</td><td data-label="言葉">「次回はご判断される方にも、この画面でご説明します。」</td></tr></tbody></table></div></section>
+<section class="section-block" id="visit-record" data-search-title="営業記録 フォロー 訪問記録 テンプレート"><div class="section-title"><h2>営業記録に、この項目を残す</h2><button class="btn btn-sm no-print" type="button" data-copy="record-copy">記録のひな形をコピー</button></div><div class="card"><p class="sub">コピーして、運営が指定する営業記録先に記入してください。パスワードや許可証画像は営業メモに残しません。</p><div class="record-template" id="record-copy">訪問日：
+店舗名／担当者名：
+登録を判断できる方か：
+採用の困りごと（相手の言葉で）：
+欲しいキャスト像（働き方・頻度・時間帯・経験など）：
+一番反応した点（思想・本人への還元・検索・トークなど）：
+使った料金資料と、確認が残る点：
+今日の到達点（説明のみ／登録意向／アカウント作成／メール認証／店舗端末ログイン）：
+残りの作業：
+次回の日時／担当者／行うこと：
+相手が希望した連絡方法：</div></div></section>
+<section class="section-block" id="success-measure" data-search-title="営業の成果 登録率 求人公開 初回スカウト"><div class="section-title"><h2>どこまで進んだかを、分けて見る</h2></div><div class="flow"><div class="flow-box"><b>説明した</b><span>困りごとを確認</span></div><span class="flow-arrow" aria-hidden="true">→</span><div class="flow-box"><b>登録できた</b><span>本人がログイン</span></div><span class="flow-arrow" aria-hidden="true">→</span><div class="flow-box"><b>使い始めた</b><span>求人公開・初回連絡</span></div></div><p class="flow-note">営業記録では「デモ実施→登録提案→アカウント作成→店舗端末ログイン→求人公開→初回スカウト」を確認します。止まる場所を見つけ、次の支援を決めます。</p></section>
+<div class="callout-good callout section-block"><strong>「後で使ってください」で終えず、次の一歩を一つ。</strong><p>連絡する日時・担当・用件まで合意します。手続きが完了していない段階を、完了として記録しないようにします。</p></div>
+</section>
+
+<section class="panel" id="words" data-panel data-title="言葉の早見表">
+<div class="page-head"><div class="page-kicker"><span class="kicker-rule"></span>07 / 言葉の早見表</div><h1>画面の言葉を、日本語で理解する。</h1><p>お店に説明するときも、英語の名前に意味を添えると伝わりやすくなります。</p></div>
+<dl class="glossary">
+<div id="word-cast" data-search-title="キャスト 求職者"><dt>キャスト</dt><dd>働くお店を探している人。ミセチョクで店舗が採用する相手。</dd></div>
+<div id="word-back" data-search-title="スカウトバック 採用報酬"><dt>スカウトバック</dt><dd>ここでは、採用に伴い店舗から紹介者側へ支払われる報酬を指す言葉。ミセチョクは、採用費を働く本人へ還元できる仕組みを目指す。</dd></div>
+<div id="word-scout" data-search-title="スカウト 新規送信"><dt>スカウト</dt><dd>店舗から候補者へ声をかけること。送信枠でいう新規スカウトは、まだメッセージのやり取りがない相手への最初の送信。</dd></div>
+<div id="word-bonus" data-search-title="入店ボーナス 採用報酬 達成条件"><dt>入店ボーナス／採用報酬</dt><dd>求人で示す条件を満たしたキャスト本人への報酬。金額だけでなく、受け取る条件も一緒に説明する。</dd></div>
+<div id="word-search" data-search-title="SEARCH サーチ 検索"><dt>SEARCH〈サーチ〉</dt><dd>条件を設定して候補者を探す画面。「キャスト検索」と説明してよい。</dd></div>
+<div id="word-keep" data-search-title="KEEP キープ 保存"><dt>KEEP〈キープ〉</dt><dd>気になった候補者を、後から見返すために保存すること。保存しただけで面談が決まるわけではない。</dd></div>
+<div id="word-talk" data-search-title="TALK トーク メッセージ 定型文"><dt>TALK〈トーク〉</dt><dd>メッセージをやり取りする画面。「定型文」は、選んで使える文章の見本のこと。</dd></div>
+<div id="word-swipe" data-search-title="SWIPE スワイプ カード"><dt>SWIPE〈スワイプ〉</dt><dd>写真のカードを指で上下に動かしながら、候補者を見ていく画面。</dd></div>
+<div id="word-mypage" data-search-title="MYPAGE マイページ 採用入金管理"><dt>MYPAGE〈マイページ〉</dt><dd>店舗の情報や求人、採用・入金の進み具合などを確認・管理する画面。</dd></div>
+<div id="word-basic" data-search-title="Basic ベーシック 無料プラン"><dt>Basic〈ベーシック〉</dt><dd>最初の登録で選ぶ基本プラン。基本利用料は0円。ボーナス・運営手数料などの費用とは分けて考える。</dd></div>
+<div id="word-premium" data-search-title="Premium プレミアム 有料プラン"><dt>Premium〈プレミアム〉</dt><dd>追加機能のある有料プラン。提供状況と料金を営業責任者に確認してから案内する。</dd></div>
+<div id="word-account" data-search-title="アカウント ログイン ログアウト"><dt>アカウント／ログイン</dt><dd>アカウントは店舗用の利用登録。ログインはその登録でサービスを開くこと。ログアウトは、その端末で利用を終えること。</dd></div>
+<div id="word-auth" data-search-title="認証メール リンク ブラウザ"><dt>メール認証／リンク</dt><dd>メール認証は、自分が使うメールであることを確かめる操作。リンクは、押すと別のページが開く文字やボタン。ブラウザはSafariやChromeなど、ページを見るアプリ。</dd></div>
+<div id="word-draft" data-search-title="仮登録 非公開 公開"><dt>仮登録／求人の非公開</dt><dd>この営業では、求人を非公開にしたまま店舗アカウントを作ることを「仮登録」と呼ぶ。公開前に求人条件と許可証の承認を整える。</dd></div>
+<div id="word-work" data-search-title="本入店 体験入店 体入 ヘルプ"><dt>本入店・体験入店・ヘルプ</dt><dd>本入店は正式な入店、体験入店は働き方を体験する入店、ヘルプは人手を補うための勤務。実際の条件は求人と本人との話し合いで確認する。</dd></div>
+<div id="word-owner" data-search-title="オーナー スタッフ 権限"><dt>オーナー／スタッフ</dt><dd>操作できる範囲の違い。オーナーは店舗・求人の編集やお金に関する管理、スタッフは応募対応や面談などの日常業務を担う。</dd></div>
+</dl>
+</section>
+
+<section class="panel" id="team" data-panel data-title="営業責任者の確認">
+<div class="page-head"><div class="page-kicker"><span class="kicker-rule"></span>08 / 営業責任者の確認</div><h1>現場で迷わせないために。</h1><p>営業責任者・運営が、訪問前にそろえる事項です。一般の営業担当者は、ここで確認済みの資料と実演画面を受け取って使います。</p></div>
+<section id="owner-ready" data-search-title="責任者の準備 営業開始前 正式料金 登録先 提供状況"><div class="section-title"><h2>営業担当者に渡す6点</h2></div><div class="cards"><div class="card"><span class="mini-label">01</span><h3>実際の登録先</h3><p>実演用と実店舗の受付用を明確にした案内。営業が見分けられる名前で渡す。</p></div><div class="card"><span class="mini-label">02</span><h3>正式な料金表</h3><p>版・適用日・本人報酬・手数料・税込の総額・発生条件を説明できる資料。</p></div><div class="card"><span class="mini-label">03</span><h3>実演専用の画面</h3><p>店舗、候補者、トーク、面談、採用・受領までの場面と、通信不良用の保存画像。</p></div><div class="card"><span class="mini-label">04</span><h3>書類の案内</h3><p>対象業態の必要書類・提出先・審査の流れ。公開条件と案内が一致していること。</p></div><div class="card"><span class="mini-label">05</span><h3>問い合わせ先</h3><p>料金、登録エラー、書類、追加機能について、誰に確認するかの連絡表。</p></div><div class="card"><span class="mini-label">06</span><h3>営業記録の場所</h3><p>訪問結果と次回の約束を、担当者間で引き継げる記録先。</p></div></div></section>
+<section class="section-block" id="known-conditions" data-search-title="提供前の確認 Premium料金 月額20000 年額200000 手数料10% 許可証"><div class="section-title"><h2>案内をそろえる確認事項</h2></div><div class="table-wrap"><table class="data-table"><thead><tr><th>項目</th><th>2026年9月12日時点の確認内容</th><th>営業での扱い</th></tr></thead><tbody>
+<tr><td>登録の必須項目</td><td data-label="確認内容">会社名・店舗名・担当者・住所・電話・メール・パスワード・店舗画像・Basic・規約同意が必要。</td><td data-label="案内">メールだけの簡易登録や、入力途中の保存は約束しない。</td></tr>
+<tr><td>求人公開の書類</td><td data-label="確認内容">現在の仕組みでは、営業許可証・風営許可証の両方の提出と運営承認が公開条件。</td><td data-label="案内">対象業態の必要書類と、この条件が合っているか運営が確認する。登録時の添付は不要。</td></tr>
+<tr><td>Basic</td><td data-label="確認内容">基本利用料0円。新規スカウトは1日5件。既存のやり取りは新規送信枠の対象外。</td><td data-label="案内">登録はBasicから。採用に伴う費用と基本利用料を分ける。</td></tr>
+<tr><td>Premium</td><td data-label="確認内容">プラン画面には月払い20,000円・年払い200,000円（税込）、新規1日30件、閲覧キャスト一覧等がある。一方、登録画面では「実装中・近日公開」で選べない。</td><td data-label="案内">正式な提供状況を確認してから追加案内。新規登録時に選択できるとは説明しない。</td></tr>
+<tr><td>採用に伴う費用</td><td data-label="確認内容">現在の既定計算はボーナス額と、その10%の運営手数料。個別の請求額を保持・調整する処理もある。</td><td data-label="案内">この数値を正式料金表の代わりにしない。税・振込関連費用・総額・発生条件を資料で確定する。</td></tr>
+<tr><td>おすすめ順とAI</td><td data-label="確認内容">店舗のおすすめ順は条件等の一致を参考にした並び。会話型のAI検索の入口はキャスト側。</td><td data-label="案内">「AIが相性や採用を保証する」とは説明しない。</td></tr>
+<tr><td>会社名・紹介文</td><td data-label="確認内容">登録画面に項目はあるが、確認した保存処理では会社名と紹介文の保存先が見当たらない。</td><td data-label="案内">開発担当に保存仕様を確認。会社名は現行フォームの必須入力として扱い、紹介文の即時反映を約束しない。</td></tr>
+<tr><td>実演用の認証</td><td data-label="確認内容">実演環境にはメールの確認を簡略化する仕組みがある。</td><td data-label="案内">実店舗では、実際に受信したメールの確認と店舗端末への引き継ぎを行う。</td></tr>
+</tbody></table></div></section>
+<section class="section-block" id="claims" data-search-title="説明で約束しないこと 採用保証 完全無料 全額還元"><div class="section-title"><h2>営業チームで、言い方を統一する</h2></div><div class="table-wrap"><table class="data-table"><thead><tr><th>避ける言い方</th><th>伝える言い方</th></tr></thead><tbody><tr><td>「採用費の全額が本人に渡る」</td><td data-label="言い換え">「本人への報酬と運営手数料を分けて説明します。」</td></tr><tr><td>「全部無料」</td><td data-label="言い換え">「Basicの基本利用料は0円。ボーナス等の費用は別途確認します。」</td></tr><tr><td>「必ず採用できる・定着する」</td><td data-label="言い換え">「自店から候補者を選び、直接条件を確かめられます。」</td></tr><tr><td>「今日から必ず求人公開できる」</td><td data-label="言い換え">「求人条件と許可証の承認が整ってから公開します。」</td></tr><tr><td>「全員が本人確認済み」</td><td data-label="言い換え">「相手のプロフィールと確認できる情報を見て進めます。」</td></tr><tr><td>「この人数が実際の登録者数」</td><td data-label="言い換え">「今日は実演用です。実際の状況とは分けてご案内します。」</td></tr></tbody></table></div></section>
+<section class="section-block" id="quality-scope" data-search-title="このマニュアルの使い方 品質確認 オフライン 印刷 出典"><div class="card"><h2>このマニュアルについて</h2><p>対象は、スマホ・タブレットで手順を確認しながら、店舗に説明する営業担当者です。元の台本とアプリの実装をもとに、専門用語を補い、準備・実演・登録・引き継ぎの順に整理しました。</p><p><strong>作成の根拠：</strong>店舗向けの運営メッセージ、キャスト向けの採用報酬説明、店舗登録、検索、トーク、求人公開、料金プラン、採用・入金管理の各実装、および営業デモ台本。</p><p><strong>このファイル：</strong>通信なしで閲覧できます。台本の切り替え、検索、コピー、チェック、印刷を用意しています。SafariやChromeなどで開いてください。端末のファイル一覧にある簡易プレビューでは、一部操作が使えないことがあります。</p><p><strong>実際の営業：</strong>運営の正式な料金・提供状況と実演用アカウントは別途用意が必要です。このマニュアルの表示確認は、公開中のアプリでの登録・採用・支払いの動作確認を意味しません。</p><p class="fine">第1版 · 内容の確認日：2026年9月12日。料金や手順が変わったら、運営がこのマニュアルも更新してください。</p></div></section>
+</section>
+</div></main>
+<nav class="reader-dock no-print" aria-label="よく使う機能">
+  <button type="button" id="menu-open" aria-haspopup="dialog" aria-controls="menu-dialog"><span class="dock-symbol" aria-hidden="true">☰</span><span>目次</span></button>
+  <a href="#demo"><span class="dock-symbol dock-text-symbol" aria-hidden="true">話</span><span>台本</span></a>
+  <a href="#register"><span class="dock-symbol dock-text-symbol" aria-hidden="true">＋</span><span>登録</span></a>
+  <button type="button" data-open-search aria-haspopup="dialog" aria-controls="search-dialog"><span class="dock-symbol dock-search-icon" aria-hidden="true"></span><span>検索</span></button>
+</nav>
+<dialog class="reader-sheet menu-sheet no-print" id="menu-dialog" aria-labelledby="menu-title">
+  <div class="sheet-head"><div><span class="mini-label">使う場面から選ぶ</span><h2 id="menu-title">マニュアルの目次</h2></div><button class="btn btn-sm" type="button" data-close-sheet>閉じる</button></div>
+  <nav id="menu-links" class="menu-links" aria-label="章を選ぶ"></nav>
+  <div class="sheet-foot"><p>本文は指で上下にスクロールして読めます。</p><button class="btn" id="menu-print" type="button">全編を印刷</button></div>
+</dialog>
+<dialog class="reader-sheet search-sheet no-print" id="search-dialog" aria-labelledby="search-title">
+  <div class="sheet-head"><div><span class="mini-label">困ったときも、ここから</span><h2 id="search-title">言葉で探す</h2></div><button class="btn btn-sm" type="button" data-close-sheet>閉じる</button></div>
+  <div class="search-wrap"><label for="manual-search" class="sr-only">マニュアル内を検索</label><input id="manual-search" type="search" placeholder="料金、写真、許可証など" autocomplete="off" enterkeyhint="search" aria-controls="search-results" aria-expanded="false"><button type="button" class="search-clear" id="search-clear" aria-label="検索を消す" hidden>×</button><div class="search-results" id="search-results" aria-label="検索結果" hidden></div></div>
+  <p class="search-help">短い言葉を入れると、該当する台本や回答が見つかります。</p>
+</dialog>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<div class="copy-fallback" id="copy-fallback" role="dialog" aria-modal="true" aria-labelledby="copy-dialog-title" hidden><div class="copy-fallback-card"><h2 id="copy-dialog-title">この文章を選択してコピー</h2><p class="sub">自動でコピーできないため、文章を選択しています。端末の「コピー」を使ってください。</p><textarea id="copy-text" aria-label="コピーする文章" readonly></textarea><div class="btn-row" style="margin-top:15px"><button class="btn btn-primary" id="copy-close" type="button">閉じる</button></div></div></div>
+<script>
+(() => {
+  'use strict';
+  const $ = (s, root = document) => root.querySelector(s);
+  const $$ = (s, root = document) => Array.from(root.querySelectorAll(s));
+  const panels = $$('[data-panel]');
+  const modes = { full: $$('#deck-full [data-step]'), short: $$('#deck-short [data-step]') };
+  const indexes = { full: 0, short: 0 };
+  const state = { mode: 'full', panel: 'start', speech: false };
+  const readerMedia = matchMedia('(max-width: 1180px), (hover: none) and (pointer: coarse)');
+  const chapterHints = ['考え方と今日のゴール', 'そのまま読める8分版・3分版', '持ち物と出発前のチェック', '必要情報と登録の進め方', 'よくある質問と答え方', '次の約束と営業記録', '画面の言葉を日本語で確認', '料金・提供状況をそろえる'];
+  $$('.sidebar .nav-link').forEach((link, i) => {
+    const copy = link.cloneNode(true); copy.className = 'menu-link';
+    const title = document.createElement('span'); title.className = 'menu-label';
+    const name = document.createElement('strong'); name.textContent = link.textContent.trim().slice(2).trim();
+    const hint = document.createElement('small'); hint.textContent = chapterHints[i];
+    title.append(name, hint); copy.replaceChildren(link.firstElementChild.cloneNode(true), title);
+    $('#menu-links').append(copy);
+  });
+  function closeReaderSheets() {
+    $$('.reader-sheet[open]').forEach(sheet => sheet.close());
+    document.body.classList.remove('reader-sheet-open');
+  }
+  function openReaderSheet(id) {
+    closeReaderSheets();
+    const sheet = document.getElementById(id); sheet.showModal();
+    document.body.classList.add('reader-sheet-open');
+    if (id === 'search-dialog') $('#manual-search').focus({ preventScroll: true });
+    else $('.menu-link[aria-current="page"]', sheet)?.focus({ preventScroll: true });
+  }
+  $('#menu-open').addEventListener('click', () => openReaderSheet('menu-dialog'));
+  $$('[data-open-search]').forEach(button => button.addEventListener('click', () => openReaderSheet('search-dialog')));
+  $$('.reader-sheet').forEach(sheet => {
+    $('[data-close-sheet]', sheet).addEventListener('click', () => sheet.close());
+    sheet.addEventListener('close', () => { if (!$('.reader-sheet[open]')) document.body.classList.remove('reader-sheet-open'); });
+    sheet.addEventListener('click', event => {
+      const box = sheet.getBoundingClientRect();
+      if (event.target === sheet && (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom)) sheet.close();
+    });
+  });
+  const storageKey = 'misechoku.sales-manual.v1';
+  let saved = { checks: {}, largeType: false };
+  let storageOK = true;
+  try {
+    const raw = localStorage.getItem(storageKey);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        saved.checks = parsed.checks && typeof parsed.checks === 'object' ? parsed.checks : {};
+        saved.largeType = parsed.largeType === true;
+      }
+    }
+    localStorage.setItem(storageKey, JSON.stringify(saved));
+  } catch (_) { storageOK = false; }
+  function storageNote() {
+    $$('.storage-note').forEach(el => { el.textContent = storageOK
+      ? 'チェック状態は、この端末のブラウザに保存します。次の訪問ではリセットしてください。'
+      : 'この閲覧環境ではチェックを保存できません。ページを閉じるとチェックは元に戻ります。'; });
+  }
+  function persist() {
+    try { localStorage.setItem(storageKey, JSON.stringify(saved)); }
+    catch (_) { storageOK = false; storageNote(); }
+  }
+  let toastTimer;
+  function announce(message) {
+    const toast = $('#toast'); clearTimeout(toastTimer);
+    toast.textContent = message; toast.hidden = false;
+    toastTimer = setTimeout(() => { toast.hidden = true; }, 3000);
+  }
+  function setFont(enabled, store = true) {
+    document.body.classList.toggle('large-type', enabled);
+    $('#font-toggle').setAttribute('aria-pressed', String(enabled));
+    $('#font-toggle').textContent = enabled ? '文字を標準に' : '文字を大きく';
+    if (store) { saved.largeType = enabled; persist(); }
+  }
+  $('#font-toggle').addEventListener('click', () => setFont(!document.body.classList.contains('large-type')));
+  setFont(saved.largeType, false);
+  $$('[data-check]').forEach(input => {
+    input.checked = saved.checks[input.dataset.check] === true;
+    input.addEventListener('change', () => {
+      saved.checks[input.dataset.check] = input.checked; persist(); updateChecks();
+    });
+  });
+  function updateChecks() {
+    $$('[data-check-group]').forEach(group => {
+      const inputs = $$('[data-check]', group), done = inputs.filter(x => x.checked).length;
+      $('[data-check-count]', group).textContent = `${done} / ${inputs.length} 完了`;
+      $('[role="progressbar"]', group).setAttribute('aria-valuenow', String(done));
+      $('.check-fill', group).style.width = `${done / inputs.length * 100}%`;
+    });
+  }
+  $$('[data-reset-checks]').forEach(button => button.addEventListener('click', () => {
+    const group = $(`[data-check-group="${button.dataset.resetChecks}"]`);
+    $$('[data-check]', group).forEach(input => { input.checked = false; saved.checks[input.dataset.check] = false; });
+    persist(); updateChecks(); announce('このチェックをリセットしました。');
+  }));
+  updateChecks(); storageNote();
+
+  function renderDeck() {
+    $$('.script-deck').forEach(deck => { deck.hidden = deck.dataset.mode !== state.mode; });
+    Object.entries(modes).forEach(([mode, steps]) => steps.forEach((step, i) => { step.hidden = i !== indexes[mode]; }));
+    $$('button[data-mode]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.mode === state.mode)));
+    const nav = $('#step-nav'); nav.replaceChildren();
+    nav.style.gridTemplateColumns = '';
+    modes[state.mode].forEach((step, i) => {
+      const button = document.createElement('button'); button.type = 'button';
+      const number = document.createElement('span'); number.className = 'step-number'; number.textContent = String(i + 1).padStart(2, '0');
+      const name = document.createElement('span'); name.className = 'step-name'; name.textContent = step.dataset.title;
+      button.append(number, name);
+      button.setAttribute('aria-label', `場面${i + 1} ${step.dataset.title} ${step.dataset.time}`);
+      if (i === indexes[state.mode]) button.setAttribute('aria-current', 'step');
+      button.addEventListener('click', () => navigate(step.id)); nav.append(button);
+    });
+    $('#step-prev').disabled = indexes[state.mode] === 0;
+    const last = indexes[state.mode] === modes[state.mode].length - 1;
+    $('#step-next').textContent = last ? '登録の手順へ →' : '次の場面 →';
+    $('#step-indicator').textContent = `${state.mode === 'full' ? '標準8分' : '短縮3分'} · ${indexes[state.mode] + 1} / ${modes[state.mode].length} 場面`;
+    if (readerMedia.matches) {
+      const active = $('[aria-current="step"]', nav);
+      if (active) nav.scrollLeft = active.offsetLeft - nav.offsetLeft - 8;
+    }
+  }
+  function updateHash(id) {
+    if (location.hash === '#' + id) return;
+    try { history.pushState(null, '', '#' + id); }
+    catch (_) { location.hash = id; }
+  }
+  let highlightTimer;
+  function navigate(id, { push = true, focus = true } = {}) {
+    const target = document.getElementById(id) || $('#start');
+    const panel = target.matches('[data-panel]') ? target : target.closest('[data-panel]');
+    if (!panel) return;
+    closeReaderSheets();
+    state.panel = panel.id;
+    document.body.dataset.activePanel = panel.id;
+    const step = target.matches('[data-step]') ? target : target.closest('[data-step]');
+    if (step) {
+      state.mode = step.closest('.script-deck').dataset.mode;
+      indexes[state.mode] = modes[state.mode].indexOf(step);
+    }
+    panels.forEach(p => { p.hidden = p !== panel; });
+    $$('.nav-link, .menu-link, .reader-dock a').forEach(link => {
+      if (link.getAttribute('href') === '#' + panel.id) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
+    });
+    let parent = target;
+    while (parent && parent !== panel) { if (parent.tagName === 'DETAILS') parent.open = true; parent = parent.parentElement; }
+    renderDeck();
+    document.title = `${panel.dataset.title}｜ミセチョク 店舗営業マニュアル`;
+    closeSearch();
+    if (push) updateHash(target.id);
+    if (focus) {
+      const focusTarget = target.matches('[data-panel]') ? $('h1', target) : target.matches('details') ? $('summary', target) : step ? $('h3', step) : $('h2,h3,dt', target) || target;
+      if (focusTarget) { if (!focusTarget.matches('summary,button,a,input')) focusTarget.setAttribute('tabindex', '-1'); focusTarget.focus({ preventScroll: true }); }
+      if (target === panel) window.scrollTo({ top: 0, behavior: 'auto' });
+      else target.scrollIntoView({ behavior: 'auto', block: 'start' });
+    }
+  }
+  document.addEventListener('click', event => {
+    const link = event.target.closest('a[href^="#"]');
+    if (!link || link.classList.contains('skip')) return;
+    const id = link.getAttribute('href').slice(1);
+    if (document.getElementById(id)) {
+      event.preventDefault();
+      navigate(id === 'demo' && link.closest('.reader-dock') ? modes[state.mode][indexes[state.mode]].id : id);
+    }
+  });
+  $$('button[data-mode]').forEach(button => button.addEventListener('click', () => {
+    state.mode = button.dataset.mode;
+    navigate(modes[state.mode][indexes[state.mode]].id);
+  }));
+  $('#step-prev').addEventListener('click', () => {
+    if (indexes[state.mode] > 0) navigate(modes[state.mode][indexes[state.mode] - 1].id);
+  });
+  $('#step-next').addEventListener('click', () => {
+    const next = indexes[state.mode] + 1;
+    navigate(next < modes[state.mode].length ? modes[state.mode][next].id : 'register');
+  });
+  $('#speech-toggle').addEventListener('click', () => {
+    state.speech = !state.speech;
+    $('#demo').classList.toggle('speech-only', state.speech);
+    $('#speech-toggle').setAttribute('aria-pressed', String(state.speech));
+    $('#speech-toggle').textContent = state.speech ? '操作の説明も表示する' : '話す言葉を大きく表示';
+  });
+  const routeFromLocation = () => { let id = 'start'; try { id = decodeURIComponent(location.hash.slice(1)) || 'start'; } catch (_) {} navigate(id, { push: false }); };
+  window.addEventListener('popstate', routeFromLocation);
+  window.addEventListener('hashchange', routeFromLocation);
+
+  const searchInput = $('#manual-search'), searchResults = $('#search-results');
+  const searchIndex = $$('[data-search-title]').map(el => ({
+    id: el.id, title: el.dataset.searchTitle,
+    text: el.textContent.replace(/\s+/g, ' ').trim(),
+    panel: el.closest('[data-panel]').dataset.title
+  }));
+  const normalized = value => value.normalize('NFKC').toLowerCase();
+  function closeSearch() { searchResults.hidden = true; searchInput.setAttribute('aria-expanded', 'false'); }
+  function search() {
+    const raw = searchInput.value.trim(); $('#search-clear').hidden = !raw;
+    if (!raw) { closeSearch(); return; }
+    const terms = normalized(raw).split(/\s+/).filter(Boolean);
+    const found = searchIndex.filter(item => terms.every(term => normalized(item.title + ' ' + item.text).includes(term)));
+    searchResults.replaceChildren();
+    const count = document.createElement('div'); count.className = 'search-count'; count.setAttribute('role', 'status');
+    count.textContent = `${found.length}件見つかりました${found.length > 8 ? '（先頭8件を表示）' : ''}`; searchResults.append(count);
+    if (!found.length) { const empty = document.createElement('p'); empty.className = 'search-empty'; empty.textContent = '見つかりませんでした。「写真」「料金」「メール」など、短い言葉でもう一度お試しください。'; searchResults.append(empty); }
+    found.slice(0, 8).forEach(item => {
+      const button = document.createElement('button'); button.className = 'search-result'; button.type = 'button';
+      const title = document.createElement('strong'); title.textContent = item.title;
+      const excerpt = document.createElement('span'); const at = Math.max(0, normalized(item.text).indexOf(terms[0]) - 20);
+      excerpt.textContent = `${item.panel} · ${at ? '…' : ''}${item.text.slice(at, at + 95)}…`;
+      button.append(title, excerpt); button.addEventListener('click', () => {
+        navigate(item.id);
+        clearTimeout(highlightTimer); $$('.highlight-target').forEach(el => el.classList.remove('highlight-target'));
+        const target = document.getElementById(item.id); target.classList.add('highlight-target');
+        highlightTimer = setTimeout(() => target.classList.remove('highlight-target'), 2200);
+      }); searchResults.append(button);
+    });
+    searchResults.hidden = false; searchInput.setAttribute('aria-expanded', 'true');
+  }
+  searchInput.addEventListener('input', search); searchInput.addEventListener('focus', () => { if (searchInput.value.trim()) search(); });
+  $('#search-clear').addEventListener('click', () => { searchInput.value = ''; search(); searchInput.focus(); });
+  searchInput.addEventListener('keydown', event => {
+    if (event.key === 'ArrowDown' && !searchResults.hidden) { event.preventDefault(); $('.search-result', searchResults)?.focus(); }
+    if (event.key === 'Enter' && !searchResults.hidden) { event.preventDefault(); $('.search-result', searchResults)?.click(); }
+  });
+  searchResults.addEventListener('keydown', event => {
+    const buttons = $$('.search-result', searchResults), index = buttons.indexOf(document.activeElement);
+    if (event.key === 'ArrowDown' && index >= 0) { event.preventDefault(); buttons[Math.min(index + 1, buttons.length - 1)].focus(); }
+    if (event.key === 'ArrowUp' && index >= 0) { event.preventDefault(); if (index === 0) searchInput.focus(); else buttons[index - 1].focus(); }
+  });
+  document.addEventListener('click', event => { if (!event.target.closest('#search-dialog, [data-open-search]')) closeSearch(); });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape' && !searchResults.hidden) { closeSearch(); searchInput.focus(); closeSearch(); } });
+
+  const faqItems = $$('details.faq');
+  function faqButtonState() {
+    const all = faqItems.every(el => el.open);
+    $('#faq-expand').textContent = all ? '回答をすべて閉じる' : '回答をすべて開く';
+    $('#faq-expand').setAttribute('aria-expanded', String(all));
+  }
+  $('#faq-expand').addEventListener('click', () => { const shouldOpen = !faqItems.every(el => el.open); faqItems.forEach(el => { el.open = shouldOpen; }); faqButtonState(); });
+  faqItems.forEach(el => el.addEventListener('toggle', faqButtonState));
+
+  let copyReturnFocus = null;
+  const modal = $('#copy-fallback');
+  const background = [$('.topbar'), $('.sidebar'), $('#main'), $('.reader-dock')];
+  function openCopyFallback(text, source) {
+    copyReturnFocus = source; modal.hidden = false;
+    background.forEach(el => { el.inert = true; });
+    $('#copy-text').value = text; $('#copy-text').focus(); $('#copy-text').select();
+  }
+  function closeCopyFallback() { modal.hidden = true; background.forEach(el => { el.inert = false; }); copyReturnFocus?.focus(); }
+  $('#copy-close').addEventListener('click', closeCopyFallback);
+  modal.addEventListener('click', event => { if (event.target === modal) closeCopyFallback(); });
+  modal.addEventListener('keydown', event => {
+    if (event.key === 'Escape') { event.preventDefault(); closeCopyFallback(); }
+    if (event.key === 'Tab') {
+      const first = $('#copy-text'), last = $('#copy-close');
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    }
+  });
+  $$('[data-copy]').forEach(button => button.addEventListener('click', async () => {
+    const source = document.getElementById(button.dataset.copy);
+    const text = source.innerText.trim();
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
+      await navigator.clipboard.writeText(text); announce('コピーしました。貼り付けて使えます。');
+    } catch (_) { openCopyFallback(text, button); }
+  }));
+
+  let printState = null;
+  function beforePrint() {
+    if (printState) return;
+    closeReaderSheets();
+    printState = { details: $$('details').map(el => [el, el.open]), large: document.body.classList.contains('large-type') };
+    $$('details').forEach(el => { el.open = true; }); document.body.classList.remove('large-type'); closeSearch();
+  }
+  function afterPrint() {
+    if (!printState) return;
+    printState.details.forEach(([el, open]) => { el.open = open; });
+    document.body.classList.toggle('large-type', printState.large); printState = null; faqButtonState();
+  }
+  window.addEventListener('beforeprint', beforePrint); window.addEventListener('afterprint', afterPrint);
+  $('#print-button').addEventListener('click', () => { beforePrint(); window.print(); });
+  $('#menu-print').addEventListener('click', () => { beforePrint(); window.print(); });
+  document.documentElement.classList.add('js-ready');
+  function syncHeaderOffset() {
+    const headerHeight = $('.topbar').getBoundingClientRect().height;
+    document.documentElement.style.setProperty('--actual-header-h', `${headerHeight}px`);
+    document.documentElement.style.scrollPaddingTop = `${getComputedStyle($('.topbar')).position === 'sticky' ? headerHeight + 16 : 16}px`;
+  }
+  if (window.ResizeObserver) new ResizeObserver(syncHeaderOffset).observe($('.topbar'));
+  window.addEventListener('resize', syncHeaderOffset); syncHeaderOffset();
+  function syncReaderViewport() {
+    document.documentElement.style.setProperty('--reader-viewport-height', `${window.visualViewport?.height || innerHeight}px`);
+  }
+  window.visualViewport?.addEventListener('resize', syncReaderViewport);
+  window.addEventListener('resize', syncReaderViewport); syncReaderViewport();
+  let initial = 'start'; try { initial = decodeURIComponent(location.hash.slice(1)) || 'start'; } catch (_) {}
+  navigate(initial, { push: false, focus: false });
+})();
+</script>
+</body>
+</html>

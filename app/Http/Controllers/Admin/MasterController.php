@@ -109,7 +109,7 @@ class MasterController extends Controller
         $rules = [];
 
         foreach ($catalog['fields'] as $field) {
-            $fieldRules = ['required', 'string', 'max:255'];
+            $fieldRules = ['required', 'string', 'max:' . (int) ($field['max'] ?? 255)];
 
             if ($field['input'] === 'directory') {
                 $fieldRules[] = 'alpha_dash';

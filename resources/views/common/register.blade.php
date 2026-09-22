@@ -84,7 +84,8 @@
         var form = document.querySelector('form.register-form');
         var overlay = document.getElementById('register-submit-overlay');
         if (!form || !overlay) return;
-        form.addEventListener('submit', function () {
+        form.addEventListener('submit', function (event) {
+            if (event.defaultPrevented) return;
             overlay.classList.add('is-visible');
             var btn = form.querySelector('.register-submit');
             if (btn) {
@@ -104,7 +105,7 @@
             <h1 class="register-title">{{ $heroTitle }}</h1>
         </section>
 
-        <form method="POST" action="{{ $formAction }}" class="register-form h-adr" enctype="multipart/form-data">
+        <form method="POST" action="{{ $formAction }}" class="register-form h-adr" enctype="multipart/form-data" data-validation-errors="{{ json_encode($errors->messages(), JSON_UNESCAPED_UNICODE) }}">
             @csrf
             <span class="p-country-name" style="display:none;">Japan</span>
 
@@ -115,7 +116,7 @@
             @endif
 
             @if ($errors->any())
-                <div class="register-alert register-alert-error">
+                <div class="register-alert register-alert-error" role="alert" tabindex="-1">
                     @foreach ($errors->all() as $error)
                         <div>{{ $error }}</div>
                     @endforeach
@@ -1807,6 +1808,6 @@
         }
     </style>
 
-    <script src="{{ asset('assets/js/register-wizard.js') }}?v=20260720-wizard4"></script>
+    <script src="{{ asset('assets/js/register-wizard.js') }}?v=20260913-uiux"></script>
 
 @endsection

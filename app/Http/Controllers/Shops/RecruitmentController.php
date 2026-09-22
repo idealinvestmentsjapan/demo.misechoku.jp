@@ -420,7 +420,8 @@ class RecruitmentController extends Controller
                     'hired_regular_hourly_wage' => $hiredWage,
                     'hired_regular_hourly_wage_input' => $hiredWageInput,
                     'can_edit_hired_wage' => in_array($status, [4, 6], true)
-                        && Schema::hasColumn('shop_job_applications', 'hired_regular_hourly_wage'),
+                        && (Schema::hasColumn('shop_job_applications', 'hired_regular_hourly_wage')
+                            || Schema::hasColumn('shop_job_applications', 'hourly_wage_regular')),
                     'is_decision_overdue' => $isDecisionOverdue,
                 ];
             })
@@ -437,7 +438,10 @@ class RecruitmentController extends Controller
             'hired_regular_hourly_wage' => ['nullable', 'string', 'max:32'],
         ]);
 
-        if (!Schema::hasColumn('shop_job_applications', 'hired_regular_hourly_wage')) {
+        $wageColumn = Schema::hasColumn('shop_job_applications', 'hired_regular_hourly_wage')
+            ? 'hired_regular_hourly_wage'
+            : (Schema::hasColumn('shop_job_applications', 'hourly_wage_regular') ? 'hourly_wage_regular' : null);
+        if ($wageColumn === null) {
             abort(404);
         }
 
@@ -466,7 +470,7 @@ class RecruitmentController extends Controller
         DB::table('shop_job_applications')
             ->where('id', $target->id)
             ->update([
-                'hired_regular_hourly_wage' => $wage,
+                $wageColumn => $wage,
                 'updated_at' => now(),
             ]);
 
@@ -499,6 +503,40 @@ class RecruitmentController extends Controller
             'ok' => true,
             'id' => (int) $row->id,
             'body' => (string) $row->body,
+        ]);
+    }
+
+    /**
+     * キャストに表示される求人画面を、非公開中でも店舗本人が確認する。
+     */
+    public function preview(Request $request)
+    {
+        $shopId = $this->currentShopId();
+        $data = $this->getRecruitData($shopId);
+        abort_if(empty($data['recruit']), 404);
+
+        $initialJobPanel = (string) $request->query('job', '');
+        $initialJobPanel = in_array($initialJobPanel, ['fulltime', 'help'], true) ? $initialJobPanel : '';
+        $numericId = (int) ltrim($shopId, 's0');
+        $shopName = $data['shop']['name'] ?? $data['recruit']['store_name'] ?? '店舗';
+        $shareText = trim((string) ($data['recruit']['catch_copy'] ?? $data['recruit']['message'] ?? ''));
+
+        return view('shops.recruit.show', [
+            'pageId' => 'job_preview',
+            'recruit' => $data['recruit'],
+            'recruit_trial' => $data['recruit_trial'] ?? $data['recruit'],
+            'recruit_help' => $data['recruit_help'] ?? $data['recruit'],
+            'usesJobTypes' => $this->shopJobsUseMultipleTypes(),
+            'horizontalShopJobs' => $this->shopJobsHorizontalSchema(),
+            'initial_job_panel' => $initialJobPanel,
+            'shop' => $data['shop'],
+            'forCast' => false,
+            'isPublicShare' => false,
+            'shareUrl' => route('share.recruit.show', ['id' => max(1, $numericId)]),
+            'shareTitle' => $shopName . 'の求人情報',
+            'shareText' => mb_strimwidth($shareText !== '' ? $shareText : 'ミセチョクの求人情報です。', 0, 80, '…'),
+            'distanceKm' => null,
+            'distanceLabel' => null,
         ]);
     }
 

@@ -1,5 +1,11 @@
 # demo.misechoku.jp
 
+## 店舗向け営業資料
+
+店舗向けの紹介スライド、読み上げ原稿、営業マニュアルは [`docs/public-sales/`](docs/public-sales/) にあります。
+
+[営業資料サイトを開く](https://mearin0424-tech.github.io/demo.misechoku.jp/)
+
 ## 自動テスト実行環境
 
 本番は Plesk 上で動かしつつ、画面スモークテストは **本番 DB を使わずに別環境で実行** する前提です。

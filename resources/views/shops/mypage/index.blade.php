@@ -256,7 +256,11 @@
                                 <i class="fas {{ ($js['is_published'] ?? false) ? 'fa-circle-check' : 'fa-pause' }} text-[10px]"></i>
                                 {{ $js['status_label'] ?? '未設定' }}
                             </span>
-                            <a href="{{ route('shop.recruits.edit') }}" class="text-[11px] font-bold text-accent-text underline">ステータス管理</a>
+                            @shopowner
+                                <a href="{{ route('shop.recruits.edit') }}" class="text-[13px] font-bold text-accent-text underline">ステータス管理</a>
+                            @else
+                                <span class="text-sm text-text-sub">公開設定の変更はオーナーにご依頼ください</span>
+                            @endshopowner
                         </div>
                         <div class="flex items-center gap-4 text-[11px]">
                             <span><span class="text-text-sub">応募</span> <strong class="text-text-main">{{ number_format($js['applicant_count'] ?? 0) }}</strong></span>
@@ -271,7 +275,7 @@
                                 <i class="fas fa-file-shield text-danger text-[10px] mr-1"></i>掲載には営業許可証の承認が必要です。
                                 <a href="{{ route('shop.mypage.documents.index') }}" class="font-bold text-accent-text underline">許可証を登録する</a>
                             @else
-                                <i class="fas fa-circle-info text-[10px] mr-1"></i>公開すると検索・スワイプに表示されます。上の「ステータス管理」から公開できます。
+                                <i class="fas fa-circle-info text-[10px] mr-1"></i>公開すると検索・スワイプに表示されます。公開設定はオーナーが変更できます。
                             @endif
                         </p>
                     @endunless

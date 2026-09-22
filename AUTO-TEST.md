@@ -2,6 +2,15 @@
 
 ## 基本方針
 
+### DBを操作しないUI/UX回帰検証（2026-09-13追加）
+
+- `npm run test:frontend`：検索・登録・AI診断・トーク・モーダル・オフライン動作をJSDOMと通信モックで確認する。Node.js 24で検証済み。
+- `composer test:uiux`：PHPとBladeの構文、および検索条件・送信再試行の判定を確認する。DB接続もデータ作成も行わない。
+- これらは実アカウントのログイン、実DB、実端末による画面確認の代替ではない。
+- 現状は `database/migrations/` が存在しないため、従来の `test:smoke` の `migrate:fresh` では必要なテーブルが作られない。開発者によるスキーマ準備が必要。Codexはプロジェクト規約に従いDBテストを実行しない。
+
+### DBを利用するFeature/Smoke検証
+
 - テストは `tests/Feature/` 配下に機能テストとして作成する
 - テスト DB は `.env.testing` を参照、`database/testing.sqlite` を使用（本番 MySQL には向けない）
 - 画面スモークテストは `tests/Feature/Smoke` に集約する

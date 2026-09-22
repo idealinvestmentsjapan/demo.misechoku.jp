@@ -10,8 +10,8 @@
 @section('body-class', 'page-talk page-talk-room')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/talk.css') }}?v=20260815-scroll-fix">
-<link rel="stylesheet" href="{{ asset('assets/css/talk-light.css') }}?v=20260802-split">
+<link rel="stylesheet" href="{{ asset('assets/css/talk.css') }}?v=20260823-template-popup">
+<link rel="stylesheet" href="{{ asset('assets/css/talk-light.css') }}?v=20260823-template-popup">
 @if($isCast)
 <link rel="stylesheet" href="{{ asset('assets/css/mypage.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/css/review-modal.css') }}">
@@ -68,228 +68,6 @@
     .hired-wage-field-wrap.is-visible {
         display: block;
     }
-    /* ============================================================
-       クイック定型文パネル（2026-08-01 リニューアル）
-       - キーボード表示中もパネルは隠さず、コンパクト（横1列スクロール）に変形
-       - パネル頭の折りたたみハンドルで手動で完全に閉じられる
-       - is-hidden は撤廃（意図せぬ非表示の原因だったため）
-       ============================================================ */
-    .quick-reply-panel {
-        padding: 6px 0 0;
-        opacity: 1;
-        overflow: hidden;
-        transition: max-height 0.22s ease, padding 0.22s ease;
-        max-height: 240px;
-    }
-    /* コンパクト：入力欄フォーカス中 = キーボード表示中の想定。chip 1行だけ残す */
-    .quick-reply-panel.is-compact {
-        max-height: 60px;
-        padding-top: 4px;
-    }
-    /* コンパクト時は head を隠して chip 領域を最大化 */
-    .quick-reply-panel.is-compact .quick-reply-panel__head { display: none; }
-    /* 手動折りたたみ：ハンドルだけ残す（chip なし） */
-    .quick-reply-panel.is-collapsed {
-        max-height: 30px;
-        padding-top: 0;
-    }
-
-    .quick-reply-panel__head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        margin-bottom: 6px;
-        padding: 0 2px;
-    }
-    .quick-reply-panel.is-compact .quick-reply-panel__head,
-    .quick-reply-panel.is-collapsed .quick-reply-panel__head { margin-bottom: 4px; }
-
-    .quick-reply-panel__label {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.72rem;
-        font-weight: 800;
-        color: #6d28d9;
-        letter-spacing: 0.02em;
-        min-width: 0;
-        overflow: hidden;
-    }
-    .quick-reply-panel.is-compact .quick-reply-panel__label > span:not(.quick-reply-panel__status) { display: none; }
-    .quick-reply-panel.is-collapsed .quick-reply-panel__label { color: #857ca0; }
-
-    .quick-reply-panel__status {
-        padding: 2px 8px;
-        border-radius: 999px;
-        background: rgba(124, 58, 237, 0.10);
-        border: 1px solid rgba(124, 58, 237, 0.30);
-        font-size: 0.66rem;
-        font-weight: 800;
-        color: #6d28d9;
-        white-space: nowrap;
-    }
-
-    /* ハンドル群（右側）：折りたたみトグル + 編集 */
-    .quick-reply-panel__tools {
-        flex: 0 0 auto;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-    }
-    .quick-reply-panel__toggle,
-    .quick-reply-panel__edit {
-        flex: 0 0 auto;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 4px;
-        padding: 4px 10px;
-        border-radius: 999px;
-        border: 1px solid rgba(124, 58, 237, 0.35);
-        background: #ffffff;
-        color: #6d28d9;
-        font-size: 0.72rem;
-        font-weight: 800;
-        cursor: pointer;
-        min-height: 30px;
-        transition: background 0.12s ease, border-color 0.12s ease, transform 0.1s ease;
-    }
-    .quick-reply-panel__toggle {
-        min-width: 34px;
-        padding: 4px 8px;
-    }
-    .quick-reply-panel__toggle:hover,
-    .quick-reply-panel__edit:hover {
-        background: rgba(124, 58, 237, 0.06);
-        border-color: rgba(124, 58, 237, 0.60);
-    }
-    .quick-reply-panel__toggle:active,
-    .quick-reply-panel__edit:active { transform: scale(0.96); }
-    .quick-reply-panel__toggle i {
-        transition: transform 0.2s ease;
-        font-size: 0.72rem;
-    }
-    .quick-reply-panel.is-collapsed .quick-reply-panel__toggle i { transform: rotate(180deg); }
-
-    /* カードグリッド：デフォルトは 2 列。コンパクト時は横スクロールの chip 1 列 */
-    .quick-reply-panel__grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
-        max-height: 180px;
-        overflow-y: auto;
-        padding: 2px 2px 8px;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-    }
-    .quick-reply-panel__grid::-webkit-scrollbar { display: none; }
-    /* コンパクト時：flex 横スクロール */
-    .quick-reply-panel.is-compact .quick-reply-panel__grid {
-        display: flex;
-        grid-template-columns: none;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        overflow-y: hidden;
-        max-height: 48px;
-        gap: 6px;
-        padding: 2px 2px 6px;
-    }
-    .quick-reply-panel.is-collapsed .quick-reply-panel__grid { display: none; }
-
-    .quick-reply-card {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-        padding: 9px 11px;
-        border-radius: 12px;
-        border: 1px solid rgba(124, 58, 237, 0.28);
-        background: #ffffff;
-        color: #4b465c;
-        text-align: left;
-        cursor: pointer;
-        min-height: 56px;
-        box-shadow: 0 2px 6px rgba(76, 29, 149, 0.06);
-        transition: background 0.12s ease, transform 0.1s ease, border-color 0.12s ease, box-shadow 0.15s ease;
-    }
-    .quick-reply-card:hover {
-        border-color: rgba(124, 58, 237, 0.55);
-        box-shadow: 0 4px 12px rgba(76, 29, 149, 0.12);
-    }
-    .quick-reply-card:active { transform: scale(0.98); }
-    .quick-reply-card__body {
-        font-size: 0.78rem;
-        line-height: 1.45;
-        color: inherit;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-    .quick-reply-card__slot-no {
-        display: inline-block;
-        font-size: 0.6rem;
-        font-weight: 800;
-        letter-spacing: 0.06em;
-        color: #a16207;
-        margin-bottom: 1px;
-    }
-    /* コンパクト時のカードは 1 行の pill */
-    .quick-reply-panel.is-compact .quick-reply-card {
-        flex: 0 0 auto;
-        flex-direction: row;
-        align-items: center;
-        min-height: 38px;
-        max-width: 240px;
-        padding: 7px 14px;
-        border-radius: 999px;
-        gap: 6px;
-    }
-    .quick-reply-panel.is-compact .quick-reply-card__slot-no { display: none; }
-    .quick-reply-panel.is-compact .quick-reply-card__body {
-        -webkit-line-clamp: 1;
-        font-size: 0.76rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    /* おすすめ（進行状況ベース）：淡バイオレット面 */
-    .quick-reply-card--suggest {
-        background: rgba(124, 58, 237, 0.08);
-        border-color: rgba(124, 58, 237, 0.40);
-    }
-    .quick-reply-card--suggest .quick-reply-card__body {
-        color: #4c2889;
-        font-weight: 700;
-    }
-    /* マイ定型文（スロット）：淡ゴールド面 */
-    .quick-reply-card--slot {
-        background: linear-gradient(180deg, rgba(246, 211, 106, 0.10), rgba(246, 211, 106, 0.04));
-        border-color: rgba(180, 83, 9, 0.30);
-    }
-    .quick-reply-card--slot .quick-reply-card__body { color: #4b465c; }
-    /* カテゴリ chip（カード先頭のミニラベル：質問／感謝 等） */
-    .quick-reply-card__cat {
-        display: inline-block;
-        padding: 1px 7px;
-        border-radius: 999px;
-        font-size: 0.58rem;
-        font-weight: 800;
-        letter-spacing: 0.04em;
-        color: #7c3aed;
-        background: rgba(124, 58, 237, 0.10);
-        border: 1px solid rgba(124, 58, 237, 0.22);
-    }
-    .quick-reply-card__cat--thanks   { color: #b45309; background: rgba(217, 119, 6, 0.10); border-color: rgba(217, 119, 6, 0.22); }
-    .quick-reply-card__cat--schedule { color: #0f766e; background: rgba(20, 184, 166, 0.10); border-color: rgba(20, 184, 166, 0.28); }
-    .quick-reply-card__cat--intro    { color: #6d28d9; background: rgba(124, 58, 237, 0.10); border-color: rgba(124, 58, 237, 0.28); }
-    .quick-reply-card__cat--question { color: #2563eb; background: rgba(37, 99, 235, 0.10); border-color: rgba(37, 99, 235, 0.28); }
-    .quick-reply-card__cat--status   { color: #6d28d9; background: rgba(124, 58, 237, 0.10); border-color: rgba(124, 58, 237, 0.28); }
-    /* 「今すぐヘルプ入れませんか」等の緊急招集テンプレ：金色で最強調（店舗→キャスト用） */
-    .quick-reply-card__cat--help     { color: #7a4b00; background: linear-gradient(105deg, #f0e6a8, #e8d08e 60%, #c5a059); border-color: rgba(197, 160, 89, 0.55); text-shadow: 0 1px 0 rgba(255,255,255,0.28); }
-    .quick-reply-panel.is-compact .quick-reply-card__cat { display: none; }
-
     .hired-wage-field-wrap label {
         display: block;
         font-size: 0.80rem;
@@ -423,7 +201,7 @@
     window.talkAllQuickReplies = @json($allQuickReplySuggestions ?? []);
     window.talkNgPayload = @json($ngWordPayload ?? ['patterns' => [], 'words' => []]);
 </script>
-<script src="{{ asset('assets/js/talk-room.js') }}?v=20260809-initiate-fix"></script>
+<script src="{{ asset('assets/js/talk-room.js') }}?v=20260913-uiux"></script>
 @endpush
 
 @section('content')
@@ -806,8 +584,17 @@
                         <input type="hidden" name="talk_topic" value="{{ $initialTalkTopic ?? '' }}">
                         <input type="hidden" name="talk_job_kind" value="{{ $initialTalkJobKind ?? '' }}">
                     @endif
-                    {{-- ＋メニューは廃止（2026-07-20）。定型文は下部パネル、ボーナス報告は
-                         採用確定の自動送信カード内CTA、面談候補日は定型文パネル先頭の導線から。 --}}
+                    {{-- ＋メニューは廃止（2026-07-20）。ボーナス報告は採用確定の自動送信カード内CTA。
+                         定型文は左の「定型文」ボタン → ポップアップから選択（2026-08-23：常設パネルを撤去し
+                         デフォルトはキーボード入力のみ）。面談候補日（店舗）は隣のカレンダーボタンから。 --}}
+                    <button type="button" id="open-quick-reply-popup" class="btn-chat-action btn-chat-action--template" aria-label="定型文を選ぶ" title="定型文を選ぶ" aria-haspopup="dialog">
+                        <i class="far fa-file-alt" aria-hidden="true"></i>
+                    </button>
+                    @if(!$isCast && !$isInterviewOfferLocked)
+                        <button type="button" id="open-interview-modal-inline" class="btn-chat-action btn-chat-action--interview" aria-label="面談候補日を送信" title="面談候補日を送信" aria-haspopup="dialog">
+                            <i class="far fa-calendar-alt" aria-hidden="true"></i>
+                        </button>
+                    @endif
                     <div class="chat-input-wrapper">
                         <textarea name="message" rows="1" placeholder="メッセージを入力..." class="focus:outline-none"></textarea>
                     </div>
@@ -818,76 +605,12 @@
                     <span class="talk-ng-warn-text">使用できない表現が含まれています。</span>
                 </div>
             </form>
-
-            {{-- クイック定型文パネル（2026-08-01 リニューアル）:
-                 - キーボード表示中もパネルを隠さず、コンパクト（横1列 chip）に自動変形
-                 - 右上のハンドルで手動折りたたみ可能（設定は sessionStorage に保存）
-                 - suggestion に category chip を付けて視認性向上 --}}
-            <div id="quick-reply-panel" class="quick-reply-panel" aria-label="定型文パネル">
-                <div class="quick-reply-panel__head">
-                    <span class="quick-reply-panel__label">
-                        <i class="fas fa-bolt" aria-hidden="true"></i>
-                        <span>定型文</span>
-                        @if(!empty($currentStatusLabel))
-                            <span class="quick-reply-panel__status">{{ $currentStatusLabel }}</span>
-                        @endif
-                    </span>
-                    <span class="quick-reply-panel__tools">
-                        <button type="button" class="quick-reply-panel__edit" id="quick-reply-open-editor" aria-label="定型文を編集・全て見る">
-                            <i class="fas fa-list" aria-hidden="true"></i>すべて
-                        </button>
-                        <button type="button" class="quick-reply-panel__toggle" id="quick-reply-toggle" aria-label="定型文パネルを開閉" aria-expanded="true">
-                            <i class="fas fa-chevron-down" aria-hidden="true"></i>
-                        </button>
-                    </span>
-                </div>
-                <div class="quick-reply-panel__grid" id="quick-reply-scroll">
-                    @if(!$isCast && !$isInterviewOfferLocked)
-                        {{-- ＋メニュー廃止に伴い、面談候補日の送信導線をここに常設 --}}
-                        <button type="button" class="quick-reply-card quick-reply-card--action" id="open-interview-modal-inline">
-                            <span class="quick-reply-card__cat quick-reply-card__cat--schedule">日程</span>
-                            <span class="quick-reply-card__body"><i class="far fa-calendar-alt" aria-hidden="true"></i> 面談候補日を送信</span>
-                        </button>
-                    @endif
-                    @foreach(($quickReplySuggestions ?? []) as $qr)
-                        @php
-                            // カテゴリ検出（TalkController の suggest は string または {category, body} を許容）
-                            $cat = null;
-                            $body = null;
-                            if (is_array($qr)) {
-                                $cat = $qr['category'] ?? null;
-                                $body = $qr['body'] ?? '';
-                            } else {
-                                $body = (string) $qr;
-                            }
-                            $catLabelMap = [
-                                'intro'    => ['自己紹介', 'intro'],
-                                'question' => ['質問',     'question'],
-                                'schedule' => ['日程',     'schedule'],
-                                'thanks'   => ['感謝',     'thanks'],
-                                'status'   => ['状況',     'status'],
-                                'help'     => ['緊急招集', 'help'],
-                            ];
-                            $catInfo = $cat && isset($catLabelMap[$cat]) ? $catLabelMap[$cat] : null;
-                        @endphp
-                        <button type="button" class="quick-reply-card quick-reply-card--suggest"
-                                data-quick-reply="{{ $body }}"
-                                title="{{ $body }}">
-                            @if($catInfo)
-                                <span class="quick-reply-card__cat quick-reply-card__cat--{{ $catInfo[1] }}">{{ $catInfo[0] }}</span>
-                            @endif
-                            <span class="quick-reply-card__body">{{ $body }}</span>
-                        </button>
-                    @endforeach
-                    {{-- マイ定型文（4スロット）は JS が window.talkQuickTemplates から追加 --}}
-                </div>
-            </div>
         </div>
     @endif
 </div>
 
 {{-- 面談日候補 送信モーダル（店舗側のみ利用） --}}
-<div id="talk-action-menu-overlay" class="interview-modal-overlay interview-modal-overlay-sheet" aria-hidden="true">
+<div id="talk-action-menu-overlay" role="dialog" aria-modal="true" aria-label="トークの操作" class="interview-modal-overlay interview-modal-overlay-sheet" aria-hidden="true">
     <div class="interview-modal interview-menu-sheet">
         <div class="interview-modal-header">
             <h2>メニュー</h2>
@@ -924,19 +647,19 @@
     </div>
 </div>
 
-<div id="talk-template-menu-overlay" class="interview-modal-overlay interview-modal-overlay-sheet" aria-hidden="true">
+<div id="talk-template-menu-overlay" role="dialog" aria-modal="true" aria-label="定型文を選択" class="interview-modal-overlay interview-modal-overlay-sheet" aria-hidden="true">
     <div class="interview-modal interview-menu-sheet">
         <div class="interview-modal-header">
             <h2>定型文を選択</h2>
             <button type="button" class="interview-modal-close js-talk-template-close" aria-label="閉じる">&times;</button>
         </div>
-        <p class="talk-template-menu-hint">状況ごとの定型文をタップで挿入できます。マイ定型文（下段）は鉛筆ボタンから編集できます。</p>
+        <p class="talk-template-menu-hint">状況ごとの定型文をタップすると入力欄に挿入されます。「マイ定型文」タブでは自分用の定型文を編集できます。</p>
         <div id="talk-template-menu-list" class="talk-template-list"></div>
     </div>
 </div>
 
 @if(!$isCast)
-<div id="job-kind-modal-overlay" class="interview-modal-overlay interview-modal-overlay-sheet" aria-hidden="true">
+<div id="job-kind-modal-overlay" role="dialog" aria-modal="true" aria-label="求人種別の設定" class="interview-modal-overlay interview-modal-overlay-sheet" aria-hidden="true">
     <div class="interview-modal interview-menu-sheet">
         <div class="interview-modal-header">
             <h2>求人種別の設定</h2>
@@ -964,7 +687,7 @@
     </div>
 </div>
 
-<div id="interview-modal-overlay" class="interview-modal-overlay" aria-hidden="true">
+<div id="interview-modal-overlay" role="dialog" aria-modal="true" aria-label="面談候補日を送信" class="interview-modal-overlay" aria-hidden="true">
     <div class="interview-modal">
         <div class="interview-modal-header">
             <h2>面談候補日を送信</h2>
@@ -999,7 +722,7 @@
 @endif
 
 @if($isCast)
-<div id="work-complete-confirm-overlay" class="interview-modal-overlay" aria-hidden="true">
+<div id="work-complete-confirm-overlay" role="dialog" aria-modal="true" aria-label="勤務完了の確認" class="interview-modal-overlay" aria-hidden="true">
     <div class="interview-modal interview-confirm-modal">
         <div class="interview-modal-header">
             <h2 id="work-complete-confirm-title">勤務完了報告</h2>
@@ -1013,7 +736,7 @@
     </div>
 </div>
 
-<div id="interview-confirm-overlay" class="interview-modal-overlay" aria-hidden="true">
+<div id="interview-confirm-overlay" role="dialog" aria-modal="true" aria-label="面談日時の確認" class="interview-modal-overlay" aria-hidden="true">
     <div class="interview-modal interview-confirm-modal">
         <div class="interview-modal-header">
             <h2>この日時で確定しますか？</h2>
@@ -1033,7 +756,7 @@
 @endif
 
 @if(!$isCast && !empty($canSelectResult))
-<div id="result-message-overlay" class="interview-modal-overlay" aria-hidden="true">
+<div id="result-message-overlay" role="dialog" aria-modal="true" aria-label="採用結果の送信" class="interview-modal-overlay" aria-hidden="true">
     <div class="interview-modal">
         <div class="interview-modal-header">
             <h2 id="result-message-title">結果メッセージを送信</h2>
@@ -1104,7 +827,7 @@
             <button type="button" class="payment-bank-modal-close" data-close-bonus-modal aria-label="閉じる"><i class="fas fa-times"></i></button>
         </div>
         <div class="payment-bank-modal-body">
-            <p class="deposit-precheck-note">採用された時点のボーナス金・達成条件です。内容を確認のうえ「完了」で入金申請を行ってください。</p>
+            <p class="deposit-precheck-note">採用された時点のボーナス金・達成条件です。勤務日数・時間などの条件を確認してから申請してください。申請後は店舗の入金確認と運営の振込手続きに進みます。</p>
             <div class="deposit-precheck-card">
                 <div class="deposit-precheck-title">
                     <span id="bonus-confirm-shop-name">—</span>
@@ -1123,7 +846,7 @@
                 </label>
                 <p id="bonus-confirm-error" class="deposit-precheck-note" style="color:#fca5a5; display:none;"></p>
                 <div class="text-right mt-3">
-                    <button type="submit" class="btn-action manage" id="bonus-confirm-submit-btn">完了</button>
+                    <button type="submit" class="btn-action manage" id="bonus-confirm-submit-btn">この内容でボーナスを申請する</button>
                 </div>
             </form>
         </div>
@@ -1133,45 +856,17 @@
 
 @push('scripts')
 <script>
-{{-- クイック定型文パネル：チップ挿入 / 入力フォーカスで非表示（キーボード優先）/ マイ定型文の合流 --}}
+{{-- 入力エリア：定型文ポップアップ導線 / 面談候補日ボタン / composer 高さ・キーボード対応 --}}
 (function () {
     'use strict';
-    var panel = document.getElementById('quick-reply-panel');
     var form = document.getElementById('chat-form');
-    if (!panel || !form) return;
-    var textarea = form.querySelector('textarea[name="message"]');
-    var scroll = document.getElementById('quick-reply-scroll');
+    if (!form) return;
 
-    // マイ定型文（4スロット・設定で編集可能）を候補の後ろに追加
-    (window.talkQuickTemplates || []).forEach(function (slot) {
-        var body = ((slot && (slot.body || slot.default_body)) || '').trim();
-        if (!body || !scroll) return;
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'quick-reply-card quick-reply-card--slot';
-        btn.setAttribute('data-quick-reply', body);
-        btn.title = body;
-        var bodyEl = document.createElement('span');
-        bodyEl.className = 'quick-reply-card__body';
-        bodyEl.textContent = body;
-        var slotLabel = document.createElement('span');
-        slotLabel.className = 'quick-reply-card__slot-no';
-        slotLabel.textContent = 'マイ定型文' + (slot && slot.slot ? slot.slot : '');
-        btn.appendChild(slotLabel);
-        btn.appendChild(bodyEl);
-        scroll.appendChild(btn);
-    });
+    // 「定型文」ボタン（#open-quick-reply-popup）→ 定型文ポップアップ（#talk-template-menu-overlay）。
+    // open 処理は talk-room.js 側で直接バインド。旧「＋メニュー」内の #open-template-send-menu も
+    // フォールバックとして残している。
 
-    // 「すべて」ボタン → 定型文モーダルを直接開く（＋メニューは廃止済み）
-    var editBtn = document.getElementById('quick-reply-open-editor');
-    if (editBtn) {
-        editBtn.addEventListener('click', function () {
-            var templateSendBtn = document.getElementById('open-template-send-menu');
-            if (templateSendBtn) templateSendBtn.click();
-        });
-    }
-
-    // 面談候補日の送信（定型文パネル先頭の常設導線 → 既存モーダルを開く）
+    // 面談候補日の送信（店舗のみ：入力欄左のカレンダーボタン → 既存モーダルを開く）
     var interviewInline = document.getElementById('open-interview-modal-inline');
     if (interviewInline) {
         interviewInline.addEventListener('click', function () {
@@ -1180,53 +875,7 @@
         });
     }
 
-    // チップ → 入力欄へ挿入。フォーカスは奪わない（パネルを保ったまま送信ボタンで即送信できる）
-    panel.addEventListener('click', function (e) {
-        // トグル系のクリックは chip 選択から除外
-        if (e.target.closest('.quick-reply-panel__toggle, .quick-reply-panel__edit')) return;
-        var chip = e.target.closest('[data-quick-reply]');
-        if (!chip || !textarea) return;
-        textarea.value = chip.getAttribute('data-quick-reply');
-        textarea.dispatchEvent(new Event('input', { bubbles: true }));
-    });
-
-    // ------------------------------------------------------------------
-    // パネルの状態切替：
-    //   - 入力欄フォーカス中：is-compact（横1列 chip、常時可視）
-    //   - フォーカス外：通常グリッド
-    //   - ユーザー手動折りたたみ（is-collapsed）は sessionStorage に保存
-    // ------------------------------------------------------------------
-    var COLLAPSE_KEY = 'talkQuickReplyCollapsed';
-    var isManuallyCollapsed = sessionStorage.getItem(COLLAPSE_KEY) === '1';
-
-    function applyCollapsed() {
-        panel.classList.toggle('is-collapsed', isManuallyCollapsed);
-        var toggle = document.getElementById('quick-reply-toggle');
-        if (toggle) toggle.setAttribute('aria-expanded', isManuallyCollapsed ? 'false' : 'true');
-    }
-    applyCollapsed();
-
-    var toggleBtn = document.getElementById('quick-reply-toggle');
-    if (toggleBtn) {
-        toggleBtn.addEventListener('click', function () {
-            isManuallyCollapsed = !isManuallyCollapsed;
-            sessionStorage.setItem(COLLAPSE_KEY, isManuallyCollapsed ? '1' : '0');
-            applyCollapsed();
-        });
-    }
-
-    // 入力欄フォーカス/ブラー：完全非表示にせず、コンパクト表示に切替（キーボード表示中も chip が見える）
-    if (textarea) {
-        textarea.addEventListener('focus', function () {
-            if (!isManuallyCollapsed) panel.classList.add('is-compact');
-        });
-        textarea.addEventListener('blur', function () {
-            // 180ms 待って chip タップとの競合を避ける
-            setTimeout(function () { panel.classList.remove('is-compact'); }, 180);
-        });
-    }
-
-    // 入力エリア（パネル込み）の実高さをメッセージ一覧の余白へ反映（cast/shop 両ロール共通）
+    // 入力エリアの実高さをメッセージ一覧の余白へ反映（cast/shop 両ロール共通）
     var inputArea = document.querySelector('#talk-room-container .chat-input-area');
     var messages = document.querySelector('#talk-room-container .chat-messages');
     if (inputArea && messages && !window.__talkComposerHBound) {

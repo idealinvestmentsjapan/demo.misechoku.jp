@@ -116,7 +116,7 @@
       var sendBtn = form.querySelector('[data-message-send]');
       if (sendBtn) sendBtn.addEventListener('click', send);
       if (input) input.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+        if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); send(); }
       });
     });
   }

@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
 {
@@ -49,12 +50,12 @@ class ProfileController extends Controller
             'shop_name' => 'required|string|max:100',
             'industry_label' => 'nullable|string|max:60',
             'zip' => ['nullable', 'regex:/^\d{3}-?\d{4}$/'],
-            'pref' => 'required|string|max:50',
+            'pref' => ['required', 'string', Rule::in(CommonConsts::PREFS)],
             'city' => 'nullable|string|max:100',
             'addr1' => 'nullable|string|max:255',
             'addr' => 'nullable|string|max:255',
             'building' => 'nullable|string|max:255',
-            'tel' => 'nullable|string|max:30',
+            'tel' => 'nullable|string|max:20',
             'industry_ids' => 'nullable|array|max:1',
             'industry_ids.*' => 'integer|exists:industries,id',
             'atmosphere_tag_ids'   => 'nullable|array',

@@ -17,6 +17,7 @@ class AdminPermissionService
 {
     public const ROLE_ADMIN = 'admin';
     public const ROLE_STAFF = 'staff';
+    private const NO_PERMISSIONS_SENTINEL = '__none__';
 
     /**
      * 権限カタログ。
@@ -144,14 +145,14 @@ class AdminPermissionService
         }
 
         if (Schema::hasTable('admin_role_permissions')) {
-            $row = DB::table('admin_role_permissions')->where('role', $role)->first();
-            if ($row && !empty($row->permissions)) {
-                $decoded = json_decode((string) $row->permissions, true);
-                if (is_array($decoded)) {
-                    // 不明キーを除外
-                    $valid = array_intersect($decoded, $this->allPermissionKeys());
-                    return array_values($valid);
-                }
+            $stored = DB::table('admin_role_permissions')
+                ->where('role', $role)
+                ->pluck('permission')
+                ->map(fn ($permission) => (string) $permission)
+                ->all();
+
+            if ($stored !== []) {
+                return array_values(array_intersect($stored, $this->allPermissionKeys()));
             }
         }
 
@@ -168,15 +169,25 @@ class AdminPermissionService
             return;
         }
         $valid = array_values(array_intersect($keys, $this->allPermissionKeys()));
-        $payload = json_encode($valid, JSON_UNESCAPED_UNICODE);
-
         if (!Schema::hasTable('admin_role_permissions')) {
-            return;
+            throw new \RuntimeException('admin_role_permissions テーブルが存在しません。');
         }
-        DB::table('admin_role_permissions')->updateOrInsert(
-            ['role' => $role],
-            ['permissions' => $payload, 'updated_at' => now()]
-        );
+
+        DB::transaction(function () use ($role, $valid) {
+            DB::table('admin_role_permissions')->where('role', $role)->delete();
+
+            $now = now();
+            $permissions = $valid !== [] ? $valid : [self::NO_PERMISSIONS_SENTINEL];
+            DB::table('admin_role_permissions')->insert(array_map(
+                fn (string $permission) => [
+                    'role' => $role,
+                    'permission' => $permission,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ],
+                $permissions
+            ));
+        });
     }
 
     public function roleHasPermission(string $role, string $key): bool

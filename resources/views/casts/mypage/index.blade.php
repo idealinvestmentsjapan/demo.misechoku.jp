@@ -128,6 +128,11 @@
             </div>
         </div>
 
+        <div class="mb-4 flex items-center justify-between rounded-2xl border border-line-accent/40 bg-gradient-to-br from-surface-from to-base px-4 py-3 shadow-card-3d">
+            <span class="text-[12px] font-bold text-text-sub">受取済みボーナス総額</span>
+            <strong class="text-[18px] text-accent-text">¥{{ $bonusTotal }}</strong>
+        </div>
+
         {{-- ===== 管理メニュー =====
              プロフィール編集 → DETAILS タブ内、本人確認 → サイドメニュー、
              レビュー → 採用・入金管理の案件カード内リンクに集約したため、

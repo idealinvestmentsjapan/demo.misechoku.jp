@@ -639,6 +639,12 @@
             </div>
         @endif
 
+        <div class="job-edit-v2__preview-row" style="padding-inline:16px;">
+            <a href="{{ route('shop.recruits.preview') }}" class="job-edit-v2__preview-link">
+                <i class="fas fa-eye" aria-hidden="true"></i> キャストからの見え方を確認
+            </a>
+        </div>
+
         {{-- 入力完成度メーター（form-enhance.js が挿入する） --}}
         <div id="recruit-meter-host" style="padding: 12px 16px 0;"></div>
 
@@ -1186,7 +1192,7 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('assets/js/form-enhance.js') }}?v=20260802-phase3"></script>
+<script src="{{ asset('assets/js/form-enhance.js') }}?v=20260913-uiux"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     var form = document.getElementById('recruit-form');
@@ -1196,7 +1202,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var pubLabel  = document.getElementById('published-label');
     if (pubToggle && pubLabel) {
         pubToggle.addEventListener('change', function () {
-            pubLabel.textContent = pubToggle.checked ? '公開中' : '非公開';
+            pubLabel.textContent = pubToggle.checked ? '保存後に公開（未保存）' : '保存後に非公開（未保存）';
             pubLabel.classList.toggle('is-on', pubToggle.checked);
         });
     }
@@ -1205,7 +1211,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var lbl = lid ? document.getElementById(lid) : null;
         if (!lbl) return;
         function sync() {
-            lbl.textContent = cb.checked ? '公開中' : '非公開';
+            lbl.textContent = cb.checked ? '保存後に公開（未保存）' : '保存後に非公開（未保存）';
             lbl.classList.toggle('is-on', cb.checked);
         }
         cb.addEventListener('change', sync);

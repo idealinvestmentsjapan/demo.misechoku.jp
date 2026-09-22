@@ -90,6 +90,12 @@
             </div>
         @endif
 
+        @if (\App\Support\SalesDemoAccess::enabled(request()->getHost()))
+            <div class="mb-5">
+                <x-ui.button as="a" :href="route('demo.sales')" size="lg" class="w-full">営業デモをまとめて準備する</x-ui.button>
+            </div>
+        @endif
+
         {{-- ログインカード（Glassmorphism + 3D） --}}
         <div class="w-full bg-surface-from/90 backdrop-blur-xl border border-line-accent/30 rounded-card shadow-card-3d overflow-hidden">
 

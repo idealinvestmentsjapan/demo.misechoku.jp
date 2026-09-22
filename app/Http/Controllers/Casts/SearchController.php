@@ -20,6 +20,9 @@ class SearchController extends BaseSearchController
     private const SORT_OPTIONS = [
         'hitokoto'  => 'ひとこと更新が新しい順',
         'distance'  => '距離が近い順',
+        'name'      => '店舗名順',
+        'wage'      => '時給が高い順',
+        'reward'    => 'ボーナスが高い順',
         'new'       => '新着登録順',
         'relevance' => 'おすすめ（マッチ度が高い順）',
     ];
@@ -35,13 +38,18 @@ class SearchController extends BaseSearchController
         }
         $tab = in_array($tab, ['list', 'ai', 'keep'], true) ? $tab : 'list';
         $activeTab = 'pane-' . $tab;
+        $savedPreferences = app(\App\Services\CastSearchPreferenceService::class)->loadAll();
+        $this->applySavedSearchDefaults($request, $savedPreferences, [
+            'industry_ids' => 'industry_ids', 'hourly_wage' => 'hourly_wage_min',
+            'shift_frequency' => 'shift_frequency', 'work_periods' => 'work_periods',
+        ]);
 
-        $sort = (string) $request->query('sort', 'hitokoto');
+        $sort = (string) $request->query('sort', 'relevance');
         if (!array_key_exists($sort, self::SORT_OPTIONS)) {
-            $sort = 'hitokoto';
+            $sort = 'relevance';
         }
 
-        $items = $this->buildSearchItems($request, $sort);
+        $items = $tab === 'list' ? $this->buildSearchItems($request, $sort) : [];
         $personalityType = $this->currentCastPersonalityType();
 
         $data = [
@@ -52,7 +60,7 @@ class SearchController extends BaseSearchController
             'sort'                   => $sort,
             'sortOptions'            => self::SORT_OPTIONS,
             'detailSearchOptions'    => $this->buildDetailSearchOptions(),
-            'savedPreferences'       => app(\App\Services\CastSearchPreferenceService::class)->loadAll(),
+            'savedPreferences'       => $savedPreferences,
             'searchLocationSettings' => app(UserLocationService::class)->loadProfileSettings(),
         ];
 
@@ -170,8 +178,17 @@ class SearchController extends BaseSearchController
             'normalize'     => fn (string $s) => $this->normalizeSearchText($s),
         ];
 
-        $items = $rows->get()
-            ->filter(function ($row) use ($keywordTokens, $areas, $hourlyWage, $reward, $jobTagFilters, $shopTagFilters) {
+        $allRows = $rows->get();
+        $availabilityFilters = $request->only(['shift_frequency', 'work_periods']);
+        $shopAvailability = ($request->filled('shift_frequency') || $request->filled('work_periods'))
+            ? \App\Models\ShopSearchPreference::whereIn('shop_id', $allRows->pluck('id'))->get(['shop_id', 'shift_frequency', 'work_periods'])->keyBy('shop_id')
+            : collect();
+        $filterService = app(\App\Services\SearchFilterService::class);
+        $items = $allRows
+            ->filter(function ($row) use ($keywordTokens, $areas, $hourlyWage, $reward, $jobTagFilters, $shopTagFilters, $availabilityFilters, $shopAvailability, $filterService) {
+                if (!$filterService->matchesAvailability($availabilityFilters, $shopAvailability->get($row->id)?->toArray() ?? [])) {
+                    return false;
+                }
                 // キーワード絞り込み: 全トークンが少なくとも1つのフィールドに含まれること
                 if ($keywordTokens !== []) {
                     $haystack = $this->normalizeSearchText(implode(' ', array_filter([
@@ -273,12 +290,12 @@ class SearchController extends BaseSearchController
         $persistedMaxKm = (int) ($userLocation->getEffectiveMaxDistanceKm() ?? 0);
 
         $locationMode = (string) $request->query('location_mode', '');
-        if (!in_array($locationMode, ['profile', 'passport', 'current'], true)) {
+        if (!in_array($locationMode, ['none', 'profile', 'passport', 'current'], true)) {
             $locationMode = '';
         }
         $queryDistanceKm = (int) $request->query('distance_km', 0);
 
-        $origin = $persistedOrigin;
+        $origin = $locationMode === 'none' ? null : $persistedOrigin;
         if ($locationMode === 'profile') {
             // プロフィール住所を基準にする：永続設定の profile_location をそのまま採用
             $settings = $userLocation->loadProfileSettings();

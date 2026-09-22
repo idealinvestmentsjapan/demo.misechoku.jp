@@ -8,7 +8,7 @@
         $metaDescription = trim($__env->yieldContent('meta_description')) ?: 'ミセチョクのデモサイトです。';
         $metaImage = trim($__env->yieldContent('meta_image')) ?: asset('assets/images/pwa/icon-512.png');
         $canonicalUrl = trim($__env->yieldContent('canonical')) ?: url()->current();
-        $assetVersion = '20260815-notif-visit';
+        $assetVersion = '20260913-uiux';
         $resolvedTitle = $metaTitle !== ''
             ? $metaTitle
             : ($pageTitle !== '' ? $pageTitle . ' | ' . config('app.name', 'ミセチョク') : config('app.name', 'ミセチョク'));
@@ -167,7 +167,8 @@
         $isLightTheme = $naturalLightTheme;
 
         // ===== ボトムナビ：アクティブ判定（旧 layouts.parts.footer と同一ロジック） =====
-        $navPrefix       = request()->is('cast/*') ? 'cast' : 'shop';
+        $navPrefix       = request()->is('shop/*') ? 'shop' : (auth()->guard('member')->check() ? 'cast'
+            : (auth()->guard('shop')->check() ? 'shop' : (request()->is('cast/*') ? 'cast' : 'shop')));
         $navIsHome        = request()->is("*/home*");
         $navIsSearch      = request()->is("*/search*");
         $navIsTalk        = request()->is("*/talk*");
@@ -177,7 +178,7 @@
             : route('shop.search.index');
     @endphp
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="description" content="{{ $metaDescription }}">
     <link rel="canonical" href="{{ $canonicalUrl }}">
@@ -203,6 +204,7 @@
     <link rel="icon" href="data:image/svg+xml,{{ rawurlencode('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" fill="#050505"/><text x="16" y="22" font-size="18" text-anchor="middle" fill="#a855f7">店</text></svg>') }}" type="image/svg+xml">
     <title>{{ $resolvedTitle }}</title>
 
+    <link rel="stylesheet" href="{{ asset('assets/css/tailwind.css') }}?v=20260913-uiux">
     {{-- 共通: Font Awesome（sidebar partial が依存） / Swiper / Noto Sans JP --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
@@ -781,7 +783,8 @@
     {{-- アプリ既存 JS（CSRFやサイドメニュー開閉などはここに集約） --}}
     <script src="{{ asset('assets/js/app.js') }}" defer></script>
     {{-- グローバル トースト：alert() の置き換えに使う window.appToast(msg, variant) --}}
-    <script src="{{ asset('assets/js/app-toast.js') }}" defer></script>
+    <script src="{{ asset('assets/js/app-toast.js') }}?v=20260913-uiux" defer></script>
+    <script src="{{ asset('assets/js/ux-accessibility.js') }}?v=20260913" defer></script>
 
     {{-- 新デザインシステム（tailwind.css / Phosphor / Montserrat / behaviors.js）
          x-ui.assets は @push 経由なので、必ず @stack('head-styles') より前に呼ぶ（後だとスタックが空のまま head が確定する）。 --}}
@@ -798,13 +801,19 @@
     <script src="{{ asset('assets/js/motion.js') }}?v={{ $assetVersion }}" defer></script>
     {{-- ライトモード（薄ラベンダー基調）。全ルールが body.theme-light スコープのため常時読み込みで安全。
          テーマトグル（ライト/ダーク）のライブ切替を可能にするため @if を外して常時ロードする --}}
-    <link rel="stylesheet" href="{{ asset('assets/css/light-theme.css') }}?v=20260809-popup-light">
+    <link rel="stylesheet" href="{{ asset('assets/css/light-theme.css') }}?v=20260913-uiux">
     {{-- プレミアムホワイト（MyPage）: 全ルールが body.theme-premium-white スコープ。同上で常時ロード --}}
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700;900&family=Cinzel:wght@600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('assets/css/premium-white.css') }}?v=20260720-pwhite-09">
 </head>
 <body class="@yield('body-class') {{ $isLightTheme ? 'theme-light' : '' }} {{ $isPremiumWhite ? 'theme-premium-white' : '' }} bg-base text-text-main"
+      data-navigation-scope="{{ $navPrefix }}:{{ auth()->guard($navPrefix === 'cast' ? 'member' : 'shop')->id() }}"
       data-notification-badge="{{ isset($unreadNewsCount) ? (int) $unreadNewsCount : 0 }}">
+    @if(in_array(session('registration_completed'), ['cast', 'shop'], true))
+    <script>
+        try { sessionStorage.removeItem('register-form-draft-v2:' + @json(session('registration_completed'))); } catch (_) {}
+    </script>
+    @endif
 
     {{-- サイドメニュー開閉用オーバーレイ（app.js が #menu-overlay を操作） --}}
     <div id="menu-overlay" class="menu-overlay"></div>
@@ -882,8 +891,9 @@
     @include('layouts.parts.header_popover.task')
 
     {{-- 共通ライトボックス（プロフィール画像クリック等） --}}
-    <div id="global-lightbox-overlay" class="lightbox-overlay" onclick="window._closeGlobalLightbox && window._closeGlobalLightbox(event)">
-        <img id="global-lightbox-image" src="" alt="" class="lightbox-image">
+    <div id="global-lightbox-overlay" class="lightbox-overlay" role="dialog" aria-modal="true" aria-label="画像の拡大表示" aria-hidden="true" onclick="window._closeGlobalLightbox && window._closeGlobalLightbox(event)">
+        <button type="button" class="btn-secondary-cta" style="position:absolute;top:20px;right:20px" onclick="event.stopPropagation(); window._closeGlobalLightbox()">閉じる</button>
+        <img id="global-lightbox-image" src="" alt="拡大したプロフィール画像" class="lightbox-image">
     </div>
 
     {{-- 既存共通 JS --}}
@@ -905,6 +915,7 @@
             if (!src) return;
             img.src = src;
             overlay.classList.add('is-open');
+            overlay.setAttribute('aria-hidden', 'false');
         };
         window._closeGlobalLightbox = function (e) {
             if (e) {
@@ -912,8 +923,12 @@
                 e.stopPropagation();
             }
             overlay.classList.remove('is-open');
+            overlay.setAttribute('aria-hidden', 'true');
             img.src = '';
         };
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && overlay.classList.contains('is-open')) window._closeGlobalLightbox();
+        });
         document.addEventListener('DOMContentLoaded', function () {
             document.querySelectorAll('.js-lightbox-target').forEach(function (el) {
                 el.style.cursor = 'zoom-in';

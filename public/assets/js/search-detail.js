@@ -339,6 +339,9 @@
         form.querySelectorAll('select').forEach(function (select) {
             if (select.value) n++;
         });
+        form.querySelectorAll('input[name="hourly_wage"], input[name="reward"]').forEach(function (input) {
+            if (Number(input.value) > 0) n++;
+        });
         return n;
     }
 
@@ -372,6 +375,10 @@
                 lines.push(label + '：' + values.join('・'));
             }
         });
+        var wage = form.querySelector('input[name="hourly_wage"]');
+        var reward = form.querySelector('input[name="reward"]');
+        if (wage && Number(wage.value) > 0) lines.push('時給：' + Number(wage.value).toLocaleString('ja-JP') + '円以上');
+        if (reward && Number(reward.value) > 0) lines.push('ボーナス：' + Number(reward.value).toLocaleString('ja-JP') + '円以上');
         return lines;
     }
 
@@ -424,6 +431,7 @@
 
     if (form) {
         form.addEventListener('change', updateBadgeAndSummary);
+        form.addEventListener('input', updateBadgeAndSummary);
         updateBadgeAndSummary();
     }
 
@@ -433,12 +441,17 @@
             resetBtn.addEventListener('click', function () {
                 if (!form) return;
                 form.querySelectorAll('input[type="checkbox"]').forEach(function (c) { c.checked = false; });
-                form.querySelectorAll('input[type="text"]').forEach(function (i) { i.value = ''; });
+                form.querySelectorAll('input[type="text"], input[type="number"]').forEach(function (i) { i.value = ''; });
                 form.querySelectorAll('input[type="radio"]').forEach(function (r) {
-                    r.checked = r.value === 'current';
+                    r.checked = r.value === 'none';
+                    r.dispatchEvent(new Event('change', { bubbles: true }));
                 });
                 form.querySelectorAll('select').forEach(function (select) {
                     select.value = '';
+                });
+                form.querySelectorAll('input[name="hourly_wage"], input[name="reward"]').forEach(function (input) {
+                    input.value = '';
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
                 });
                 var distanceInput = form.querySelector('input[name="distance_km"]');
                 if (distanceInput) {
@@ -446,8 +459,13 @@
                     if (distanceValueEl) distanceValueEl.textContent = '20km';
                     distanceInput.dispatchEvent(new Event('input'));
                 }
+                var locationRange = document.getElementById('detail-search-location-slider');
+                if (locationRange) {
+                    locationRange.value = '1';
+                    locationRange.dispatchEvent(new Event('input', { bubbles: true }));
+                }
                 locationOptions.forEach(function (l) { l.classList.remove('is-selected'); });
-                var firstLocation = modal.querySelector('.detail-search-location-option input[value="current"]');
+                var firstLocation = modal.querySelector('.detail-search-location-option input[value="none"]');
                 if (firstLocation) firstLocation.closest('.detail-search-location-option').classList.add('is-selected');
                 if (keywordInput) keywordInput.value = '';
                 updateBadgeAndSummary();
@@ -464,7 +482,7 @@
     }
 
     function buildSearchParams(extraParams) {
-        var params = [];
+        var params = ['filters_applied=1'];
         if (keywordInput && keywordInput.value.trim()) {
             params.push('keyword=' + encodeURIComponent(keywordInput.value.trim()));
         }
@@ -472,18 +490,14 @@
             params.push('sort=' + encodeURIComponent(sortCurrent.value));
         }
         if (form) {
-            form.querySelectorAll('input[type="radio"]:checked').forEach(function (r) {
-                params.push(r.name + '=' + encodeURIComponent(r.value));
-            });
-            var distanceInput = form.querySelector('input[name="distance_km"]');
-            if (distanceInput && distanceInput.value) {
-                params.push('distance_km=' + encodeURIComponent(distanceInput.value));
-            }
-            form.querySelectorAll('input[type="checkbox"]:checked').forEach(function (c) {
-                if (c.name && c.value) params.push(c.name + '=' + encodeURIComponent(c.value));
-            });
-            form.querySelectorAll('select').forEach(function (select) {
-                if (select.name && select.value) params.push(select.name + '=' + encodeURIComponent(select.value));
+            var modeField = form.querySelector('[name="location_mode"]:checked') || form.querySelector('[name="location_mode"][type="hidden"]');
+            var selectedMode = modeField ? modeField.value : '';
+            new FormData(form).forEach(function (value, name) {
+                if (['_token', '_method', 'filters_applied'].indexOf(name) !== -1 || typeof value !== 'string' || value === '') return;
+                if (name.indexOf('current_') === 0 && selectedMode !== 'current') return;
+                if (name.indexOf('passport_') === 0 && selectedMode !== 'passport') return;
+                if (name === 'distance_km' && selectedMode === 'none') return;
+                params.push(encodeURIComponent(name) + '=' + encodeURIComponent(value));
             });
         }
         if (extraParams && typeof extraParams === 'object') {
@@ -498,13 +512,23 @@
 
     function getSearchUrl() {
         var pathname = window.location.pathname;
-        if (/\/search\/ai$/.test(pathname)) {
-            return pathname.replace(/\/ai$/, '/search');
+        return pathname.indexOf('/cast/') === 0 ? '/cast/search/list' : '/shop/search';
+    }
+
+    // 一覧側には実際に適用した条件だけを表示する（モーダル編集中は変更しない）。
+    var appliedSummary = document.querySelector('[data-applied-search-summary]');
+    if (appliedSummary && form) {
+        var appliedLines = getSummaryLines();
+        if (keywordInput && keywordInput.value.trim()) appliedLines.unshift('キーワード：' + keywordInput.value.trim());
+        var locationMode = form.querySelector('[name="location_mode"]:checked') || form.querySelector('[name="location_mode"][type="hidden"]');
+        if (locationMode && locationMode.value !== 'none') {
+            var mode = locationMode.value;
+            var lat = form.querySelector('[name="' + (mode === 'passport' ? 'passport_lat' : 'current_lat') + '"]');
+            var km = form.querySelector('[name="distance_km"]');
+            if (mode === 'profile' || (lat && lat.value !== '')) appliedLines.push((mode === 'profile' ? '店舗住所' : mode === 'passport' ? '指定地' : '現在地') + 'から' + (km ? km.value : '') + 'km以内（距離不明の相手を含む）');
+            else appliedLines.push('位置情報未取得のため距離では絞り込んでいません');
         }
-        if (/\/search\/(timeline|list)$/.test(pathname)) {
-            return pathname.replace(/\/(timeline|list)$/, '');
-        }
-        return pathname;
+        appliedSummary.textContent = appliedLines.length ? appliedLines.join(' / ') : '条件の指定なし';
     }
 
     function doSearch(params) {
@@ -521,7 +545,7 @@
 
     if (keywordInput) {
         keywordInput.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) {
                 e.preventDefault();
                 doSearch(buildSearchParams());
             }

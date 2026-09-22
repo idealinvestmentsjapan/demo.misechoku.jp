@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Common;
 use App\Http\Controllers\Controller;
 use App\Models\Favorite;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -13,14 +14,42 @@ use Illuminate\Support\Facades\DB;
  */
 abstract class SearchController extends Controller
 {
+    protected function applySavedSearchDefaults(Request $request, array $saved, array $mapping): void
+    {
+        if ($request->boolean('filters_applied')) {
+            return;
+        }
+        foreach ($mapping as $queryKey => $savedKey) {
+            if (!$request->query->has($queryKey) && isset($saved[$savedKey])) {
+                $request->query->set($queryKey, $saved[$savedKey]);
+            }
+        }
+    }
+
     /**
      * 共通のインデックス表示ロジック
      */
     protected function renderIndex(array $data)
     {
+        $items = $data['items'] ?? [];
+        $data['resultCount'] = count($items);
+        $data['items'] = $this->paginateResults($items, request());
+
         return view('common.search.index', array_merge([
             'pageId' => 'search',
         ], $data));
+    }
+
+    protected function paginateResults(array $items, Request $request): LengthAwarePaginator
+    {
+        $total = count($items);
+        $perPage = 20;
+        $page = max(1, min((int) $request->query('page', 1), max(1, (int) ceil($total / $perPage))));
+
+        return new LengthAwarePaginator(array_slice($items, ($page - 1) * $perPage, $perPage), $total, $perPage, $page, [
+            'path' => $request->url(),
+            'query' => $request->except('page'),
+        ]);
     }
 
     /**

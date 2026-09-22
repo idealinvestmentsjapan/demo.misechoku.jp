@@ -3,7 +3,7 @@
  *
  * いくつかの質問に選択肢で答えると、回答をまとめて /cast/search/ai-chat に送信し、
  * 自分に合う店舗のレコメンドカードを表示する。
- * フリーテキスト入力は「実装中」表示で無効化（選択肢のみで完結させる）。
+ * 5問の選択式診断。途中の回答変更と同じ条件での通信再試行に対応。
  */
 (function () {
     'use strict';
@@ -34,12 +34,11 @@
         var avatar = root.getAttribute('data-avatar') || '';
         var personalityType = (root.getAttribute('data-personality-type') || '').trim();
         var thread = root.querySelector('[data-ai-thread]');
-        var form = root.querySelector('[data-ai-form]');
-        var input = root.querySelector('[data-ai-input]');
-        var sendBtn = root.querySelector('[data-ai-send]');
         var quickReplyArea = root.querySelector('[data-ai-quick-replies]');
 
         var isBusy = false;
+        var isAnswering = false;
+        var nextQuestionTimer = null;
 
         // ------------------------------------------------------------
         // QA 診断フロー定義
@@ -53,6 +52,10 @@
         ];
         var qaIndex = -1;
         var qaAnswers = [];
+        try {
+            var areas = JSON.parse(root.getAttribute('data-area-options') || '[]');
+            if (Array.isArray(areas) && areas.length) QA_FLOW[0].opts = areas.concat(['エリアは問わない']);
+        } catch (e) { /* Keep the displayed fallback choices. */ }
 
         // ------------------------------------------------------------
         // 描画ヘルパ
@@ -189,29 +192,48 @@
         // QA フロー進行
         // ------------------------------------------------------------
         function askNext() {
+            nextQuestionTimer = null;
             qaIndex++;
             if (qaIndex >= QA_FLOW.length) {
                 finishQa();
                 return;
             }
             var step = QA_FLOW[qaIndex];
+            isAnswering = false;
             appendAi('Q' + (qaIndex + 1) + '/' + QA_FLOW.length + '　' + step.q, { instant: qaIndex > 0 });
-            renderChoices(step.opts.map(function (opt) {
+            var choices = step.opts.map(function (opt) {
                 return { label: opt, onClick: handleAnswer };
-            }));
+            });
+            if (qaIndex > 0) choices.push({ label: '前の質問に戻る', onClick: previousQuestion });
+            renderChoices(choices);
         }
 
         function handleAnswer(label) {
+            if (isBusy || isAnswering) return;
+            isAnswering = true;
+            renderChoices([]);
             appendUser(label);
             qaAnswers.push(label);
-            window.setTimeout(askNext, 250);
+            nextQuestionTimer = window.setTimeout(askNext, 250);
+        }
+
+        function previousQuestion() {
+            if (isBusy || isAnswering || qaIndex < 1) return;
+            window.clearTimeout(nextQuestionTimer);
+            qaAnswers.pop();
+            qaIndex -= 2;
+            appendAi('前の回答を変更できます。', { instant: true });
+            askNext();
         }
 
         function restartQa() {
+            window.clearTimeout(nextQuestionTimer);
+            isAnswering = true;
             qaIndex = -1;
             qaAnswers = [];
+            renderChoices([]);
             appendAi('もう一度診断するね！✨', { instant: true });
-            window.setTimeout(askNext, 250);
+            nextQuestionTimer = window.setTimeout(askNext, 250);
         }
 
         function finishQa() {
@@ -226,7 +248,7 @@
         }
 
         // ------------------------------------------------------------
-        // サーバへ送信（QA 回答のまとめのみ。フリーテキストは実装中）
+        // サーバへ送信（QA 回答のまとめ）
         // ------------------------------------------------------------
         function fetchRecommendation(msg) {
             if (isBusy) return;
@@ -236,6 +258,8 @@
             var typingEl = appendTyping();
             var minWait = 700 + Math.floor(Math.random() * 400);
             var startedAt = Date.now();
+            var controller = new AbortController();
+            var timeout = window.setTimeout(function () { controller.abort(); }, 30000);
 
             fetch(endpoint, {
                 method: 'POST',
@@ -246,6 +270,7 @@
                     'X-CSRF-TOKEN': getCsrf(),
                 },
                 credentials: 'same-origin',
+                signal: controller.signal,
                 body: JSON.stringify({ message: msg, history: [] }),
             })
                 .then(function (res) {
@@ -258,7 +283,7 @@
                         if (typingEl && typingEl.parentNode) typingEl.parentNode.removeChild(typingEl);
                         appendAi(data.reply || '', { source: data.source || '' });
                         appendCards(data.recommendations || []);
-                        renderChoices([{ label: 'もう一度診断する', onClick: restartQa }]);
+                        renderChoices([{ label: '条件を変えて診断する', onClick: restartQa }]);
                         isBusy = false;
                     }, wait);
                 })
@@ -266,10 +291,14 @@
                     window.setTimeout(function () {
                         if (typingEl && typingEl.parentNode) typingEl.parentNode.removeChild(typingEl);
                         appendAi('ごめん、いま少し繋がりにくいみたい💦 もう一度試してみてね。', { instant: true });
-                        renderChoices([{ label: 'もう一度診断する', onClick: restartQa }]);
+                        renderChoices([
+                            { label: '同じ条件で再試行する', onClick: function () { fetchRecommendation(msg); } },
+                            { label: '条件を変更する', onClick: restartQa },
+                            { label: '通常の検索で探す', onClick: function () { window.location.href = '/cast/search/list'; } }
+                        ]);
                         isBusy = false;
                     }, 500);
-                });
+                }).finally(function () { window.clearTimeout(timeout); });
         }
 
         // ------------------------------------------------------------
@@ -288,6 +317,9 @@
             btn.title = '診断をやり直す';
             btn.addEventListener('click', function () {
                 if (isBusy) return;
+                window.clearTimeout(nextQuestionTimer);
+                isAnswering = true;
+                renderChoices([]);
                 thread.innerHTML = '';
                 qaIndex = -1;
                 qaAnswers = [];
@@ -304,19 +336,8 @@
                 ? 'こんにちは✨ いくつかの質問に答えるだけで、あなたにピッタリのお店をAIが探すよ！\n接客タイプ診断（' + personalityType + '）も加味して提案するね💎'
                 : 'こんにちは✨ いくつかの質問に答えるだけで、あなたにピッタリのお店をAIが探すよ！';
             appendAi(greet, { instant: true });
-            window.setTimeout(askNext, 300);
-        }
-
-        // フリーテキストは実装中：入力欄・送信ボタンを無効化
-        if (input) {
-            input.value = '';
-            input.disabled = true;
-            input.required = false;
-            input.placeholder = 'フリーテキスト入力は実装中です（選択肢から選んでね）';
-        }
-        if (sendBtn) sendBtn.disabled = true;
-        if (form) {
-            form.addEventListener('submit', function (e) { e.preventDefault(); });
+            isAnswering = true;
+            nextQuestionTimer = window.setTimeout(askNext, 300);
         }
 
         injectResetButton();

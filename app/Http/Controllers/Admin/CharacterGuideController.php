@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Services\CharacterGuideService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 class CharacterGuideController extends Controller
 {
@@ -40,18 +42,19 @@ class CharacterGuideController extends Controller
     {
         $catalog = $this->characterGuideService->getCatalogRouteNames();
 
-        $rules = [];
-        foreach ($catalog as $route) {
-            $rules['settings.' . $route . '.enabled'] = ['nullable'];
-            $rules['settings.' . $route . '.message'] = ['nullable', 'string', 'max:500'];
-        }
-
-        $request->validate($rules);
-
         $inputs = [];
         $rawSettings = (array) $request->input('settings', []);
         foreach ($catalog as $route) {
-            $entry = $rawSettings[$route] ?? [];
+            $entry = (array) ($rawSettings[$route] ?? []);
+            $validator = Validator::make($entry, [
+                'enabled' => ['nullable'],
+                'message' => ['nullable', 'string', 'max:500'],
+            ]);
+            if ($validator->fails()) {
+                throw ValidationException::withMessages([
+                    'settings.' . $route . '.message' => $validator->errors()->first('message'),
+                ]);
+            }
             $inputs[$route] = [
                 'enabled' => !empty($entry['enabled']),
                 'message' => isset($entry['message']) ? trim((string) $entry['message']) : '',

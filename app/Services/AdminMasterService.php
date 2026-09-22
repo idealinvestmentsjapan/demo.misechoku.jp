@@ -451,7 +451,7 @@ class AdminMasterService
                 'description' => 'キャバクラ、ラウンジ、ガールズバー など',
                 'group' => 'プロフィール',
                 'fields' => [
-                    ['input' => 'name', 'column' => 'name', 'label' => '業種名', 'placeholder' => '例: キャバクラ'],
+                    ['input' => 'name', 'column' => 'name', 'label' => '業種名', 'placeholder' => '例: キャバクラ', 'max' => 100],
                 ],
             ],
             [
@@ -462,8 +462,8 @@ class AdminMasterService
                 'description' => 'キャバクラ情報、面接対策 など',
                 'group' => 'コンテンツ',
                 'fields' => [
-                    ['input' => 'name', 'column' => 'name', 'label' => 'カテゴリ名', 'placeholder' => '例: 面接対策'],
-                    ['input' => 'directory', 'column' => 'directory', 'label' => 'ディレクトリ', 'placeholder' => '例: interview'],
+                    ['input' => 'name', 'column' => 'name', 'label' => 'カテゴリ名', 'placeholder' => '例: 面接対策', 'max' => 255],
+                    ['input' => 'directory', 'column' => 'directory', 'label' => 'ディレクトリ', 'placeholder' => '例: interview', 'max' => 255],
                 ],
                 'uses_del_flg' => true,
             ],
@@ -489,7 +489,7 @@ class AdminMasterService
                 'description' => 'cast_tags (category = ' . $meta['category'] . ')',
                 'group' => 'プロフィール',
                 'fields' => [
-                    ['input' => 'name', 'column' => 'name', 'label' => 'タグ名', 'placeholder' => '例: スレンダー'],
+                    ['input' => 'name', 'column' => 'name', 'label' => 'タグ名', 'placeholder' => '例: スレンダー', 'max' => 100],
                 ],
                 'uses_del_flg' => true,
                 'uses_sort_order' => true,
@@ -520,7 +520,7 @@ class AdminMasterService
                 'description' => 'shop_tags (target = ' . $meta['target'] . ', category = ' . $meta['category'] . ')',
                 'group' => $group,
                 'fields' => [
-                    ['input' => 'name', 'column' => 'name', 'label' => 'タグ名', 'placeholder' => '例: アットホーム'],
+                    ['input' => 'name', 'column' => 'name', 'label' => 'タグ名', 'placeholder' => '例: アットホーム', 'max' => 100],
                 ],
                 'uses_del_flg' => true,
                 'uses_sort_order' => true,

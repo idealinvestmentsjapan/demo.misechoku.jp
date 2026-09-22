@@ -1,0 +1,148 @@
+{
+  "file": "C:\\Users\\Lenovo\\OneDrive\\デスクトップ\\mearin0424-tech\\demo.misechoku.jp\\docs\\public-sales\\shop-sales-manual.html",
+  "checks": [
+    {
+      "name": "UTF-8 / JavaScript syntax / complete content",
+      "passed": true
+    },
+    {
+      "name": "Semantic structure / unique IDs / all internal and copy links / no external assets",
+      "passed": true,
+      "details": {
+        "duplicates": [],
+        "brokenLinks": [],
+        "brokenCopies": 0,
+        "searchIdsMissing": 0,
+        "unnamedButtons": 0,
+        "language": "ja",
+        "externalAssets": 0
+      }
+    },
+    {
+      "name": "One active chapter on opening",
+      "passed": true
+    },
+    {
+      "name": "Ten viewport sizes in portrait and landscape, all eight chapters and twelve script scenes, enlarged text and speech view",
+      "passed": true,
+      "details": [
+        [
+          1440,
+          1000
+        ],
+        [
+          1366,
+          1024
+        ],
+        [
+          1180,
+          820
+        ],
+        [
+          1024,
+          768
+        ],
+        [
+          820,
+          1180
+        ],
+        [
+          768,
+          1024
+        ],
+        [
+          430,
+          932
+        ],
+        [
+          390,
+          844
+        ],
+        [
+          320,
+          700
+        ],
+        [
+          844,
+          390
+        ]
+      ]
+    },
+    {
+      "name": "Touch navigation, persistent scene buttons, 44px targets, all chapters, modal focus return and search layout",
+      "passed": true
+    },
+    {
+      "name": "Large tablet touch mode uses the tablet layout and touch chapter navigation",
+      "passed": true
+    },
+    {
+      "name": "Previous / next / registration handoff / browser back / deep-link reload",
+      "passed": true
+    },
+    {
+      "name": "Search results / detail expansion / sticky focus visibility / empty results / keyboard / Escape",
+      "passed": true
+    },
+    {
+      "name": "All 14 FAQ answers expand and collapse",
+      "passed": true
+    },
+    {
+      "name": "Both checklists save, reload, count and reset correctly",
+      "passed": true
+    },
+    {
+      "name": "Clipboard copy works from the standalone local file",
+      "passed": true
+    },
+    {
+      "name": "Denied clipboard fallback, focus trap and focus return",
+      "passed": true
+    },
+    {
+      "name": "Graceful fallback when local storage is unavailable",
+      "passed": true
+    },
+    {
+      "name": "Readable without JavaScript, including both scripts and native FAQ disclosure",
+      "passed": true
+    },
+    {
+      "name": "Offline file reload and navigation; zero external requests",
+      "passed": true
+    },
+    {
+      "name": "Print button preserves expanded answers until asynchronous printing finishes",
+      "passed": true
+    },
+    {
+      "name": "Print includes all chapters, both scripts and all answers; screen state restores",
+      "passed": true
+    },
+    {
+      "name": "No browser JavaScript errors",
+      "passed": true,
+      "details": []
+    }
+  ],
+  "screenshots": [
+    "1440-start.png",
+    "820-start.png",
+    "820-register.png",
+    "820-bonus.png",
+    "390-start.png",
+    "390-script.png",
+    "390-menu.png",
+    "390-search.png",
+    "390-reader.png",
+    "844-landscape.png",
+    "1180-reader.png",
+    "820-help.png",
+    "print-preview.png"
+  ],
+  "pageErrors": [],
+  "remoteRequests": [],
+  "overflow": [],
+  "passed": true
+}

@@ -603,6 +603,7 @@ CREATE TABLE IF NOT EXISTS `reviews` (
   `contents` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `eva` decimal(3,1) NOT NULL DEFAULT '0.0',
   `is_anonymous` tinyint(1) NOT NULL DEFAULT '1',
+  `release` tinyint(1) NOT NULL DEFAULT '0' COMMENT '0:非公開, 1:公開',
   `reply_body` text COLLATE utf8mb4_unicode_ci COMMENT '店舗からの返信本文（1件のみ）',
   `reply_at` timestamp NULL DEFAULT NULL COMMENT '返信投稿日時',
   `created_at` timestamp NULL DEFAULT NULL,

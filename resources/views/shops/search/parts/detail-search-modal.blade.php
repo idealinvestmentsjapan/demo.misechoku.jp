@@ -1,6 +1,6 @@
 {{-- 店舗用：キャスト詳細検索モーダル --}}
 @php
-    $savedPrefs = $savedPreferences ?? [];
+    $savedPrefs = request()->boolean('filters_applied') ? [] : ($savedPreferences ?? []);
     $tagsByCat = $castTagsByCategory ?? ['looks' => [], 'personality' => []];
 
     $maxDistanceKm = (int) (request('distance_km', $savedPrefs['max_distance_km'] ?? 20));
@@ -11,7 +11,7 @@
     $searchLocationSettings = $searchLocationSettings ?? [];
     $loc = is_array($searchLocationSettings) ? $searchLocationSettings : [];
     $reqLocationMode = (string) request('location_mode', '');
-    $allowedLocationModes = ['', 'profile', 'passport', 'current'];
+    $allowedLocationModes = ['', 'none', 'profile', 'passport', 'current'];
     if (!in_array($reqLocationMode, $allowedLocationModes, true)) {
         $reqLocationMode = '';
     }
@@ -88,7 +88,11 @@
                     </div>
 
                     {{-- 店舗は常に「店舗の登録住所」を基準に距離検索する（拠点選択なし・仕様） --}}
-                    <input type="hidden" name="location_mode" value="profile">
+                    <fieldset class="detail-search-location-modes">
+                        <legend class="sr-only">距離の絞り込み</legend>
+                        <label><input type="radio" name="location_mode" value="profile" @checked($detailLocationMode !== 'none')> 店舗住所からの距離で絞り込む</label>
+                        <label><input type="radio" name="location_mode" value="none" @checked($detailLocationMode === 'none')> 距離で絞り込まない</label>
+                    </fieldset>
                     <div class="detail-search-location-fixed">
                         <i class="fas fa-store detail-search-location-fixed__icon" aria-hidden="true"></i>
                         <span class="detail-search-location-fixed__body">
@@ -361,7 +365,7 @@
     if (lookupBtn) lookupBtn.addEventListener('click', performLookup);
     if (passportInput) {
         passportInput.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') { e.preventDefault(); performLookup(); }
+            if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); performLookup(); }
         });
         passportInput.addEventListener('input', function () {
             if (passportStatus && passportStatus.getAttribute('data-state') === 'resolved') {

@@ -52,13 +52,10 @@ class UserReport extends Model
         'handled_at',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'handled_at' => 'datetime',
-            'status'     => 'integer',
-        ];
-    }
+    protected $casts = [
+        'handled_at' => 'datetime',
+        'status' => 'integer',
+    ];
 
     public function reasonLabel(): string
     {

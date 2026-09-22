@@ -301,28 +301,27 @@ body.theme-light .btn-chat-action:hover,
 body.theme-light #talk-room-container .btn-chat-action:hover {
     background: rgba(124, 58, 237, 0.08) !important;
 }
+/* Composer row buttons (template popup / interview calendar): light-surface variants */
+body.theme-light .btn-chat-action--template,
+body.theme-light #talk-room-container .btn-chat-action--template {
+    color: #7c3aed !important;
+    border-color: rgba(124, 58, 237, 0.35) !important;
+}
+body.theme-light .btn-chat-action--interview,
+body.theme-light #talk-room-container .btn-chat-action--interview {
+    color: #0f766e !important;
+    border-color: rgba(20, 184, 166, 0.45) !important;
+}
+body.theme-light .btn-chat-action--interview:hover,
+body.theme-light #talk-room-container .btn-chat-action--interview:hover {
+    background: rgba(20, 184, 166, 0.08) !important;
+}
 /* NGワード警告：ライト面用の赤 */
 body.theme-light .talk-ng-warn {
     background: rgba(220, 38, 38, 0.06);
     border-color: rgba(220, 38, 38, 0.40);
     color: #b91c1c;
 }
-
-/* クイック定型文パネル（room.blade 内スタイルの色を確実にライト基準へ） */
-body.theme-light .quick-reply-panel__label,
-body.theme-light .quick-reply-panel__status,
-body.theme-light .quick-reply-panel__edit { color: #6d28d9; }
-body.theme-light .quick-reply-card {
-    background: #ffffff;
-    border-color: rgba(124, 58, 237, 0.28);
-    color: #4b465c;
-}
-body.theme-light .quick-reply-card--suggest {
-    background: rgba(124, 58, 237, 0.08);
-    border-color: rgba(124, 58, 237, 0.45);
-}
-body.theme-light .quick-reply-card--suggest .quick-reply-card__body { color: #4c2889; }
-
 /* --------------------------------------------------------------------------
    6. Tailwind ユーティリティ直書きページ（プロフィール詳細・設定など）の補正
    面・ボーダー・文字はトークン反転（--color-base / --color-surface-from /
@@ -1197,9 +1196,12 @@ body.theme-light .talk-action-menu-input::placeholder {
     transition: opacity .2s ease, transform .2s ease;
 }
 .app-toast.is-visible {
+    pointer-events: auto;
     opacity: 1;
     transform: translateX(-50%) translateY(0);
 }
+.app-toast.is-error { border-radius: 16px; }
+.app-toast button { color: inherit; margin-left: 12px; }
 .app-toast.is-success { background: #059669; }
 .app-toast.is-error   { background: #dc2626; }
 .app-toast.is-info    { background: #b45309; color: #ffffff; }
@@ -1708,12 +1710,6 @@ body.theme-light .talk-job-kind-chip__value { color: #6d28d9; }
 body.theme-light .talk-job-kind-chip .fa-lock { color: #857ca0; }
 
 
-/* §23 コンポーザー刷新のライト配色 */
-body.theme-light .quick-reply-card--action {
-    background: rgba(124, 58, 237, 0.10) !important;
-    border-color: rgba(124, 58, 237, 0.45) !important;
-    color: #5b21b6 !important;
-}
 
 
 /* ============================================================

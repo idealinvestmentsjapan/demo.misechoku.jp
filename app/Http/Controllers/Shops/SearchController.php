@@ -29,13 +29,18 @@ class SearchController extends BaseSearchController
         $tab = (string) $request->query('tab', 'list');
         $tab = in_array($tab, ['list', 'keep'], true) ? $tab : 'list';
         $activeTab = 'pane-' . $tab;
+        $savedPreferences = app(\App\Services\ShopSearchPreferenceService::class)->loadAll();
+        $this->applySavedSearchDefaults($request, $savedPreferences, array_combine(
+            ['age_min', 'age_max', 'shift_frequency', 'work_periods', 'looks_tag_ids', 'personality_tag_ids', 'night_work_exp'],
+            ['age_min', 'age_max', 'shift_frequency', 'work_periods', 'looks_tag_ids', 'personality_tag_ids', 'night_work_exp']
+        ));
 
         $sort = (string) $request->query('sort', 'hitokoto');
         if (!array_key_exists($sort, self::SORT_OPTIONS)) {
             $sort = 'hitokoto';
         }
 
-        $items = $this->buildSearchItems($request, $sort);
+        $items = $tab === 'list' ? $this->buildSearchItems($request, $sort) : [];
 
         $data = [
             'items'                  => $items,
@@ -43,7 +48,7 @@ class SearchController extends BaseSearchController
             'searchTab'              => $tab,
             'sort'                   => $sort,
             'sortOptions'            => self::SORT_OPTIONS,
-            'savedPreferences'       => app(\App\Services\ShopSearchPreferenceService::class)->loadAll(),
+            'savedPreferences'       => $savedPreferences,
             'castTagsByCategory'     => $this->loadCastTagsByCategory(),
             'searchLocationSettings' => app(UserLocationService::class)->loadProfileSettings(),
         ];
@@ -152,12 +157,12 @@ class SearchController extends BaseSearchController
         $persistedMaxKm = (int) ($userLocation->getEffectiveMaxDistanceKm() ?? 0);
 
         $locationMode = (string) $request->query('location_mode', '');
-        if (!in_array($locationMode, ['profile', 'passport', 'current'], true)) {
+        if (!in_array($locationMode, ['none', 'profile', 'passport', 'current'], true)) {
             $locationMode = '';
         }
         $queryDistanceKm = (int) $request->query('distance_km', 0);
 
-        $origin = $persistedOrigin;
+        $origin = $locationMode === 'none' ? null : $persistedOrigin;
         if ($locationMode === 'profile') {
             $settings = $userLocation->loadProfileSettings();
             $profileLoc = $settings['profile_location'] ?? null;
@@ -206,8 +211,13 @@ class SearchController extends BaseSearchController
 
         // キーワード絞り込み: 入力をトークン化し、各トークンが少なくとも1つのフィールドに含まれること
         // （AND-of-tokens / OR-of-fields）。ヒット順位はスコアで決定。
+        $filters = $request->only(['age_min', 'age_max', 'shift_frequency', 'work_periods', 'looks_tag_ids', 'personality_tag_ids', 'night_work_exp']);
+        $filterService = app(\App\Services\SearchFilterService::class);
         $items = $allRows
-            ->filter(function ($row) use ($keywordTokens) {
+            ->filter(function ($row) use ($keywordTokens, $filters, $castTagsByCastId, $castPrefsByCastId, $filterService) {
+                if (!$filterService->matchesCast($row, $filters, $castTagsByCastId[$row->id] ?? [], $castPrefsByCastId[$row->id] ?? [])) {
+                    return false;
+                }
                 if ($keywordTokens === []) {
                     return true;
                 }

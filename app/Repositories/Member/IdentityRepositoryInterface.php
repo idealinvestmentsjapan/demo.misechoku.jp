@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Collection;
 
 interface IdentityRepositoryInterface
 {
-    public function store(array $data);Identity
+    public function store(array $data);
     public function findByMemberId($id): Identity;
 }
 

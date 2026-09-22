@@ -2,13 +2,11 @@
  * ミセチョク PWA Service Worker
  * 静的アセットをキャッシュし、オフラインでも基本動作をサポート
  */
-const CACHE_NAME = 'misechoku-v49-identity-remind';
+const CACHE_NAME = 'misechoku-v50-offline-safe';
 const BADGE_CACHE = 'misechoku-badge';
 const BADGE_KEY_URL = '/__pwa_badge_count__';
 const STATIC_ASSETS = [
-  '/',
-  '/login',
-  '/shop/home',
+  '/offline.html',
   '/assets/css/app.css',
   '/assets/css/tailwind.css',
   '/assets/css/layout-header.css',
@@ -29,9 +27,7 @@ const STATIC_ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS).catch(() => {
-        // 一部失敗してもインストールは完了とする
-      });
+      return Promise.allSettled(STATIC_ASSETS.map((asset) => cache.add(asset)));
     }).then(() => self.skipWaiting())
   );
 });
@@ -41,7 +37,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((names) => {
       return Promise.all(
-        names.filter((name) => name !== CACHE_NAME).map((name) => caches.delete(name))
+        names.filter((name) => name.startsWith('misechoku-v') && name !== CACHE_NAME).map((name) => caches.delete(name))
       );
     }).then(() => self.clients.claim())
   );
@@ -62,22 +58,29 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  const navigation = request.mode === 'navigate';
+  if (!navigation && !isCacheable(url)) return;
+
   event.respondWith(
     fetch(request)
       .then((response) => {
         const clone = response.clone();
-        if (response.status === 200 && isCacheable(url)) {
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+        if (!navigation && !response.redirected && response.status === 200 && isCacheable(url)) {
+          event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put(request, clone)));
         }
         return response;
       })
-      .catch(() => caches.match(request).then((cached) => cached || caches.match('/')))
+      .catch(async () => {
+        const cache = await caches.open(CACHE_NAME);
+        if (navigation) return (await cache.match('/offline.html')) || new Response('通信できません。接続を確認して再読み込みしてください。', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+        return (await cache.match(request)) || Response.error();
+      })
   );
 });
 
 function isCacheable(url) {
   const path = url.pathname;
-  return path.startsWith('/assets/') || path === '/manifest.json' || path === '/';
+  return path.startsWith('/assets/') || path === '/manifest.json';
 }
 
 async function readBadgeCount() {

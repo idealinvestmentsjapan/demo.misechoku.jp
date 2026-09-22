@@ -10,6 +10,7 @@ use App\Services\DocumentReviewService;
 use App\Services\MessageTemplateService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class VerificationController extends Controller
 {
@@ -168,18 +169,23 @@ class VerificationController extends Controller
 
     private function streamDocument(?string $storedPath)
     {
-        // ファイル未配置（モックデータ等）でも 404 にせず、プレースホルダー画像を返す。
-        // 画像が無いことを理由に承認・却下の審査操作がブロックされないようにするため。
+        // 未提出はプレースホルダーで示す。保存パスがあるのに実体が無い場合は
+        // データ欠損として404にし、監視できるよう警告ログを残す。
         if (empty($storedPath)) {
             return $this->placeholderImageResponse();
         }
         $resolved = $this->documentReviewService->resolveDocumentDiskPath($storedPath);
         if ($resolved === null) {
-            return $this->placeholderImageResponse();
+            Log::warning('審査書類の保存先を解決できません。', ['stored_path' => $storedPath]);
+            abort(404);
         }
         [$disk, $relative] = $resolved;
         if (!Storage::disk($disk)->exists($relative)) {
-            return $this->placeholderImageResponse();
+            Log::warning('審査書類の実ファイルが見つかりません。', [
+                'disk' => $disk,
+                'relative_path' => $relative,
+            ]);
+            abort(404);
         }
         $absolute = Storage::disk($disk)->path($relative);
         $mime = @mime_content_type($absolute) ?: 'application/octet-stream';
@@ -187,12 +193,15 @@ class VerificationController extends Controller
         if (!str_starts_with($mime, 'image/') && $mime !== 'application/pdf') {
             return $this->placeholderImageResponse();
         }
-        return response()->file($absolute, [
+        $response = response()->file($absolute, [
             'Content-Type' => $mime,
             'Content-Disposition' => 'inline; filename*=UTF-8\'\'' . rawurlencode(basename($relative)),
-            'Cache-Control' => 'private, no-store',
             'X-Content-Type-Options' => 'nosniff',
         ]);
+        $response->setPrivate();
+        $response->headers->set('Cache-Control', 'private, no-store, max-age=0', true);
+
+        return $response;
     }
 
     private function placeholderImageResponse()

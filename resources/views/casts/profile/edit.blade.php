@@ -18,13 +18,23 @@
 
 @push('scripts')
 <script src="https://yubinbango.github.io/yubinbango/yubinbango.js" charset="UTF-8"></script>
-<script src="{{ asset('assets/js/form-enhance.js') }}?v=20260802-phase3"></script>
+<script src="{{ asset('assets/js/form-enhance.js') }}?v=20260913-uiux"></script>
 @endpush
 
 @section('content')
 <div class="cast-edit-page">
     @if(session('message'))
         <p class="profile-edit-flash" data-flash-toast="success">{{ session('message') }}</p>
+    @endif
+    @if($errors->any())
+        <div class="mb-4 rounded-xl border border-red-400/50 bg-red-500/10 px-4 py-3 text-[13px] text-red-200" role="alert" aria-live="assertive">
+            <p class="font-bold">入力内容を確認してください</p>
+            <ul class="mt-2 list-disc space-y-1 pl-5">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
     @endif
 
     @php

@@ -564,7 +564,7 @@
 
 @push('scripts')
 <script src="https://yubinbango.github.io/yubinbango/yubinbango.js" charset="UTF-8"></script>
-<script src="{{ asset('assets/js/form-enhance.js') }}?v=20260802-phase3"></script>
+<script src="{{ asset('assets/js/form-enhance.js') }}?v=20260913-uiux"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     var lastCb = document.querySelector('.js-biz-close-last');

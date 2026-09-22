@@ -1,0 +1,238 @@
+{
+  "pages": [
+    {
+      "page": 1,
+      "section": "サービスコンセプト・機能紹介",
+      "key": "cover"
+    },
+    {
+      "page": 2,
+      "section": "目次",
+      "key": "contents"
+    },
+    {
+      "page": 3,
+      "section": "コンセプトと特徴 01",
+      "key": "s1"
+    },
+    {
+      "page": 4,
+      "section": "コンセプトと特徴 01",
+      "key": null
+    },
+    {
+      "page": 5,
+      "section": "コンセプトと特徴  /  仕組みの比較",
+      "key": null
+    },
+    {
+      "page": 6,
+      "section": "コンセプトと特徴  /  仕組みの比較",
+      "key": null
+    },
+    {
+      "page": 7,
+      "section": "コンセプトと特徴  /  入店ボーナスの手続き",
+      "key": null
+    },
+    {
+      "page": 8,
+      "section": "コンセプトと特徴 02",
+      "key": "s7"
+    },
+    {
+      "page": 9,
+      "section": "コンセプトと特徴 02",
+      "key": null
+    },
+    {
+      "page": 10,
+      "section": "コンセプトと特徴 02  /  画面イメージ",
+      "key": null
+    },
+    {
+      "page": 11,
+      "section": "コンセプトと特徴 03",
+      "key": "s2"
+    },
+    {
+      "page": 12,
+      "section": "コンセプトと特徴 03  /  画面イメージ",
+      "key": null
+    },
+    {
+      "page": 13,
+      "section": "基本機能 01",
+      "key": "s4"
+    },
+    {
+      "page": 14,
+      "section": "基本機能 01",
+      "key": null
+    },
+    {
+      "page": 15,
+      "section": "基本機能 01  /  画面イメージ",
+      "key": null
+    },
+    {
+      "page": 16,
+      "section": "基本機能 02",
+      "key": "s5"
+    },
+    {
+      "page": 17,
+      "section": "基本機能 02",
+      "key": null
+    },
+    {
+      "page": 18,
+      "section": "基本機能 02  /  画面イメージ",
+      "key": null
+    },
+    {
+      "page": 19,
+      "section": "基本機能 03",
+      "key": "s6"
+    },
+    {
+      "page": 20,
+      "section": "基本機能 03",
+      "key": null
+    },
+    {
+      "page": 21,
+      "section": "基本機能 03  /  画面イメージ",
+      "key": null
+    },
+    {
+      "page": 22,
+      "section": "基本機能 04",
+      "key": "quick-replies"
+    },
+    {
+      "page": 23,
+      "section": "基本機能 04",
+      "key": null
+    },
+    {
+      "page": 24,
+      "section": "基本機能 04  /  画面イメージ",
+      "key": null
+    },
+    {
+      "page": 25,
+      "section": "基本機能 05",
+      "key": "s3"
+    },
+    {
+      "page": 26,
+      "section": "基本機能 05  /  画面イメージ",
+      "key": null
+    },
+    {
+      "page": 27,
+      "section": "基本機能 06",
+      "key": "input-support"
+    },
+    {
+      "page": 28,
+      "section": "基本機能 06  /  画面イメージ",
+      "key": null
+    },
+    {
+      "page": 29,
+      "section": "基本機能 07",
+      "key": "s8"
+    },
+    {
+      "page": 30,
+      "section": "基本機能 07  /  画面イメージ",
+      "key": null
+    },
+    {
+      "page": 31,
+      "section": "キラーコンテンツ 01",
+      "key": "ai-search"
+    },
+    {
+      "page": 32,
+      "section": "キラーコンテンツ 01",
+      "key": null
+    },
+    {
+      "page": 33,
+      "section": "キラーコンテンツ 01  /  画面イメージ",
+      "key": null
+    },
+    {
+      "page": 34,
+      "section": "キラーコンテンツ 02",
+      "key": "type-test"
+    },
+    {
+      "page": 35,
+      "section": "キラーコンテンツ 02",
+      "key": null
+    },
+    {
+      "page": 36,
+      "section": "キラーコンテンツ 02  /  画面イメージ",
+      "key": null
+    },
+    {
+      "page": 37,
+      "section": "キラーコンテンツ 03",
+      "key": "photo-gallery"
+    },
+    {
+      "page": 38,
+      "section": "キラーコンテンツ 03",
+      "key": null
+    },
+    {
+      "page": 39,
+      "section": "キラーコンテンツ 03  /  画面イメージ",
+      "key": null
+    },
+    {
+      "page": 40,
+      "section": "キラーコンテンツ 04",
+      "key": "sns-share"
+    },
+    {
+      "page": 41,
+      "section": "キラーコンテンツ 04",
+      "key": null
+    },
+    {
+      "page": 42,
+      "section": "キラーコンテンツ 04  /  画面イメージ",
+      "key": null
+    }
+  ],
+  "destinations": {
+    "cover": 1,
+    "contents": 2,
+    "s1": 3,
+    "s7": 8,
+    "s2": 11,
+    "s4": 13,
+    "s5": 16,
+    "s6": 19,
+    "quick-replies": 22,
+    "s3": 25,
+    "input-support": 27,
+    "s8": 29,
+    "ai-search": 31,
+    "type-test": 34,
+    "photo-gallery": 37,
+    "sns-share": 40
+  },
+  "pageCount": 42,
+  "sizeMm": [
+    105,
+    220
+  ],
+  "fontPt": 12
+}

@@ -13,17 +13,12 @@ CLAUDE.md から本ファイルを参照させ、画面移行のたびに先頭�
 
 | 項目 | プロトA（mypage） | プロトB（その他画面） | 採用 |
 |---|---|---|---|
-| **プライマリボタン色** | アクセント追従（`#8B5CF6` / グラデ `#A78BFA→#7C3AED`） | 固定ディープパープル（`#581C87` / グラデ `#6B21A8→#3B0764`） | **★要確認：アクセント追従を既定** |
+| **プライマリボタン色** | アクセント追従（`#8B5CF6` / グラデ `#A78BFA→#7C3AED`） | 固定ディープパープル（`#581C87` / グラデ `#6B21A8→#3B0764`） | **アクセント追従を既定** |
 | ボタン上の文字色 | `#E6DFFC` / グラデ `#F4F2FA` | `#F3E8FF` / グラデ `#FAF5FF` | アクセント追従（`--on-accent`） |
 | アクセント枠 | `#A855F7/40` | `#A855F7/40` | 一致 → `border-line-accent/40` |
 | 背景 / 文字 / サブ | `#050505 / #F5F5F5 / #A0A0A0` | 同左 | 一致 |
 
-> **★確認してほしい1点：プライマリボタンの色**
-> A はテーマ（アメジスト/ライラック/水色/ピンク）に追従、B はテーマに関係なく固定ディープパープル。
-> テーマスイッチャーを活かす観点から **既定はアクセント追従** にしています。
-> 固定ディープパープルにしたい場合は、ボタンの class を
-> `bg-accent` → `bg-deep-purple-btn` / `from-accent-grad-from to-accent-grad-to` → `from-deep-purple-from to-deep-purple-to` に
-> 差し替えるだけ（1行）です。
+> プライマリボタンはアクセント追従を採用。現在の画面では amethyst を使用する。ライト／ダークの利用者向け切替は提供しない。
 
 ---
 
@@ -117,7 +112,7 @@ CLAUDE.md から本ファイルを参照させ、画面移行のたびに先頭�
 | `staff` | `ph-fill ph-users-three`（スタッフ・チーム） |
 | `crown` | `ph-fill ph-crown-simple`（Premium） |
 
-> 読み込みは npm パッケージ `@phosphor-icons/web` を `resources/js/app.js` で import する想定（CDN webfont 廃止）。
+> 現在の読込元は `components/ui/assets.blade.php` のCDN。バンドラーからの読み込みには移行していない。
 
 ---
 
@@ -261,13 +256,12 @@ $naturalPremiumWhite = request()->routeIs(
     'cast.shopprofile.show', 'shop.castprofileview.show',
 );
 $naturalLightTheme = !$isDarkPage && !$naturalPremiumWhite;
-// ヘッダーのライト/ダークトグル（Cookie: theme_mode=dark）で全画面ダーク強制可
-$isForcedDark   = request()->cookie('theme_mode') === 'dark';
-$isPremiumWhite = $naturalPremiumWhite && !$isForcedDark;
-$isLightTheme   = $naturalLightTheme   && !$isForcedDark;
+// ページ標準テーマを適用。ユーザーのライト/ダーク切替は廃止済み。
+$isPremiumWhite = $naturalPremiumWhite;
+$isLightTheme = $naturalLightTheme;
 ```
 
-body に `theme-light` / `theme-premium-white` / `mode-dark|mode-light` クラスを付与。
+body に `theme-light` / `theme-premium-white` クラスを付与。どちらも付かない画面はダーク表示。
 上書きは `public/assets/css/light-theme.css` および `public/assets/css/premium-white.css` のみで完結させる
 （画面ごとに `<style>` を書かない）。
 
@@ -319,9 +313,9 @@ body に `theme-light` / `theme-premium-white` / `mode-dark|mode-light` クラ�
 
 ---
 
-## 13. 説明文はオコジョガイドに集約
+## 13. 操作に必要な説明とオコジョガイド
 
-**方針**：ページ内のリード文（説明文）は原則書かない。すべて `character_guide_settings` テーブル + `layouts/parts/character-guide.blade.php` に集約する。
+**方針**：機能紹介や補足は `character_guide_settings` とガイドに集約する。申請条件・保存範囲・公開範囲・必須項目・通信失敗からの復旧など、判断や操作に必要な説明は該当する入力欄・ボタンの近くへ常時表示する。ガイドを閉じても重要な説明と機能への入口が残ること。
 
 ### 実装
 - テーブル: `character_guide_settings`（`route_name` UNIQUE / `is_enabled` / `message`）
@@ -377,3 +371,16 @@ body に `theme-light` / `theme-premium-white` / `mode-dark|mode-light` クラ�
 ### 禁止
 - 個別画面で `alert()` を使う（全て `window.appToast()` に置換）
 - トーストの色を画面独自に上書きする
+
+
+## 16. 入力保護・検索・アクセシビリティ（2026-09-13）
+
+- ビューポートの拡大を制限しない。モーダルはラベル・フォーカス移動・Tab制御・背景の操作抑止・閉じた後の復帰を備える。
+- 検索の一覧には結果件数・適用済み条件・並び順・距離の基準を表示する。0件時も条件変更・条件解除へ進める。
+- 保存前の公開設定は「保存後に公開／非公開（未保存）」と表示する。申請ボタンには確定する操作を明記する。
+- 入力メーターは必須と任意を区別し、非表示の項目を分母に含めない。
+- エラー通知は利用者が閉じるまで表示する。入力エラーは該当箇所にも残す。成功・情報通知の既定表示時間は5秒。
+- 登録の文章ドラフトはタブ単位・24時間。画像・書類・パスワードは対象外で、登録成功後に削除する。
+- オフライン画面のみ外部CSSに依存しない最小のスタイルを同梱する。APIや画像にHTMLの代替を返さない。
+
+- CSS読込順は Tailwind → 既存・ページ固有CSS → 共通UI補正 → ライト／プレミアムホワイト補正。新しい画面単位の上書きを追加する前に既存ルールを整理する。

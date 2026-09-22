@@ -7,6 +7,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const isCastRoom = typeof window.isCastTalkRoom !== 'undefined' ? !!window.isCastTalkRoom : false;
 
     if (!chatMessages) return;
+    function showTalkError(message) {
+        if (window.appToast) window.appToast(message, 'error');
+        else window.alert(message);
+    }
 
     const messageInput = chatForm ? chatForm.querySelector('textarea[name="message"]') : null;
     const sendButton = chatForm ? chatForm.querySelector('#talk-send-btn') : null;
@@ -16,11 +20,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const talkJobKindField = chatForm ? chatForm.querySelector('[name="talk_job_kind"]') : null;
     const initialTalkTopic = typeof window.initialTalkTopic !== 'undefined' ? window.initialTalkTopic : null;
     const initialTalkJobKind = typeof window.initialTalkJobKind !== 'undefined' ? window.initialTalkJobKind : null;
-    const hasTalkMessages = typeof window.hasTalkMessages !== 'undefined' ? !!window.hasTalkMessages : false;
+    let hasTalkMessages = typeof window.hasTalkMessages !== 'undefined' ? !!window.hasTalkMessages : false;
     const selectedTalkJobKind = typeof window.selectedTalkJobKind !== 'undefined' ? window.selectedTalkJobKind : null;
     const canSelectTalkJobKind = typeof window.canSelectTalkJobKind !== 'undefined' ? !!window.canSelectTalkJobKind : false;
     const currentTalkStatusCode = typeof window.currentTalkStatusCode !== 'undefined' ? window.currentTalkStatusCode : 'chatting';
     const talkJobKindCurrent = document.getElementById('talk-job-kind-current');
+    const openWorkCompleteReportMenu = document.getElementById('open-work-complete-report-menu');
 
     const scrollToBottom = (behavior = 'auto') => {
         chatMessages.scrollTo({
@@ -137,7 +142,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function postJson(url, token, body) {
-        const response = await fetch(url, {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 30000);
+        let response;
+        try {
+        response = await fetch(url, {
+            signal: controller.signal,
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -146,16 +156,19 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             body: JSON.stringify(body)
         });
+        } finally { clearTimeout(timeout); }
 
         if (!response.ok) {
-            let message = 'Request failed';
+            let message = response.status === 419 ? 'ログインの有効期限が切れました。ページを再読み込みしてください。' : '送信できませんでした。時間をおいて再試行してください。';
             try {
                 const errorData = await response.json();
                 message = errorData.message || message;
             } catch (e) {
                 // JSON で返らないケースは共通メッセージにフォールバックする
             }
-            throw new Error(message);
+            const error = new Error(message);
+            error.status = response.status;
+            throw error;
         }
 
         return response.json();
@@ -183,115 +196,146 @@ document.addEventListener('DOMContentLoaded', function() {
         messageInput.addEventListener('input', autoResize);
 
         let isSubmitting = false;
-        chatForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const content = messageInput.value.trim();
-            if (!content) return;
-            if (isSubmitting) return;
-
-            // クライアント側 NG ワード検査
-            const ngHit = detectNg(content);
-            if (ngHit) {
-                showNgWarning(ngHit.label, ngHit.hit);
-                setSendDisabled(true);
-                if (typeof messageInput.focus === 'function') messageInput.focus();
-                return;
-            }
-
-            isSubmitting = true;
-
-            const url = chatForm.getAttribute('data-url');
-            const partnerId = chatForm.getAttribute('data-partner-id');
-            const token = chatForm.querySelector('input[name="_token"]').value;
-            const submitBtn = chatForm.querySelector('button');
-            submitBtn.disabled = true;
-
-            const tempId = 'msg-' + Date.now();
-            const now = new Date();
-            const timeStr = now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0');
-            const normalizedContent = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n{2,}/g, '\n').trim();
-            const bubbleHtml = '<p class="m-0">' + escapeHtml(normalizedContent).replace(/\n/g, '<br>') + '</p><span class="message-bubble-tail" aria-hidden="true"><svg viewBox="0 0 8 12" fill="currentColor"><path d="M0 0V12C3 12 8 8 8 0H0Z"/></svg></span>';
-            const messageHtml = '<div class="message-row msg-right" id="' + tempId + '"><div class="message-block"><div class="message-inline"><div class="msg-meta"><span class="msg-status sending"><i class="fas fa-check"></i></span><span class="msg-time">' + timeStr + '</span></div><div class="message-bubble">' + bubbleHtml + '</div></div></div></div>';
-            ensureEmptyStateRemoved();
-            chatMessages.insertAdjacentHTML('beforeend', messageHtml);
-
-            messageInput.value = '';
-            autoResize();
-            scrollToBottom('smooth');
-
+        let pending = null;
+        const storageKey = 'talk-draft-v1:' + (document.body.dataset.navigationScope || location.pathname) + ':' + chatForm.dataset.partnerId;
+        const deliveryNotice = document.createElement('div');
+        deliveryNotice.className = 'talk-delivery-notice text-sm';
+        deliveryNotice.setAttribute('role', 'status');
+        deliveryNotice.hidden = true;
+        chatForm.parentNode.insertBefore(deliveryNotice, chatForm);
+        function saveTalkDraft() {
             try {
-                const payload = { partner_id: partnerId, message: content };
-                if (isCastRoom && !hasTalkMessages && talkTopicField) {
-                    payload.talk_topic = talkTopicField.value;
-                    if (talkJobKindField && !talkJobKindField.disabled) {
-                        payload.talk_job_kind = talkJobKindField.value;
-                    }
+                if (!messageInput.value && !pending) { sessionStorage.removeItem(storageKey); return; }
+                sessionStorage.setItem(storageKey, JSON.stringify({ text: messageInput.value, pending: pending, ts: Date.now() }));
+            } catch (_) {}
+        }
+        function showDeliveryNotice(text, canRetry) {
+            deliveryNotice.replaceChildren();
+            deliveryNotice.hidden = false;
+            const message = document.createElement('p');
+            message.textContent = text;
+            deliveryNotice.appendChild(message);
+            if (canRetry && pending) {
+                const retry = document.createElement('button');
+                retry.type = 'button';
+                retry.className = 'btn-secondary-cta';
+                retry.textContent = '同じメッセージを再試行';
+                retry.addEventListener('click', () => sendMessage(pending));
+                deliveryNotice.appendChild(retry);
+            }
+            const reload = document.createElement('button');
+            reload.type = 'button';
+            reload.className = 'btn-ghost-cta';
+            reload.textContent = '再読み込みして送信結果を確認';
+            reload.addEventListener('click', () => { saveTalkDraft(); location.reload(); });
+            deliveryNotice.appendChild(reload);
+        }
+        try {
+            const draft = JSON.parse(sessionStorage.getItem(storageKey) || 'null');
+            if (draft && Date.now() - draft.ts < 24 * 3600000) {
+                messageInput.value = draft.text || '';
+                pending = draft.pending || null;
+                if (pending) showDeliveryNotice('前回の送信結果を確認できていません。本文を保持しています。', true);
+                autoResize();
+            } else if (draft) sessionStorage.removeItem(storageKey);
+        } catch (_) {}
+        messageInput.addEventListener('input', saveTalkDraft);
+        evaluateNgState();
+
+        async function sendMessage(payload) {
+            if (isSubmitting || !payload) return;
+            isSubmitting = true;
+            pending = payload;
+            saveTalkDraft();
+            sendButton.disabled = true;
+            messageInput.readOnly = true;
+            deliveryNotice.hidden = true;
+            const tempId = 'pending-' + payload.client_request_id;
+            let row = document.getElementById(tempId);
+            if (!row) {
+                row = document.createElement('div');
+                row.className = 'message-row msg-right';
+                row.id = tempId;
+                row.innerHTML = '<div class="message-block"><div class="message-inline"><div class="msg-meta"><span class="msg-status sending" role="status">送信中</span></div><div class="message-bubble"><p class="m-0"></p></div></div></div>';
+                row.querySelector('.message-bubble p').textContent = payload.message;
+                row.querySelector('.message-bubble p').style.whiteSpace = 'pre-wrap';
+                ensureEmptyStateRemoved();
+                chatMessages.appendChild(row);
+            }
+            const status = row.querySelector('.msg-status');
+            status.textContent = '送信中';
+            status.classList.add('sending');
+            scrollToBottom('smooth');
+            try {
+                const result = await postJson(chatForm.dataset.url, chatForm.querySelector('input[name="_token"]').value, payload);
+                if (!result.success || !result.data || !result.data.message_id) throw new Error('送信結果を確認できませんでした。');
+                const messageId = String(result.data.message_id);
+                const exists = Array.from(chatMessages.querySelectorAll('[data-message-id]')).some(el => el !== row && el.dataset.messageId === messageId);
+                if (exists) row.remove();
+                else {
+                    row.dataset.messageId = messageId;
+                    status.classList.remove('sending');
+                    status.textContent = '送信済み';
+                    const meta = row.querySelector('.msg-meta');
+                    const time = document.createElement('span');
+                    time.className = 'msg-time';
+                    time.textContent = result.data.time || '';
+                    meta.appendChild(time);
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.type = 'button';
+                    deleteBtn.className = 'msg-delete-btn';
+                    deleteBtn.dataset.messageId = messageId;
+                    deleteBtn.setAttribute('aria-label', 'メッセージを削除');
+                    deleteBtn.innerHTML = '<i class="fas fa-trash-alt" aria-hidden="true"></i>';
+                    meta.prepend(deleteBtn);
                 }
-                // Room access itself is already gated server-side by canAccessTalkRoom().
-                // If the user could load this room at all, they are allowed to send —
-                // so always include initiate:1 for the first message regardless of which
-                // entry point brought them here (search, profile, viewers list, etc.).
-                if (!hasTalkMessages) {
-                    payload.initiate = 1;
-                }
-                const result = await postJson(url, token, payload);
-                if (!result.success) {
-                    throw new Error('Failed');
-                }
-                const sentMsg = document.getElementById(tempId);
-                if (sentMsg) {
-                    sentMsg.querySelector('.msg-status').classList.remove('sending');
-                    if (result.data && result.data.message_id) {
-                        sentMsg.dataset.messageId = String(result.data.message_id);
-                        const meta = sentMsg.querySelector('.msg-meta');
-                        if (meta) {
-                            const deleteBtn = document.createElement('button');
-                            deleteBtn.type = 'button';
-                            deleteBtn.className = 'msg-delete-btn';
-                            deleteBtn.dataset.messageId = String(result.data.message_id);
-                            deleteBtn.title = '削除';
-                            deleteBtn.setAttribute('aria-label', 'メッセージを削除');
-                            deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
-                            meta.insertBefore(deleteBtn, meta.firstChild);
-                        }
-                    }
-                }
+                if (messageInput.value.trim() === payload.message) messageInput.value = '';
+                pending = null;
+                hasTalkMessages = true;
+                saveTalkDraft();
+                autoResize();
             } catch (error) {
-                const errorMsg = document.getElementById(tempId);
-                if (errorMsg) {
-                    errorMsg.querySelector('.msg-status').innerHTML = '<i class="fas fa-exclamation-circle text-red-500"></i>';
-                    errorMsg.querySelector('.msg-status').classList.remove('sending');
+                status.classList.remove('sending');
+                status.textContent = '送信未確認';
+                const definiteRejection = error.status >= 400 && error.status < 500 && error.status !== 409;
+                if (definiteRejection) {
+                    row.remove();
+                    pending = null;
+                    showDeliveryNotice(error.message + ' 入力した文章は残しています。', false);
+                    if (error.status === 422 && error.message.includes('使用できない表現')) {
+                        showNgWarning('NGワード', '');
+                        if (ngWarnTextEl) ngWarnTextEl.textContent = error.message;
+                    }
+                } else {
+                    showDeliveryNotice('送信結果を確認できませんでした。文章を保持しています。再試行か、再読み込みで結果を確認してください。', true);
                 }
-                const msg = String((error && error.message) || '');
-                // スカウト送信上限（429）：本文を復元して案内を表示
-                if (msg.indexOf('スカウト送信上限') !== -1) {
-                    if (errorMsg) errorMsg.remove();
-                    messageInput.value = content;
-                    autoResize();
-                    (window.appToast || window.alert)(msg, 'error');
-                    isSubmitting = false;
-                    submitBtn.disabled = false;
-                    return;
-                }
-                // サーバ側 NG 検出（422）の場合は本文を復元して警告表示
-                if (msg.indexOf('使用できない表現') !== -1) {
-                    if (errorMsg) errorMsg.remove();
-                    messageInput.value = content;
-                    showNgWarning('NGワード', '');
-                    if (ngWarnTextEl) ngWarnTextEl.textContent = msg;
-                    setSendDisabled(true);
-                }
+                saveTalkDraft();
             } finally {
                 isSubmitting = false;
-                submitBtn.disabled = false;
-                // NOTE: 送信ボタンタップで input からフォーカスが外れると
-                // モバイルではキーボードが閉じる → 100dvh レイアウトが元に戻り、
-                // ヘッダー・定型文パネルなどの再フローで一瞬 "画面が消える" ように見えていた。
-                // ここで再フォーカスすると即キーボードが戻り、レイアウトが 2 回フリップして
-                // 逆に体感が悪化する。Instagram DM 同様、キーボードは自然に閉じたままにする。
+                messageInput.readOnly = false;
                 evaluateNgState();
             }
+        }
+        chatForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            if (isSubmitting) return;
+            const content = messageInput.value.trim();
+            if (pending) {
+                if (pending.message === content) sendMessage(pending);
+                else showDeliveryNotice('先ほどのメッセージの送信結果を確認してから、次の文章を送信してください。編集中の文章は残しています。', true);
+                return;
+            }
+            if (!content) return;
+            const ngHit = detectNg(content);
+            if (ngHit) { showNgWarning(ngHit.label, ngHit.hit); setSendDisabled(true); messageInput.focus(); return; }
+            const id = typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, c => (Number(c) ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> Number(c) / 4).toString(16));
+            const payload = { partner_id: chatForm.dataset.partnerId, message: content, client_request_id: id };
+            if (!hasTalkMessages) payload.initiate = 1;
+            if (isCastRoom && !hasTalkMessages && talkTopicField) {
+                payload.talk_topic = talkTopicField.value;
+                if (talkJobKindField && !talkJobKindField.disabled) payload.talk_job_kind = talkJobKindField.value;
+            }
+            sendMessage(payload);
         });
 
         messageInput.addEventListener('focus', () => {
@@ -325,7 +369,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         } catch (err) {
-            window.alert(err.message || '削除に失敗しました。');
+            showTalkError(err.message || '削除に失敗しました。');
             btn.disabled = false;
         }
     });
@@ -795,6 +839,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Template button in the composer row (2026-08-23): the always-visible quick-reply
+    // panel was removed; the keyboard is the default and templates open in this popup.
+    // Blur the textarea first so the soft keyboard closes behind the sheet.
+    const openQuickReplyPopupBtn = document.getElementById('open-quick-reply-popup');
+    if (openQuickReplyPopupBtn && templateMenuOverlay) {
+        openQuickReplyPopupBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (messageInput && document.activeElement === messageInput) messageInput.blur();
+            openTemplateMenu();
+        });
+    }
+
     if (!isCastRoom && chatForm) {
         const actionUrl = chatForm.getAttribute('data-action-url');
         const token = chatForm.querySelector('input[name="_token"]').value;
@@ -806,7 +862,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const jobKindOverlay = document.getElementById('job-kind-modal-overlay');
         const closeJobKindButtons = document.querySelectorAll('.js-job-kind-close');
         const openTemplateSendMenu = document.getElementById('open-template-send-menu');
-        const openWorkCompleteReportMenu = document.getElementById('open-work-complete-report-menu');
         const overlay = document.getElementById('interview-modal-overlay');
         const interviewForm = overlay ? overlay.querySelector('#interview-form') : null;
         const closeBtn = overlay ? overlay.querySelector('.interview-modal-close') : null;
@@ -845,7 +900,7 @@ document.addEventListener('DOMContentLoaded', function() {
             saveTalkJobKindBtn.addEventListener('click', async function() {
                 const selected = talkRoomJobKindSelect.value;
                 if (!selected) {
-                    window.alert('求人種別を選択してください。');
+                    showTalkError('求人種別を選択してください。');
                     return;
                 }
                 if (selected === currentSavedTalkJobKind) {
@@ -868,7 +923,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     saveTalkJobKindBtn.disabled = false;
                     closeJobKindModal();
                 } catch (error) {
-                    window.alert(error.message || '求人種別の保存に失敗しました。');
+                    showTalkError(error.message || '求人種別の保存に失敗しました。');
                     if (talkJobKindSaveStatus) talkJobKindSaveStatus.textContent = '保存失敗';
                     saveTalkJobKindBtn.disabled = false;
                 }
@@ -1041,7 +1096,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }).then(function () {
                         window.location.reload();
                     }).catch(function (error) {
-                        window.alert(error.message || '面談キャンセル依頼の送信に失敗しました。');
+                        showTalkError(error.message || '面談キャンセル依頼の送信に失敗しました。');
                     });
                     return;
                 }
@@ -1128,7 +1183,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 const message = resultTextarea.value.trim();
                 if (currentResultAction === 'hired' && !message) {
-                    window.alert('送信メッセージを入力してください。');
+                    showTalkError('送信メッセージを入力してください。');
                     return;
                 }
 
@@ -1145,7 +1200,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (currentResultAction === 'hired' && hiredHourlyWageInput) {
                         const hiredWage = hiredHourlyWageInput.value.trim();
                         if (!hiredWage) {
-                            window.alert('採用時給（確定）を入力してください。');
+                            showTalkError('採用時給（確定）を入力してください。');
                             resultSubmitBtn.disabled = false;
                             return;
                         }
@@ -1157,7 +1212,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     await postJson(actionUrl, token, payload);
                     window.location.reload();
                 } catch (error) {
-                    window.alert(error.message || '結果メッセージの送信に失敗しました。');
+                    showTalkError(error.message || '結果メッセージの送信に失敗しました。');
                     resultSubmitBtn.disabled = false;
                 }
             });
@@ -1174,7 +1229,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     await postJson(actionUrl, token, { partner_id: partnerId, action_type: 'cancel_status' });
                     window.location.reload();
                 } catch (error) {
-                    window.alert(error.message || 'ステータスのキャンセルに失敗しました。');
+                    showTalkError(error.message || 'ステータスのキャンセルに失敗しました。');
                     cancelStatusBtn.disabled = false;
                 }
             });
@@ -1196,7 +1251,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     await postJson(actionUrl, token, { partner_id: partnerId, action_type: 'cancel_status' });
                     window.location.reload();
                 } catch (error) {
-                    window.alert(error.message || 'キャンセルに失敗しました。');
+                    showTalkError(error.message || 'キャンセルに失敗しました。');
                     btn.disabled = false;
                 }
             });
@@ -1218,7 +1273,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }).filter(Boolean);
 
                 if (options.length === 0) {
-                    window.alert('面談候補日を1件以上入力してください。');
+                    showTalkError('面談候補日を1件以上入力してください。');
                     return;
                 }
                 const now = new Date();
@@ -1227,15 +1282,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 for (const option of options) {
                     const dt = new Date(option.replace(' ', 'T'));
                     if (Number.isNaN(dt.getTime())) {
-                        window.alert('日時の形式が不正です。');
+                        showTalkError('日時の形式が不正です。');
                         return;
                     }
                     if (dt.getTime() < now.getTime()) {
-                        window.alert('面談候補日は現在日時より後を指定してください。');
+                        showTalkError('面談候補日は現在日時より後を指定してください。');
                         return;
                     }
                     if (dt.getTime() > max.getTime()) {
-                        window.alert('面談候補日は2か月後まで指定できます。');
+                        showTalkError('面談候補日は2か月後まで指定できます。');
                         return;
                     }
                 }
@@ -1249,7 +1304,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                     window.location.reload();
                 } catch (error) {
-                    window.alert(error.message || '面談候補日の送信に失敗しました。');
+                    showTalkError(error.message || '面談候補日の送信に失敗しました。');
                     submitBtn.disabled = false;
                 }
             });
@@ -1326,7 +1381,7 @@ document.addEventListener('DOMContentLoaded', function() {
             saveTalkJobKindBtn.addEventListener('click', async function() {
                 const selected = talkRoomJobKindSelect.value;
                 if (!selected) {
-                    window.alert('求人種別を選択してください。');
+                    showTalkError('求人種別を選択してください。');
                     return;
                 }
                 if (selected === currentSavedTalkJobKind) {
@@ -1347,7 +1402,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     saveTalkJobKindBtn.disabled = false;
                 } catch (error) {
-                    window.alert(error.message || '求人種別の保存に失敗しました。');
+                    showTalkError(error.message || '求人種別の保存に失敗しました。');
                     if (talkJobKindSaveStatus) talkJobKindSaveStatus.textContent = '保存失敗';
                     saveTalkJobKindBtn.disabled = false;
                 }
@@ -1400,7 +1455,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                     window.location.reload();
                 } catch (error) {
-                    window.alert(error.message || '面談日の確定に失敗しました。');
+                    showTalkError(error.message || '面談日の確定に失敗しました。');
                     confirmSubmitBtn.disabled = false;
                 }
             });
@@ -1418,7 +1473,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                     window.location.reload();
                 } catch (error) {
-                    window.alert(error.message || '本入店リクエストの送信に失敗しました。');
+                    showTalkError(error.message || '本入店リクエストの送信に失敗しました。');
                     fulltimeRequestBtn.disabled = false;
                 }
             });
@@ -1454,7 +1509,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 window.location.reload();
             } catch (error) {
-                window.alert(error.message || '承諾に失敗しました。');
+                showTalkError(error.message || '承諾に失敗しました。');
                 acceptBtn.disabled = false;
             }
         });

@@ -94,6 +94,7 @@ TRUNCATE TABLE `user_talk_templates`;
 TRUNCATE TABLE `support_inquiries`;
 TRUNCATE TABLE `line_messages`;
 TRUNCATE TABLE `admin_operation_logs`;
+TRUNCATE TABLE `admin_role_permissions`;
 TRUNCATE TABLE `user_reports`;
 
 -- =============================================================================

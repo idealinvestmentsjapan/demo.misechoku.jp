@@ -223,6 +223,7 @@ class TalkController extends Controller
         $request->validate([
             'partner_id' => ['required', 'string'],
             'message' => ['required', 'string', 'max:5000'],
+            'client_request_id' => ['nullable', 'uuid'],
             'talk_topic' => ['nullable', 'string', 'in:new_hire,help,other'],
             'talk_job_kind' => ['nullable', 'string', 'in:fulltime,trial,help'],
         ]);
@@ -287,35 +288,49 @@ class TalkController extends Controller
             'updated_at' => now(),
         ];
 
-        if ($isCastPortal) {
-            $this->ensureApplicationForTalkStart(
-                (string) $this->currentCastId(),
-                (string) $partnerId,
-                $this->normalizeTalkTopic((string) $request->input('talk_topic', '')),
-                $this->normalizeTalkJobKind((string) $request->input('talk_job_kind', ''))
-            );
-        }
-        $messageId = DB::table('messages')->insertGetId($payload);
-        $this->notifyConversationPartner(
-            castId: (string) $payload['cast_id'],
-            shopId: (string) $payload['shop_id'],
-            isCastPortal: $isCastPortal,
-            title: '新着メッセージ',
-            body: $isCastPortal
-                ? 'キャストからメッセージが届きました。'
-                : '店舗からメッセージが届きました。内容を確認してください。',
-            url: $isCastPortal ? url('/shop/talk/room/' . $payload['cast_id']) : url('/cast/talk/room/' . $payload['shop_id'])
+        $delivery = app(\App\Services\TalkDeliveryService::class)->once(
+            $payload['cast_id'] . ':' . $payload['shop_id'] . ':' . $payload['sender_type'],
+            (string) ($request->input('client_request_id') ?: \Illuminate\Support\Str::uuid()),
+            $content,
+            function () use ($isCastPortal, $partnerId, $request, $payload, $messageType, $content) {
+                if ($isCastPortal) {
+                    $this->ensureApplicationForTalkStart(
+                        (string) $this->currentCastId(),
+                        (string) $partnerId,
+                        $this->normalizeTalkTopic((string) $request->input('talk_topic', '')),
+                        $this->normalizeTalkJobKind((string) $request->input('talk_job_kind', ''))
+                    );
+                }
+                $message = \App\Models\Message::create($payload);
+
+                return [
+                    'message_id' => $message->id,
+                    'message_type' => $messageType,
+                    'content' => $content,
+                    'time' => Carbon::now()->format('H:i'),
+                ];
+            }
         );
+        if ($delivery['created']) {
+            try {
+                $this->notifyConversationPartner(
+                    castId: (string) $payload['cast_id'],
+                    shopId: (string) $payload['shop_id'],
+                    isCastPortal: $isCastPortal,
+                    title: '新着メッセージ',
+                    body: $isCastPortal ? 'キャストからメッセージが届きました。' : '店舗からメッセージが届きました。内容を確認してください。',
+                    url: $isCastPortal ? url('/shop/talk/room/' . $payload['cast_id']) : url('/cast/talk/room/' . $payload['shop_id'])
+                );
+            } catch (\Throwable $exception) {
+                // メッセージの保存成功を通知障害で失敗扱いにしない。
+                report($exception);
+            }
+        }
 
         return response()->json([
             'success' => true,
             'message' => '送信しました',
-            'data' => [
-                'message_id' => $messageId,
-                'message_type' => $messageType,
-                'content' => $content,
-                'time' => Carbon::now()->format('H:i'),
-            ]
+            'data' => $delivery['data'],
         ]);
     }
 
@@ -1233,6 +1248,8 @@ class TalkController extends Controller
             }
             if (Schema::hasColumn('shop_job_applications', 'hired_regular_hourly_wage') && $hiredRegularHourlyWage !== null) {
                 $updates['hired_regular_hourly_wage'] = $hiredRegularHourlyWage;
+            } elseif (Schema::hasColumn('shop_job_applications', 'hourly_wage_regular') && $hiredRegularHourlyWage !== null) {
+                $updates['hourly_wage_regular'] = $hiredRegularHourlyWage;
             }
         } elseif ($actionType === 'rejected') {
             $updates['status'] = self::APPLICATION_STATUS_REJECTED;

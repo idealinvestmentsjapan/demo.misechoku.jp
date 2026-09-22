@@ -533,7 +533,7 @@
             <button type="button" class="payment-bank-modal-close" data-close-bonus-modal aria-label="閉じる"><i class="fas fa-times"></i></button>
         </div>
         <div class="payment-bank-modal-body">
-            <p class="deposit-precheck-note">採用された時点のボーナス金・達成条件です。内容を確認のうえ「完了」で入金申請を行ってください。</p>
+            <p class="deposit-precheck-note">採用された時点のボーナス金・達成条件です。勤務日数・時間などの条件を確認してから申請してください。申請後は店舗の入金確認と運営の振込手続きに進みます。</p>
             <div class="deposit-precheck-card">
                 <div class="deposit-precheck-title">
                     <span id="bonus-confirm-shop-name">—</span>
@@ -563,7 +563,7 @@
                 </div>
                 <p id="bonus-confirm-error" class="deposit-precheck-note" style="color:#fca5a5; display:none;"></p>
                 <div class="text-right mt-3">
-                    <button type="submit" class="btn-action manage" id="bonus-confirm-submit-btn" disabled>完了</button>
+                    <button type="submit" class="btn-action manage" id="bonus-confirm-submit-btn" disabled>この内容でボーナスを申請する</button>
                 </div>
             </form>
         </div>

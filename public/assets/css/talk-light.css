@@ -432,15 +432,6 @@ body.page-talk-room .talk-room-header,
 .talk-bonus-cta:hover { filter: brightness(1.07); }
 .talk-bonus-cta:active { transform: scale(0.97); }
 
-/* 面談候補日の常設導線（定型文パネル先頭のアクションカード） */
-.quick-reply-card--action {
-    background: rgba(168, 85, 247, 0.16) !important;
-    border: 1px solid rgba(168, 85, 247, 0.50) !important;
-    color: #c4b5fd !important;
-    font-weight: 800;
-}
-.quick-reply-card--action .quick-reply-card__body i { margin-right: 4px; }
-
 
 /* ============================================================
    トーク一覧：スカウト残数バー（店舗側 2026-07-20）

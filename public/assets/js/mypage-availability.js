@@ -10,8 +10,7 @@
  *
  * Buttons are swapped between the declared / cleared states, so clicks are
  * delegated on the card element.
- * The declaration is fixed to end-of-day ("today only"), matching the shop
- * side's behavior. There is no hours selection.
+ * Casts choose a 2 / 4 / 8 hour availability window.
  */
 (function () {
     'use strict';
@@ -34,7 +33,7 @@
             availCard.classList.add('is-active');
             if (iconEl) iconEl.className = 'fas fa-bolt';
             if (titleEl) titleEl.textContent = '今から入れます：宣言中';
-            if (leadEl) leadEl.textContent = (remainingLabel || '有効中') + '・本日 23:59 まで有効';
+            if (leadEl) leadEl.textContent = (remainingLabel || '有効中') + '有効';
             if (actionsEl) {
                 actionsEl.innerHTML = '<button type="button" class="cast-avail__btn cast-avail__btn--danger" data-availability-clear><i class="fas fa-xmark"></i> OFF</button>';
             }
@@ -44,10 +43,16 @@
             availCard.classList.remove('is-active');
             if (iconEl) iconEl.className = 'fas fa-clock';
             if (titleEl) titleEl.textContent = '今から入れます';
-            if (leadEl) leadEl.textContent = '本日中、近くの店舗の SWIPE で優先表示されます';
+            if (leadEl) leadEl.textContent = '有効時間を選ぶと、近くの店舗の SWIPE で優先表示されます';
             if (actionsEl) {
-                actionsEl.innerHTML = '<button type="button" class="cast-avail__btn cast-avail__btn--primary" data-availability-declare><i class="fas fa-bolt"></i> 本日 ON</button>';
+                actionsEl.innerHTML = [2, 4, 8].map(function (hours) {
+                    return '<button type="button" class="cast-avail__btn cast-avail__btn--primary" data-availability-declare data-hours="' + hours + '"><i class="fas fa-bolt"></i> ' + hours + '時間</button>';
+                }).join('');
             }
+        }
+
+        if (!availCard.classList.contains('is-active')) {
+            renderInactiveState();
         }
 
         availCard.addEventListener('click', function (e) {
@@ -55,6 +60,7 @@
             var clearBtn = e.target.closest('[data-availability-clear]');
 
             if (declareBtn) {
+                var hours = Number(declareBtn.getAttribute('data-hours'));
                 declareBtn.disabled = true;
 
                 fetch(declareUrl, {
@@ -65,13 +71,13 @@
                         'X-CSRF-TOKEN': csrfToken,
                         'X-Requested-With': 'XMLHttpRequest'
                     },
-                    body: '{}'
+                    body: JSON.stringify({ hours: hours })
                 })
                 .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
                 .then(function (res) {
                     if (res.ok && res.body && res.body.success) {
-                        renderActiveState(res.body.remaining_label || '本日中');
-                        (window.appToast || function () {})('「今から入れます」を本日 ON にしました', 'success');
+                        renderActiveState(res.body.remaining_label || (hours + '時間'));
+                        (window.appToast || function () {})('「今から入れます」を' + hours + '時間有効にしました', 'success');
                     } else {
                         declareBtn.disabled = false;
                         (window.appToast || window.alert)('宣言できませんでした。もう一度お試しください', 'error');
