@@ -46,6 +46,8 @@ class MypageController extends Controller
             ];
         }
         $searchLocationSettings = app(UserLocationService::class)->loadProfileSettings();
+        $availabilityDates = app(\App\Services\AvailabilityService::class)
+            ->getDates(\App\Models\AvailabilityDate::OWNER_CAST, $this->currentCastId());
 
         return view('casts.mypage.index', [
             'pageId'       => 'mypage',
@@ -54,6 +56,7 @@ class MypageController extends Controller
             'subImages'    => $subImages,
             'searchLocationSettings' => $searchLocationSettings,
             'searchLocationDistanceOptions' => UserLocationService::DISTANCE_OPTIONS_KM,
+            'availabilityDates' => $availabilityDates,
         ]);
     }
 
@@ -129,49 +132,41 @@ class MypageController extends Controller
     }
 
     /**
-     * 「今から入れる」宣言（Tier A 判定用）
-     *   - available_until = 現在 + 2 / 4 / 8時間
-     *   - available_declared_at = NOW()（宣言時刻・タイブレーク用）
-     * 呼び出し例: POST /cast/mypage/availability
+     * Candidate-date availability declaration (up to 5 dates, 30 days ahead).
+     * POST /cast/mypage/availability with dates[] = ['Y-m-d', ...]
      */
     public function declareAvailability(Request $request)
     {
-        $castId = $this->currentCastId();
         $validated = $request->validate([
-            'hours' => ['required', 'integer', 'in:2,4,8'],
+            'dates' => ['required', 'array', 'max:' . \App\Services\AvailabilityService::MAX_DATES],
+            'dates.*' => ['date_format:Y-m-d'],
         ]);
-        $hours = (int) $validated['hours'];
-        $now = Carbon::now();
-        $until = (clone $now)->addHours($hours);
 
-        DB::table('cast_profiles')
-            ->where('cast_id', $castId)
-            ->update([
-                'available_until'       => $until,
-                'available_declared_at' => $now,
-                'updated_at'            => $now,
-            ]);
+        $service = app(\App\Services\AvailabilityService::class);
+        $result = $service->setDates(
+            \App\Models\AvailabilityDate::OWNER_CAST,
+            $this->currentCastId(),
+            $validated['dates']
+        );
+
+        if (!$result['success']) {
+            return response()->json($result, 422);
+        }
 
         return response()->json([
             'success' => true,
-            'available_until'       => $until->toIso8601String(),
-            'available_declared_at' => $now->toIso8601String(),
-            'remaining_label'       => $hours . '時間',
+            'message' => $result['message'],
+            'dates' => $service->getDates(\App\Models\AvailabilityDate::OWNER_CAST, $this->currentCastId()),
         ]);
     }
 
     /**
-     * 「今すぐ入れる」宣言の取り消し
+     * Clear all declared candidate dates.
      */
     public function clearAvailability()
     {
-        DB::table('cast_profiles')
-            ->where('cast_id', $this->currentCastId())
-            ->update([
-                'available_until'       => null,
-                'available_declared_at' => null,
-                'updated_at'            => Carbon::now(),
-            ]);
+        app(\App\Services\AvailabilityService::class)
+            ->clearDates(\App\Models\AvailabilityDate::OWNER_CAST, $this->currentCastId());
 
         return response()->json(['success' => true]);
     }
@@ -856,12 +851,6 @@ class MypageController extends Controller
                 Schema::hasColumn('cast_profiles', 'personality_type')
                     ? 'cast_profiles.personality_type'
                     : DB::raw('NULL as personality_type'),
-                Schema::hasColumn('cast_profiles', 'available_until')
-                    ? 'cast_profiles.available_until'
-                    : DB::raw('NULL as available_until'),
-                Schema::hasColumn('cast_profiles', 'available_declared_at')
-                    ? 'cast_profiles.available_declared_at'
-                    : DB::raw('NULL as available_declared_at'),
                 'cast_profiles.updated_at as profile_updated_at'
             )
             ->first();
@@ -955,24 +944,6 @@ class MypageController extends Controller
             }
         }
 
-        // 「今すぐ入れる」宣言の残り時間ラベル
-        $availableRemainingLabel = null;
-        $availableIsActive = false;
-        if (!empty($castRow->available_until)) {
-            $until = Carbon::parse($castRow->available_until);
-            if ($until->isFuture()) {
-                $availableIsActive = true;
-                $diffMinutes = (int) ceil(Carbon::now()->diffInSeconds($until, false) / 60);
-                if ($diffMinutes >= 60) {
-                    $hours = (int) floor($diffMinutes / 60);
-                    $mins  = $diffMinutes % 60;
-                    $availableRemainingLabel = $mins > 0 ? "残り{$hours}時間{$mins}分" : "残り{$hours}時間";
-                } else {
-                    $availableRemainingLabel = "残り{$diffMinutes}分";
-                }
-            }
-        }
-
         return [
             'id'               => $castRow->id,
             'nickname'         => $castRow->nickname ?? '',
@@ -988,9 +959,6 @@ class MypageController extends Controller
             'view_cnt'         => $viewCount,
             'match_cnt'        => $matchCount,
             'bonus_total'      => $bonusTotal,
-            'available_until'  => $castRow->available_until,
-            'available_is_active'     => $availableIsActive,
-            'available_remaining_label' => $availableRemainingLabel,
             'zip'              => $castRow->zip ?? '',
             'pref'             => $castRow->pref ?? '',
             'city'             => $castRow->city ?? '',

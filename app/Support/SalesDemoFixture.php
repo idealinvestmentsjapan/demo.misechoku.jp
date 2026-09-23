@@ -86,8 +86,10 @@ final class SalesDemoFixture
             $add('cast_profiles', ['id' => $n, 'cast_id' => $id, 'industry_id' => 1, 'nickname' => sprintf('デモ%02d・', $slot) . $name,
                 'name' => '実演用 ' . $name, 'birthday' => $now->subYears(24 + $i)->toDateString(), 'pref' => '東京都',
                 'city' => '新宿区', 'profession' => '実演用プロフィール', 'exp' => $exp, 'pr' => $pr . '（架空の人物です）',
-                'personality_type' => $type, 'latitude' => 35.6939 + $i / 1000, 'longitude' => 139.7035,
-                'available_declared_at' => $stamp, 'available_until' => $now->addHours(12)->toDateTimeString()] + $dated, ['cast_id' => $id]);
+                'personality_type' => $type, 'latitude' => 35.6939 + $i / 1000, 'longitude' => 139.7035] + $dated, ['cast_id' => $id]);
+            // Tier A demo: declare today as a candidate work date
+            $add('availability_dates', ['owner_type' => 'cast', 'owner_id' => $id,
+                'available_on' => $now->toDateString()] + $dated, ['owner_type' => 'cast', 'owner_id' => $id, 'available_on' => $now->toDateString()]);
             $add('cast_images', ['id' => $n, 'cast_id' => $id, 'image_path' => 'assets/images/demo-sales/cast-' . ($i + 1) . '.svg',
                 'status' => 1, 'is_main' => 1, 'main_order' => 1] + $dated, ['cast_id' => $id]);
             $add('cast_posts', ['id' => $n, 'cast_id' => $id, 'body' => $pr] + $dated, ['cast_id' => $id]);

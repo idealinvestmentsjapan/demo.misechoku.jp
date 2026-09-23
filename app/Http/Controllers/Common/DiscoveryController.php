@@ -92,9 +92,6 @@ class DiscoveryController extends Controller
 
     private function getHomeCasts(): array
     {
-        $hasAvailUntil     = Schema::hasColumn('cast_profiles', 'available_until');
-        $hasAvailDeclared  = Schema::hasColumn('cast_profiles', 'available_declared_at');
-
         $select = [
             'casts.id',
             'casts.last_login_at',
@@ -111,12 +108,6 @@ class DiscoveryController extends Controller
             'cast_profiles.longitude',
             DB::raw("(SELECT ci.image_path FROM cast_images ci WHERE ci.cast_id = casts.id ORDER BY ci.is_main DESC, ci.main_order IS NULL, ci.main_order, ci.id LIMIT 1) as main_image_path"),
         ];
-        $select[] = $hasAvailUntil
-            ? 'cast_profiles.available_until'
-            : DB::raw('NULL as available_until');
-        $select[] = $hasAvailDeclared
-            ? 'cast_profiles.available_declared_at'
-            : DB::raw('NULL as available_declared_at');
 
         // WHERE で予めランクを付けておくとページング時に楽になるが、
         // ここでは Tier 判定に必要な情報を全部拾って PHP 側で並び替える方針
@@ -194,6 +185,9 @@ class DiscoveryController extends Controller
 
         // Tier 分類（各パラメータはクラス定数で管理。上部の定数ブロック参照）
         $now = Carbon::now();
+        $todayStr = Carbon::today()->toDateString();
+        $availDatesByCast = app(\App\Services\AvailabilityService::class)
+            ->datesByOwner(\App\Models\AvailabilityDate::OWNER_CAST, $rows->pluck('id')->map(fn ($id) => (string) $id)->all());
 
         $items = [];
         foreach ($rows as $row) {
@@ -211,20 +205,13 @@ class DiscoveryController extends Controller
             }
             $passportLabel = $passportLabelByCast[(string) $row->id] ?? null;
 
-            // --- Tier / チップ判定 ---
-            $availActive = false;
-            $availRemainingLabel = null;
-            $availDeclaredAt = $row->available_declared_at ? Carbon::parse($row->available_declared_at) : null;
-            if (!empty($row->available_until)) {
-                $until = Carbon::parse($row->available_until);
-                if ($until->isFuture()) {
-                    $availActive = true;
-                    $mins = (int) ceil($now->diffInSeconds($until, false) / 60);
-                    $availRemainingLabel = $mins >= 60
-                        ? '残り' . (int) floor($mins / 60) . '時間'
-                        : '残り' . $mins . '分';
-                }
-            }
+            // --- Tier / チップ判定（候補日ベース：本日が候補日なら Tier A） ---
+            $castAvailDates = $availDatesByCast[(string) $row->id] ?? [];
+            $availActive = in_array($todayStr, $castAvailDates, true);
+            $availDateLabels = array_map(
+                fn ($d) => \App\Services\AvailabilityService::shortLabel($d),
+                $castAvailDates
+            );
 
             $lastLogin = $row->last_login_at ? Carbon::parse($row->last_login_at) : null;
             $minutesSinceLogin = $lastLogin ? (int) $lastLogin->diffInMinutes($now, false) : null;
@@ -236,7 +223,8 @@ class DiscoveryController extends Controller
                 $tier = 'A';
                 // 距離不明は末尾扱いにするため大きな値を割当
                 $sortKey1 = $distanceKm !== null ? (float) $distanceKm : self::DISTANCE_UNKNOWN_SORT_KEY;
-                $sortKey2 = $availDeclaredAt ? -$availDeclaredAt->getTimestamp() : 0;
+                // More declared dates first as a tiebreak (motivated casts)
+                $sortKey2 = -count($castAvailDates);
             } elseif ($lat !== null && $lng !== null
                 && $lastLogin !== null
                 && $lastLogin->diffInHours($now, false) <= self::TIER_B_RECENCY_HOURS
@@ -274,7 +262,7 @@ class DiscoveryController extends Controller
                 // ↓ Tier / チップ表示用（view で参照）
                 'tier' => $tier,
                 'availability_active' => $availActive,
-                'availability_remaining_label' => $availRemainingLabel,
+                'availability_date_labels' => $availDateLabels,
                 'is_online_now' => $isOnlineNow,
                 '_sort_tier'  => ['A' => 0, 'B' => 1, 'C' => 2][$tier] ?? 2,
                 '_sort_key1'  => $sortKey1,
@@ -342,9 +330,6 @@ class DiscoveryController extends Controller
             'shop_profiles.longitude',
             DB::raw("(SELECT si.image_path FROM shop_images si WHERE si.shop_id = shops.id ORDER BY si.is_main DESC, si.main_order IS NULL, si.main_order, si.id LIMIT 1) as main_image_path"),
         ];
-        if (Schema::hasColumn('shop_profiles', 'available_until')) {
-            $selectFields[] = 'shop_profiles.available_until';
-        }
         if (Schema::hasColumn('shop_jobs', 'hourly_wage_regular')) {
             $selectFields[] = 'shop_jobs.hourly_wage_regular';
         }
@@ -468,6 +453,11 @@ class DiscoveryController extends Controller
         }
         $keptShopMap = array_fill_keys($keptShopIds, true);
 
+        // Dated help recruitment declarations per shop
+        $todayStr = Carbon::today()->toDateString();
+        $helpDatesByShop = app(\App\Services\AvailabilityService::class)
+            ->datesByOwner(\App\Models\AvailabilityDate::OWNER_SHOP, array_map('strval', $shopIds));
+
         $items = [];
         foreach ($rows as $row) {
             // 画面からは「DBの店舗ID（例: s00000001）」でアクセスできるようにする
@@ -568,12 +558,11 @@ class DiscoveryController extends Controller
                 'review_count' => $hasReviews ? (int) ($row->review_count ?? 0) : 0,
                 'is_premium' => isset($premiumShopIds[$row->id]),
                 'is_kept' => isset($keptShopMap[$row->id]),
-                'available_active' => (function () use ($row) {
-                    $val = $row->available_until ?? null;
-                    if (empty($val)) return false;
-                    try { return \Carbon\Carbon::parse($val)->isFuture(); }
-                    catch (\Throwable) { return false; }
-                })(),
+                'available_active' => in_array($todayStr, $helpDatesByShop[(string) $row->id] ?? [], true),
+                'help_date_labels' => array_map(
+                    fn ($d) => \App\Services\AvailabilityService::shortLabel($d),
+                    $helpDatesByShop[(string) $row->id] ?? []
+                ),
                 'recruit_bonus_lines' => $bonusLines,
                 'signup_bonus_range' => $this->discoverySignupBonusRange($bonusLines),
                 'trial_hourly_range' => $this->discoveryHourlyPair($trialHourly, $meta, 'trial'),

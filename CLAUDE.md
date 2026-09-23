@@ -291,6 +291,7 @@ database/
 ### 重要な業務ロジック
 - **採用ボーナス**: `application_deposits` テーブルで管理、ステータス履歴は `application_deposit_histories`。
   ステータス遷移は `BillingManagementService` のクラス定数（`STATUS_CAST_REQUESTED` … `STATUS_COMPLETED`）で管理。システム手数料 10% / 銀行振込手数料 220 円 / 請求期限 7 日。請求書番号は `INV-YYYYMM-{id:04d}`。
+- **ヘルプ採用の請求**（`talk_job_kind = 'help'`）: ボーナス金なし。代わりに **ヘルプ時給1時間分の135%** を店舗へ請求し、**時給の50%** をキャストへ振込（運営の取り分は85%分）。システム手数料10%は上乗せしない。時給はヘルプ時給スナップショット（`applied_help_hourly_wage` → `shop_jobs.help_hourly_wage` の順で解決）。体験入店（trial）は対象外（従来どおりボーナス金のみ）。定数は `BillingManagementService::HELP_INVOICE_RATE` / `HELP_CAST_BACK_RATE`。
 - **トークアクション**: `App\Support\TalkActionRegistry` に権限マトリクスを集約。`TalkController@action` の
   `action_type` は以下:
   - キャストのみ: `interview_confirm` / `interview_cancel_accept` / `fulltime_request` / `work_complete_report` / `bonus_achievement_report`

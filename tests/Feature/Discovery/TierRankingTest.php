@@ -24,12 +24,17 @@ class TierRankingTest extends TestCase
         // Base shop + owner login
         $manager = $this->makeShopManager('m11110001', 's11110001');
 
-        // Cast A: declared "available now" (Tier A)
+        // Cast A: declared today as a candidate work date (Tier A)
         $this->makeCastWithProfile('c11110001', 'Alice', [
             'latitude' => 35.68, 'longitude' => 139.76,
-            'available_until' => now()->addHours(2),
-            'available_declared_at' => now(),
         ], now()->subMinutes(3));
+        DB::table('availability_dates')->insert([
+            'owner_type' => 'cast',
+            'owner_id' => 'c11110001',
+            'available_on' => now()->toDateString(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         // Cast B: recent login + location, no declaration (Tier B)
         $this->makeCastWithProfile('c11110002', 'Bob', [

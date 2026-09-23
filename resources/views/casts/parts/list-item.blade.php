@@ -23,9 +23,16 @@
                     <span class="tl-row__industry-inline">{{ $item['industry_label'] }}</span>
                 @endif
                 @if(!empty($item['is_excellent'])) <x-ui.premium-badge size="sm" />@endif
-                @if(!empty($item['available_active']))
-                    <span class="shop-avail-tag" aria-label="本日すぐ入れます" style="margin-left:4px;">
-                        <i class="fas fa-bolt" aria-hidden="true"></i> 本日OK
+                @php
+                    $liHelpDates = array_values(array_filter((array) ($item['help_date_labels'] ?? [])));
+                @endphp
+                @if($liHelpDates !== [])
+                    <span class="shop-avail-tag" aria-label="日付指定のヘルプ募集" style="margin-left:4px;">
+                        <i class="fas fa-bolt" aria-hidden="true"></i> {{ implode('・', array_slice($liHelpDates, 0, 2)) }} ヘルプ募集
+                    </span>
+                @elseif(!empty($item['available_active']))
+                    <span class="shop-avail-tag" aria-label="本日ヘルプ募集" style="margin-left:4px;">
+                        <i class="fas fa-bolt" aria-hidden="true"></i> 本日ヘルプ募集
                     </span>
                 @endif
             </h3>

@@ -404,6 +404,7 @@ class RecruitmentController extends Controller
             'nearest_station' => $this->resolveNearestStation($shopId, $row->station1 ?? null),
             'tag_groups' => $shopTagGroups,
             'available_active' => $this->resolveShopAvailableActive($shopId),
+            'help_date_labels' => $this->resolveShopHelpDateLabels($shopId),
         ];
 
         return [
@@ -891,29 +892,31 @@ class RecruitmentController extends Controller
                 ),
                 'tag_groups' => $shopTagGroups,
                 'available_active' => $this->resolveShopAvailableActive($shopId),
+                'help_date_labels' => $this->resolveShopHelpDateLabels($shopId),
             ],
         ];
     }
 
     /**
-     * Return true if the shop's "本日すぐ入れます" declaration is still active.
+     * Return true if the shop declared help recruitment for today.
      */
     private function resolveShopAvailableActive(string $shopId): bool
     {
-        if (!Schema::hasColumn('shop_profiles', 'available_until')) {
-            return false;
-        }
-        $until = DB::table('shop_profiles')
-            ->where('shop_id', $shopId)
-            ->value('available_until');
-        if (empty($until)) {
-            return false;
-        }
-        try {
-            return \Carbon\Carbon::parse($until)->isFuture();
-        } catch (\Throwable) {
-            return false;
-        }
+        return app(\App\Services\AvailabilityService::class)->isAvailableOn(
+            \App\Models\AvailabilityDate::OWNER_SHOP,
+            $shopId,
+            \Carbon\Carbon::today()->toDateString()
+        );
+    }
+
+    /** Short labels ('本日', '9/28', ...) of the shop's dated help recruitment. */
+    private function resolveShopHelpDateLabels(string $shopId): array
+    {
+        return array_map(
+            fn ($d) => \App\Services\AvailabilityService::shortLabel($d),
+            app(\App\Services\AvailabilityService::class)
+                ->getDates(\App\Models\AvailabilityDate::OWNER_SHOP, $shopId)
+        );
     }
 
     private function resolveNearestStation(string $shopId, ?string $legacyStation): string

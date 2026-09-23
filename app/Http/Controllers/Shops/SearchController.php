@@ -213,8 +213,19 @@ class SearchController extends BaseSearchController
         // （AND-of-tokens / OR-of-fields）。ヒット順位はスコアで決定。
         $filters = $request->only(['age_min', 'age_max', 'shift_frequency', 'work_periods', 'looks_tag_ids', 'personality_tag_ids', 'night_work_exp']);
         $filterService = app(\App\Services\SearchFilterService::class);
+
+        // Candidate-date filter: only casts who declared the selected date
+        $availabilityService = app(\App\Services\AvailabilityService::class);
+        $availableOn = $availabilityService->normalizeFilterDate($request->query('available_on'));
+        $availableCastIdSet = $availableOn !== null
+            ? array_fill_keys($availabilityService->ownerIdsAvailableOn(\App\Models\AvailabilityDate::OWNER_CAST, $availableOn), true)
+            : null;
+
         $items = $allRows
-            ->filter(function ($row) use ($keywordTokens, $filters, $castTagsByCastId, $castPrefsByCastId, $filterService) {
+            ->filter(function ($row) use ($keywordTokens, $filters, $castTagsByCastId, $castPrefsByCastId, $filterService, $availableCastIdSet) {
+                if ($availableCastIdSet !== null && !isset($availableCastIdSet[(string) $row->id])) {
+                    return false;
+                }
                 if (!$filterService->matchesCast($row, $filters, $castTagsByCastId[$row->id] ?? [], $castPrefsByCastId[$row->id] ?? [])) {
                     return false;
                 }

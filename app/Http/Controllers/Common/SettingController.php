@@ -300,9 +300,14 @@ class SettingController extends Controller
                             'pr'         => null,
                             'latitude'   => null,
                             'longitude'  => null,
-                            'available_until' => null,
                             'updated_at' => now(),
                         ]);
+                }
+                if (Schema::hasTable('availability_dates')) {
+                    DB::table('availability_dates')
+                        ->where('owner_type', \App\Models\AvailabilityDate::OWNER_CAST)
+                        ->where('owner_id', $actorId)
+                        ->delete();
                 }
                 // 本人確認書類はコンプライアンス上、明示削除ではなく参照不能化のみ
                 if (Schema::hasTable('cast_images')) {

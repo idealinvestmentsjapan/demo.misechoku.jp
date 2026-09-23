@@ -179,6 +179,27 @@
                     </div>
                 </div>
 
+                {{-- 入れる候補日（〇月〇日に入れる子を探す） --}}
+                @php
+                    $availableOnValue = (string) request('available_on', '');
+                    $availableOnMin = \Carbon\Carbon::today()->toDateString();
+                    $availableOnMax = \Carbon\Carbon::today()->addDays(\App\Services\AvailabilityService::MAX_DAYS_AHEAD)->toDateString();
+                @endphp
+                <div class="detail-search-accordion detail-search-accordion--panel" data-accordion data-summary-group="入れる候補日" data-open="true">
+                    <button type="button" class="detail-search-accordion__head" data-accordion-trigger aria-expanded="true">
+                        <span><i class="fas fa-calendar-days" aria-hidden="true"></i>入れる候補日</span>
+                        <span class="detail-search-accordion__icon">−</span>
+                    </button>
+                    <div class="detail-search-accordion__body">
+                        <div class="detail-search-subsection">
+                            <span class="detail-search-subsection__label">この日に入れる子を探す</span>
+                            <input type="date" name="available_on" class="detail-search-select"
+                                   value="{{ $availableOnValue }}"
+                                   min="{{ $availableOnMin }}" max="{{ $availableOnMax }}">
+                        </div>
+                    </div>
+                </div>
+
                 {{-- 経験（短いのでデフォルト開く） --}}
                 <div class="detail-search-accordion detail-search-accordion--panel" data-accordion data-summary-group="ナイトワーク経験" data-open="true">
                     <button type="button" class="detail-search-accordion__head" data-accordion-trigger aria-expanded="true">

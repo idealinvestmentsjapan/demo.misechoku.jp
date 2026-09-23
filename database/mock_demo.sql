@@ -77,6 +77,22 @@ CREATE TABLE `application_deposit_histories` (
 -- --------------------------------------------------------
 
 --
+-- テーブルの構造 `availability_dates`
+-- Candidate work dates (cast) / dated help recruitment (shop). Max 5 future dates per owner (app-enforced).
+--
+
+CREATE TABLE `availability_dates` (
+  `id` bigint UNSIGNED NOT NULL,
+  `owner_type` varchar(8) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'cast or shop',
+  `owner_id` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Cast.id (c...) or Shop.id (s...)',
+  `available_on` date NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- テーブルの構造 `bank_accounts`
 --
 
@@ -1940,6 +1956,14 @@ ALTER TABLE `application_deposit_histories`
   ADD KEY `app_dep_hist_dep_id_foreign` (`application_deposit_id`);
 
 --
+-- テーブルのインデックス `availability_dates`
+--
+ALTER TABLE `availability_dates`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `availability_dates_owner_date_unique` (`owner_type`,`owner_id`,`available_on`),
+  ADD KEY `availability_dates_available_on_index` (`available_on`);
+
+--
 -- テーブルのインデックス `bank_accounts`
 --
 ALTER TABLE `bank_accounts`
@@ -2378,6 +2402,12 @@ ALTER TABLE `application_deposits`
 --
 ALTER TABLE `application_deposit_histories`
   MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- テーブルの AUTO_INCREMENT `availability_dates`
+--
+ALTER TABLE `availability_dates`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- テーブルの AUTO_INCREMENT `bank_accounts`

@@ -98,12 +98,12 @@
             </div>
 
             @php
-                $shopAvailActive = !empty($shop['available_active']);
+                $shopHelpDates = array_values(array_filter((array) ($shop['help_date_labels'] ?? [])));
             @endphp
-            @if($shopAvailActive)
+            @if($shopHelpDates !== [])
                 <div class="mb-1">
-                    <span class="shop-avail-tag" aria-label="本日すぐ入れます">
-                        <i class="fas fa-bolt" aria-hidden="true"></i> 本日すぐ入れます
+                    <span class="shop-avail-tag" aria-label="日付指定のヘルプ募集">
+                        <i class="fas fa-bolt" aria-hidden="true"></i> {{ implode('・', array_slice($shopHelpDates, 0, 5)) }} ヘルプ募集
                     </span>
                 </div>
             @endif

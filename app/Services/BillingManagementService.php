@@ -29,6 +29,14 @@ class BillingManagementService
     /** 銀行振込手数料（円）。マスタ化する場合はここを参照にせずマスタから取得すること */
     private const BANK_FEE_AMOUNT = 220;
 
+    /**
+     * Help hires have no hiring bonus. Instead the shop is invoiced 135% of
+     * one help hourly wage, the cast receives 50% back, and the platform
+     * keeps the remaining 85%. The 10% system fee is NOT applied on top.
+     */
+    public const HELP_INVOICE_RATE = 1.35;
+    public const HELP_CAST_BACK_RATE = 0.50;
+
     /** Card titles for auto-sent talk messages on deposit status transitions */
     private const BILLING_TALK_TITLES = [
         self::STATUS_CAST_REQUESTED => '入金申請が届きました',
@@ -266,7 +274,9 @@ class BillingManagementService
         $this->appendHistory($depositId, self::STATUS_CAST_REQUESTED);
 
         $this->postBillingTalkMessages((string) $application->cast_id, (string) $application->shop_id, self::STATUS_CAST_REQUESTED, [
-            'shop' => 'キャストから採用ボーナスの入金申請が届きました。採用・入金管理から内容を確認し、承認をお願いします。',
+            'shop' => $this->isHelpApplicationRow($application)
+                ? 'キャストからヘルプ勤務完了の入金申請が届きました。採用・入金管理から内容を確認し、承認をお願いします。'
+                : 'キャストから採用ボーナスの入金申請が届きました。採用・入金管理から内容を確認し、承認をお願いします。',
         ]);
 
         return ['success' => true, 'message' => '入金申請を受け付けました。店舗・運営の確認をお待ちください。'];
@@ -557,7 +567,9 @@ class BillingManagementService
         $this->ensurePaymentTaskForDeposit($depositId);
 
         $this->postBillingTalkMessages((string) $deposit->cast_id, (string) $deposit->shop_id, self::STATUS_SHOP_PAYMENT_CONFIRMED, [
-            'cast' => '店舗からの入金を確認しました。採用ボーナスの振込準備に入ります。',
+            'cast' => $this->isHelpApplicationRow($deposit)
+                ? '店舗からの入金を確認しました。ヘルプ勤務分の報酬の振込準備に入ります。'
+                : '店舗からの入金を確認しました。採用ボーナスの振込準備に入ります。',
             'shop' => 'お振込を確認しました。お支払いの手続きは完了です。',
         ]);
 
@@ -872,9 +884,12 @@ class BillingManagementService
 
         $this->appendHistory((int) $deposit->id, self::STATUS_COMPLETED);
 
+        $completedText = $this->isHelpApplicationRow($deposit)
+            ? 'ヘルプ勤務分のお手続きがすべて完了しました。ご利用ありがとうございました。'
+            : '採用ボーナスのお手続きがすべて完了しました。ご利用ありがとうございました。';
         $this->postBillingTalkMessages((string) $deposit->cast_id, (string) $deposit->shop_id, self::STATUS_COMPLETED, [
-            'cast' => '採用ボーナスのお手続きがすべて完了しました。ご利用ありがとうございました。',
-            'shop' => '採用ボーナスのお手続きがすべて完了しました。ご利用ありがとうございました。',
+            'cast' => $completedText,
+            'shop' => $completedText,
         ]);
 
         return ['success' => true, 'message' => '入金確認を記録しました。今回の請求・振込フローは完了です。'];
@@ -966,7 +981,7 @@ class BillingManagementService
             'payments' => $deposits->map(fn (array $deposit) => [
                 'title' => !empty($deposit['invoice_number'])
                     ? '請求・入金フロー ' . $deposit['invoice_number']
-                    : 'ボーナス入金申請',
+                    : ((($deposit['job_kind'] ?? '') === 'help') ? 'ヘルプ勤務の入金申請' : 'ボーナス入金申請'),
                 'status_label' => $deposit['status_label'],
                 'status_class' => in_array($deposit['status_code'], [self::STATUS_CAST_TRANSFERRED, self::STATUS_COMPLETED], true)
                     ? 'status-paid'
@@ -1276,6 +1291,7 @@ class BillingManagementService
         foreach ([
             'regular_hourly_wage',
             'hourly_wage_regular',
+            'help_hourly_wage',
             'bonus_reward',
             'noruma_reward',
             'noruma_cond',
@@ -1330,6 +1346,7 @@ class BillingManagementService
             'hired_regular_hourly_wage',
             'hired_bonus_amount',
             'hired_bonus_condition',
+            'applied_help_hourly_wage',
             'applied_bonus_reward',
             'applied_bonus_condition',
             'applied_norma_day',
@@ -1605,10 +1622,16 @@ class BillingManagementService
                 ->all();
         }
 
+        $jobKind = trim((string) ($application->talk_job_kind ?? ''));
+        $helpHourlyWage = $jobKind === 'help' ? $this->resolveHelpHourlyWage($application) : 0;
+
         return [
             'application_id' => (int) $application->id,
             'shop_id' => $application->shop_id,
             'shop_name' => $application->shop_name ?: $application->shop_id,
+            'job_kind' => $jobKind,
+            'help_hourly_wage' => $helpHourlyWage,
+            'help_invoice_amount' => $helpHourlyWage > 0 ? (int) round($helpHourlyWage * self::HELP_INVOICE_RATE) : 0,
             'bonus_amount' => $bonusAmount,
             'bonus_condition' => $bonusCondition,
             'bonus_meta' => $bonusMeta,
@@ -1632,6 +1655,9 @@ class BillingManagementService
     /** 採用時点の焼き付けがあればそれを、なければ求人から取得 */
     private function resolveApplicationBonusAmount(object $application): int
     {
+        if ($this->isHelpApplicationRow($application)) {
+            return (int) round($this->resolveHelpHourlyWage($application) * self::HELP_CAST_BACK_RATE);
+        }
         if (isset($application->hired_bonus_amount) && $application->hired_bonus_amount !== null && $application->hired_bonus_amount !== '') {
             return (int) $application->hired_bonus_amount;
         }
@@ -1698,6 +1724,9 @@ class BillingManagementService
             'review_id' => $review->id ?? null,
             'application_id' => $deposit['application_id'],
             'cast_name' => $deposit['cast_name'],
+            'job_kind' => trim((string) ($deposit['job_kind'] ?? '')),
+            'help_hourly_wage' => (int) ($deposit['help_hourly_wage'] ?? 0),
+            'invoice_amount' => (int) ($deposit['invoice_amount'] ?? 0),
             'bonus_amount' => (int) ($deposit['bonus_amount'] ?? 0),
             'bonus_condition' => $bonusConditionLine,
             'requested_at' => $deposit['updated_at_label'] ?? null,
@@ -1810,6 +1839,8 @@ class BillingManagementService
             'shop_job_application_id' => isset($row->shop_job_application_id) ? (int) $row->shop_job_application_id : null,
             'status_code' => $status,
             'status_label' => $this->statusLabel($status),
+            'job_kind' => trim((string) ($row->talk_job_kind ?? '')),
+            'help_hourly_wage' => $this->isHelpApplicationRow($row) ? $this->resolveHelpHourlyWage($row) : 0,
             'shop_id' => $row->shop_id,
             'shop_name' => $row->shop_name ?: $row->shop_id,
             'shop_address' => trim(implode(' ', array_filter([
@@ -1858,6 +1889,22 @@ class BillingManagementService
 
     private function calculateAmounts(object $row): array
     {
+        if ($this->isHelpApplicationRow($row)) {
+            $helpWage = $this->resolveHelpHourlyWage($row);
+            $castBack = (int) round($helpWage * self::HELP_CAST_BACK_RATE);
+            $bonusAmount = (int) ($row->bonus_amount ?? $castBack);
+            $invoiceAmount = (int) ($row->invoice_amount ?? round($helpWage * self::HELP_INVOICE_RATE));
+            $systemFeeAmount = (int) ($row->system_fee_amount ?? max(0, $invoiceAmount - $bonusAmount));
+            $castTransferAmount = (int) ($row->cast_transfer_amount ?? $bonusAmount);
+
+            return [
+                'bonus_amount' => $bonusAmount,
+                'system_fee_amount' => $systemFeeAmount,
+                'invoice_amount' => $invoiceAmount,
+                'cast_transfer_amount' => $castTransferAmount,
+            ];
+        }
+
         $bonusAmount = (int) ($row->bonus_amount
             ?? $row->hired_bonus_amount
             ?? $row->applied_bonus_reward
@@ -1877,6 +1924,28 @@ class BillingManagementService
             'invoice_amount' => $invoiceAmount,
             'cast_transfer_amount' => $castTransferAmount,
         ];
+    }
+
+    /** talk_job_kind = 'help' judged from application/deposit joined row */
+    private function isHelpApplicationRow(object $row): bool
+    {
+        return trim((string) ($row->talk_job_kind ?? '')) === 'help';
+    }
+
+    /** Help hourly wage: application-time snapshot first, then current job value */
+    private function resolveHelpHourlyWage(object $row): int
+    {
+        foreach (['applied_help_hourly_wage', 'help_hourly_wage'] as $col) {
+            if (!property_exists($row, $col) || $row->{$col} === null) {
+                continue;
+            }
+            $digits = preg_replace('/\D+/', '', (string) $row->{$col});
+            if ($digits !== '') {
+                return (int) $digits;
+            }
+        }
+
+        return 0;
     }
 
     /**
@@ -1927,8 +1996,9 @@ class BillingManagementService
     private function castTransferredTalkText(?object $deposit): string
     {
         $amount = (int) ($deposit->cast_transfer_amount ?? 0);
+        $label = ($deposit !== null && $this->isHelpApplicationRow($deposit)) ? 'ヘルプ勤務分の報酬' : '採用ボーナス';
 
-        return ($amount > 0 ? '採用ボーナス ¥' . number_format($amount) . ' の振込が完了しました。' : '採用ボーナスの振込が完了しました。')
+        return ($amount > 0 ? $label . ' ¥' . number_format($amount) . ' の振込が完了しました。' : $label . 'の振込が完了しました。')
             . '入金をご確認のうえ、採用・入金管理から受取確認をお願いします。';
     }
 

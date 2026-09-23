@@ -74,6 +74,7 @@ TRUNCATE TABLE `cast_posts`;
 TRUNCATE TABLE `shop_posts`;
 TRUNCATE TABLE `cast_profiles`;
 TRUNCATE TABLE `shop_profiles`;
+TRUNCATE TABLE `availability_dates`;
 TRUNCATE TABLE `cast_tag_relations`;
 TRUNCATE TABLE `shop_tag_relations`;
 TRUNCATE TABLE `shop_job_tag_relations`;
@@ -213,6 +214,52 @@ INSERT INTO `cast_profiles` (`id`, `industry_id`, `cast_id`, `nickname`, `name`,
 (48, 1, 'c00000048', 'とわ', '十和', '2000-08-08', '福岡県', '福岡市中央区', 33.5822010, 130.4067020, DATE_ADD(NOW(), INTERVAL 3 HOUR), NOW(), '福岡でキャバクラ', 1, 'モデル', 'LDMV', NOW(), NOW()),
 (49, 2, 'c00000049', 'ここ', '心', '2001-11-19', '東京都', '中央区', 35.6712780, 139.7601250, DATE_ADD(NOW(), INTERVAL 5 HOUR), NOW(), 'クラブ長期希望', 1, 'キャバ嬢', 'LDMV', NOW(), NOW()),
 (50, 3, 'c00000050', 'みさ', '美紗', '1998-05-25', '東京都', '港区', 35.6641820, 139.7301560, DATE_ADD(NOW(), INTERVAL 6 HOUR), NOW(), 'ラウンジで安定', 1, 'OL', 'LDOH', NOW(), NOW());
+
+-- =============================================================================
+-- Phase 3b: availability_dates（候補日宣言）
+--   cast = 入れる候補日（最大5日） / shop = 日付指定ヘルプ募集
+--   CURDATE() 起点なのでいつ流しても「本日入れる」テストデータが再現される
+-- =============================================================================
+
+INSERT INTO `availability_dates` (`owner_type`, `owner_id`, `available_on`, `created_at`, `updated_at`) VALUES
+-- casts: today declarers (DISCOVERY Tier A)
+('cast', 'c00000001', CURDATE(), NOW(), NOW()),
+('cast', 'c00000001', DATE_ADD(CURDATE(), INTERVAL 1 DAY), NOW(), NOW()),
+('cast', 'c00000001', DATE_ADD(CURDATE(), INTERVAL 3 DAY), NOW(), NOW()),
+('cast', 'c00000002', CURDATE(), NOW(), NOW()),
+('cast', 'c00000002', DATE_ADD(CURDATE(), INTERVAL 2 DAY), NOW(), NOW()),
+('cast', 'c00000011', CURDATE(), NOW(), NOW()),
+('cast', 'c00000013', CURDATE(), NOW(), NOW()),
+('cast', 'c00000013', DATE_ADD(CURDATE(), INTERVAL 1 DAY), NOW(), NOW()),
+('cast', 'c00000013', DATE_ADD(CURDATE(), INTERVAL 2 DAY), NOW(), NOW()),
+('cast', 'c00000013', DATE_ADD(CURDATE(), INTERVAL 3 DAY), NOW(), NOW()),
+('cast', 'c00000013', DATE_ADD(CURDATE(), INTERVAL 4 DAY), NOW(), NOW()),
+('cast', 'c00000014', CURDATE(), NOW(), NOW()),
+('cast', 'c00000020', CURDATE(), NOW(), NOW()),
+('cast', 'c00000024', CURDATE(), NOW(), NOW()),
+('cast', 'c00000024', DATE_ADD(CURDATE(), INTERVAL 1 DAY), NOW(), NOW()),
+('cast', 'c00000027', CURDATE(), NOW(), NOW()),
+-- casts: future-only declarers (not Tier A today)
+('cast', 'c00000008', DATE_ADD(CURDATE(), INTERVAL 1 DAY), NOW(), NOW()),
+('cast', 'c00000008', DATE_ADD(CURDATE(), INTERVAL 2 DAY), NOW(), NOW()),
+('cast', 'c00000008', DATE_ADD(CURDATE(), INTERVAL 4 DAY), NOW(), NOW()),
+('cast', 'c00000012', DATE_ADD(CURDATE(), INTERVAL 1 DAY), NOW(), NOW()),
+('cast', 'c00000015', DATE_ADD(CURDATE(), INTERVAL 2 DAY), NOW(), NOW()),
+('cast', 'c00000016', DATE_ADD(CURDATE(), INTERVAL 5 DAY), NOW(), NOW()),
+('cast', 'c00000017', DATE_ADD(CURDATE(), INTERVAL 3 DAY), NOW(), NOW()),
+('cast', 'c00000022', DATE_ADD(CURDATE(), INTERVAL 1 DAY), NOW(), NOW()),
+('cast', 'c00000025', DATE_ADD(CURDATE(), INTERVAL 6 DAY), NOW(), NOW()),
+-- shops: dated help recruitment
+('shop', 's00000001', CURDATE(), NOW(), NOW()),
+('shop', 's00000001', DATE_ADD(CURDATE(), INTERVAL 1 DAY), NOW(), NOW()),
+('shop', 's00000002', DATE_ADD(CURDATE(), INTERVAL 2 DAY), NOW(), NOW()),
+('shop', 's00000005', CURDATE(), NOW(), NOW()),
+('shop', 's00000006', DATE_ADD(CURDATE(), INTERVAL 1 DAY), NOW(), NOW()),
+('shop', 's00000006', DATE_ADD(CURDATE(), INTERVAL 3 DAY), NOW(), NOW()),
+('shop', 's00000007', CURDATE(), NOW(), NOW()),
+('shop', 's00000007', DATE_ADD(CURDATE(), INTERVAL 2 DAY), NOW(), NOW()),
+('shop', 's00000007', DATE_ADD(CURDATE(), INTERVAL 4 DAY), NOW(), NOW()),
+('shop', 's00000010', DATE_ADD(CURDATE(), INTERVAL 5 DAY), NOW(), NOW());
 
 -- =============================================================================
 -- Phase 4: shops（25 店）+ shop_managers + shop_profiles

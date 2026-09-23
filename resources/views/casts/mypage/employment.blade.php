@@ -533,13 +533,13 @@
             <button type="button" class="payment-bank-modal-close" data-close-bonus-modal aria-label="閉じる"><i class="fas fa-times"></i></button>
         </div>
         <div class="payment-bank-modal-body">
-            <p class="deposit-precheck-note">採用された時点のボーナス金・達成条件です。勤務日数・時間などの条件を確認してから申請してください。申請後は店舗の入金確認と運営の振込手続きに進みます。</p>
+            <p class="deposit-precheck-note" id="bonus-confirm-note">採用された時点のボーナス金・達成条件です。勤務日数・時間などの条件を確認してから申請してください。申請後は店舗の入金確認と運営の振込手続きに進みます。</p>
             <div class="deposit-precheck-card">
                 <div class="deposit-precheck-title">
                     <span id="bonus-confirm-shop-name">—</span>
                     <span class="doc-status status-pending">採用済み案件</span>
                 </div>
-                <div class="deposit-precheck-meta">ボーナス金額: ¥<span id="bonus-confirm-amount">0</span></div>
+                <div class="deposit-precheck-meta"><span id="bonus-confirm-amount-label">ボーナス金額</span>: ¥<span id="bonus-confirm-amount">0</span></div>
                 <div class="deposit-precheck-note" id="bonus-confirm-condition">
                     <ul class="recruit-line-list" id="bonus-confirm-condition-list"></ul>
                 </div>
@@ -779,9 +779,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function showBonusConfirmModal(applicationId, target) {
         if (!bonusModal) return;
+        var isHelp = (target.job_kind === 'help');
         document.getElementById('bonus-confirm-application-id').value = applicationId;
         document.getElementById('bonus-confirm-shop-name').textContent = target.shop_name || '—';
         document.getElementById('bonus-confirm-amount').textContent = (target.bonus_amount || 0).toLocaleString();
+        var titleEl = document.getElementById('bonus-confirm-modal-title');
+        if (titleEl) titleEl.textContent = isHelp ? 'ヘルプ勤務完了の入金申請' : 'ボーナス条件達成確認';
+        var noteEl = document.getElementById('bonus-confirm-note');
+        if (noteEl) noteEl.textContent = isHelp
+            ? 'ヘルプ勤務の完了に伴う入金申請です。受取額はヘルプ時給の50%です。申請後は店舗の承認と運営の振込手続きに進みます。'
+            : '採用された時点のボーナス金・達成条件です。勤務日数・時間などの条件を確認してから申請してください。申請後は店舗の入金確認と運営の振込手続きに進みます。';
+        var lblEl = document.getElementById('bonus-confirm-amount-label');
+        if (lblEl) lblEl.textContent = isHelp ? '受取予定額（ヘルプ時給の50%）' : 'ボーナス金額';
+        var btnEl = document.getElementById('bonus-confirm-submit-btn');
+        if (btnEl) btnEl.textContent = isHelp ? 'この内容で入金申請する' : 'この内容でボーナスを申請する';
         var bm = target.bonus_meta || {};
         var d = (bm.working_days || '').toString().trim();
         var h = (bm.working_hours || '').toString().trim();
@@ -789,14 +800,22 @@ document.addEventListener('DOMContentLoaded', function () {
         var l = document.getElementById('bonus-confirm-condition-list');
         if (l) {
             l.innerHTML = '';
-            if (d) { var li = document.createElement('li'); li.textContent = '勤務日数: ' + d; l.appendChild(li); }
-            if (h) { var li = document.createElement('li'); li.textContent = '勤務時間: ' + h; l.appendChild(li); }
-            if (x) { var li = document.createElement('li'); li.textContent = 'その他条件: ' + x; l.appendChild(li); }
-            if (!d && !h && !x) { var li = document.createElement('li'); li.textContent = '条件は店舗との合意内容に従います。'; l.appendChild(li); }
+            if (isHelp) {
+                if (target.help_hourly_wage) { var li = document.createElement('li'); li.textContent = 'ヘルプ時給: ¥' + Number(target.help_hourly_wage).toLocaleString(); l.appendChild(li); }
+                var li2 = document.createElement('li'); li2.textContent = '受取額はヘルプ時給の50%です。'; l.appendChild(li2);
+            } else {
+                if (d) { var li = document.createElement('li'); li.textContent = '勤務日数: ' + d; l.appendChild(li); }
+                if (h) { var li = document.createElement('li'); li.textContent = '勤務時間: ' + h; l.appendChild(li); }
+                if (x) { var li = document.createElement('li'); li.textContent = 'その他条件: ' + x; l.appendChild(li); }
+                if (!d && !h && !x) { var li = document.createElement('li'); li.textContent = '条件は店舗との合意内容に従います。'; l.appendChild(li); }
+            }
         }
-        var dl = document.getElementById('bonus-confirm-check-days'); if (dl) dl.textContent = d ? ('勤務日数（' + d + '）を完了しました') : '勤務日数条件を満たしています';
-        var hl = document.getElementById('bonus-confirm-check-hours'); if (hl) hl.textContent = h ? ('勤務時間（' + h + '）を完了しました') : '勤務時間条件を満たしています';
-        var xl = document.getElementById('bonus-confirm-check-extra'); if (xl) xl.textContent = x ? ('その他条件（' + x + '）を満たしています') : 'その他条件（店舗と合意した条件）を満たしています';
+        var dl = document.getElementById('bonus-confirm-check-days');
+        if (dl) dl.textContent = isHelp ? 'ヘルプ勤務を完了しました' : (d ? ('勤務日数（' + d + '）を完了しました') : '勤務日数条件を満たしています');
+        var hl = document.getElementById('bonus-confirm-check-hours');
+        if (hl) hl.textContent = isHelp ? '勤務内容は店舗との合意どおりです' : (h ? ('勤務時間（' + h + '）を完了しました') : '勤務時間条件を満たしています');
+        var xl = document.getElementById('bonus-confirm-check-extra');
+        if (xl) xl.textContent = isHelp ? '申請内容に誤りはありません' : (x ? ('その他条件（' + x + '）を満たしています') : 'その他条件（店舗と合意した条件）を満たしています');
         document.querySelectorAll('#bonus-confirm-form input[type="checkbox"]').forEach(function (c) { c.checked = false; });
         document.getElementById('bonus-confirm-error').style.display = 'none';
         bonusModal.removeAttribute('hidden');

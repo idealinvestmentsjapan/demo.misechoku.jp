@@ -181,7 +181,8 @@
             <button type="button" class="case-card__action-btn"
                     data-case-action="{{ $case['actionable'] }}"
                     data-application-id="{{ $case['application_id'] }}"
-                    data-deposit-id="{{ $deposit['id'] ?? '' }}">
+                    data-deposit-id="{{ $deposit['id'] ?? '' }}"
+                    data-job-kind="{{ $deposit['job_kind'] ?? '' }}">
                 <i class="fas {{ $actionIcon }}"></i>
                 {{ $case['actionable_label'] }}
             </button>

@@ -1,16 +1,17 @@
 /**
- * Cast MyPage "Available Today" declaration card behavior
+ * MyPage candidate-date availability card behavior (cast and shop share this).
  *
  * Dependencies (provided by the view):
  *   #availability-card
- *     data-availability-declare-url  POST endpoint (declare)
- *     data-availability-clear-url    DELETE endpoint (clear)
+ *     data-availability-declare-url  POST endpoint (save dates[])
+ *     data-availability-clear-url    DELETE endpoint (clear all)
+ *     data-availability-max          max selectable dates (5)
+ *   [data-availability-date="Y-m-d"] toggle chips
+ *   [data-availability-save] / [data-availability-clear] buttons
  *
  *   window.MYPAGE_AVAILABILITY_CONFIG = { csrfToken: '...' }
  *
- * Buttons are swapped between the declared / cleared states, so clicks are
- * delegated on the card element.
- * Casts choose a 2 / 4 / 8 hour availability window.
+ * Selection is toggled client-side; "save" replaces the whole set server-side.
  */
 (function () {
     'use strict';
@@ -23,45 +24,66 @@
         var csrfToken = config.csrfToken || '';
         var declareUrl = availCard.getAttribute('data-availability-declare-url');
         var clearUrl = availCard.getAttribute('data-availability-clear-url');
+        var maxDates = Number(availCard.getAttribute('data-availability-max') || 5);
 
-        var actionsEl = availCard.querySelector('[data-availability-actions]');
-        var titleEl = availCard.querySelector('.cast-avail__title');
-        var iconEl = availCard.querySelector('.cast-avail__icon i');
-        var leadEl = availCard.querySelector('[data-availability-remaining]');
+        var summaryEl = availCard.querySelector('[data-availability-summary]');
+        var saveBtn = availCard.querySelector('[data-availability-save]');
 
-        function renderActiveState(remainingLabel) {
-            availCard.classList.add('is-active');
-            if (iconEl) iconEl.className = 'fas fa-bolt';
-            if (titleEl) titleEl.textContent = '今から入れます：宣言中';
-            if (leadEl) leadEl.textContent = (remainingLabel || '有効中') + '有効';
-            if (actionsEl) {
-                actionsEl.innerHTML = '<button type="button" class="cast-avail__btn cast-avail__btn--danger" data-availability-clear><i class="fas fa-xmark"></i> OFF</button>';
-            }
+        function selectedChips() {
+            return Array.prototype.slice.call(
+                availCard.querySelectorAll('[data-availability-date].is-selected')
+            );
         }
 
-        function renderInactiveState() {
-            availCard.classList.remove('is-active');
-            if (iconEl) iconEl.className = 'fas fa-clock';
-            if (titleEl) titleEl.textContent = '今から入れます';
-            if (leadEl) leadEl.textContent = '有効時間を選ぶと、近くの店舗の SWIPE で優先表示されます';
-            if (actionsEl) {
-                actionsEl.innerHTML = [2, 4, 8].map(function (hours) {
-                    return '<button type="button" class="cast-avail__btn cast-avail__btn--primary" data-availability-declare data-hours="' + hours + '"><i class="fas fa-bolt"></i> ' + hours + '時間</button>';
-                }).join('');
-            }
+        function selectedDates() {
+            return selectedChips().map(function (chip) {
+                return chip.getAttribute('data-availability-date');
+            });
         }
 
-        if (!availCard.classList.contains('is-active')) {
-            renderInactiveState();
+        function shortLabel(dateStr) {
+            var parts = dateStr.split('-');
+            var d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+            var today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (d.getTime() === today.getTime()) return '本日';
+            return (d.getMonth() + 1) + '/' + d.getDate();
+        }
+
+        function refreshSummary(saved) {
+            var dates = selectedDates();
+            if (summaryEl) {
+                if (dates.length === 0) {
+                    summaryEl.textContent = '入れる日を選ぶと（最大' + maxDates + '日）、優先表示・日付検索の対象になります';
+                } else {
+                    summaryEl.textContent = dates.map(shortLabel).join('・') + (saved ? ' を宣言中' : ' を選択中（未保存）');
+                }
+            }
+            if (saveBtn) saveBtn.disabled = false;
         }
 
         availCard.addEventListener('click', function (e) {
-            var declareBtn = e.target.closest('[data-availability-declare]');
-            var clearBtn = e.target.closest('[data-availability-clear]');
+            var chip = e.target.closest('[data-availability-date]');
+            if (chip) {
+                if (chip.classList.contains('is-selected')) {
+                    chip.classList.remove('is-selected');
+                    chip.setAttribute('aria-pressed', 'false');
+                } else {
+                    if (selectedChips().length >= maxDates) {
+                        (window.appToast || window.alert)('候補日は最大' + maxDates + '日分までです', 'error');
+                        return;
+                    }
+                    chip.classList.add('is-selected');
+                    chip.setAttribute('aria-pressed', 'true');
+                }
+                refreshSummary(false);
+                return;
+            }
 
-            if (declareBtn) {
-                var hours = Number(declareBtn.getAttribute('data-hours'));
-                declareBtn.disabled = true;
+            var save = e.target.closest('[data-availability-save]');
+            if (save) {
+                var dates = selectedDates();
+                save.disabled = true;
 
                 fetch(declareUrl, {
                     method: 'POST',
@@ -71,25 +93,28 @@
                         'X-CSRF-TOKEN': csrfToken,
                         'X-Requested-With': 'XMLHttpRequest'
                     },
-                    body: JSON.stringify({ hours: hours })
+                    body: JSON.stringify({ dates: dates })
                 })
                 .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
                 .then(function (res) {
+                    save.disabled = false;
                     if (res.ok && res.body && res.body.success) {
-                        renderActiveState(res.body.remaining_label || (hours + '時間'));
-                        (window.appToast || function () {})('「今から入れます」を' + hours + '時間有効にしました', 'success');
+                        availCard.classList.toggle('is-active', dates.length > 0);
+                        refreshSummary(true);
+                        (window.appToast || function () {})(res.body.message || '候補日を保存しました', 'success');
                     } else {
-                        declareBtn.disabled = false;
-                        (window.appToast || window.alert)('宣言できませんでした。もう一度お試しください', 'error');
+                        var msg = (res.body && res.body.message) || '保存できませんでした。もう一度お試しください';
+                        (window.appToast || window.alert)(msg, 'error');
                     }
                 })
                 .catch(function () {
-                    declareBtn.disabled = false;
-                    (window.appToast || window.alert)('通信エラーで宣言できませんでした', 'error');
+                    save.disabled = false;
+                    (window.appToast || window.alert)('通信エラーで保存できませんでした', 'error');
                 });
                 return;
             }
 
+            var clearBtn = e.target.closest('[data-availability-clear]');
             if (clearBtn) {
                 clearBtn.disabled = true;
                 fetch(clearUrl, {
@@ -102,11 +127,16 @@
                 })
                 .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
                 .then(function (res) {
+                    clearBtn.disabled = false;
                     if (res.ok && res.body && res.body.success) {
-                        renderInactiveState();
-                        (window.appToast || function () {})('宣言を取り消しました', 'success');
+                        selectedChips().forEach(function (chip) {
+                            chip.classList.remove('is-selected');
+                            chip.setAttribute('aria-pressed', 'false');
+                        });
+                        availCard.classList.remove('is-active');
+                        refreshSummary(true);
+                        (window.appToast || function () {})('候補日の設定を取り消しました', 'success');
                     } else {
-                        clearBtn.disabled = false;
                         (window.appToast || window.alert)('取り消せませんでした', 'error');
                     }
                 })

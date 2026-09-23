@@ -722,6 +722,23 @@ CREATE TABLE IF NOT EXISTS `shop_license_documents` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------------
+-- availability_dates
+-- Candidate work dates (cast) / dated help recruitment (shop).
+-- Max 5 future dates per owner, enforced in AvailabilityService.
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `availability_dates` (
+  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
+  `owner_type` varchar(8) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'cast or shop',
+  `owner_id` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Cast.id (c...) or Shop.id (s...)',
+  `available_on` date NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `availability_dates_owner_date_unique` (`owner_type`, `owner_id`, `available_on`),
+  KEY `availability_dates_available_on_index` (`available_on`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------------
 -- bank_accounts
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `bank_accounts` (

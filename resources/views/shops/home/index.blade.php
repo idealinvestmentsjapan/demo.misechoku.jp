@@ -74,17 +74,20 @@
                 <div class="rc-bottom-bar" aria-label="{{ $isRecruit ? '店舗情報' : 'プロフィール' }}">
                     <div class="rc-bottom-bar__stack">
 
-                        {{-- 求人カードのみ：優良店バッヂ + 本日すぐ入れます --}}
-                        @if($isRecruit && (!empty($item['is_premium']) || !empty($item['available_active'])))
+                        {{-- 求人カードのみ：優良店バッヂ + 日付指定ヘルプ募集 --}}
+                        @php
+                            $helpDateLabels = array_values(array_filter((array) ($item['help_date_labels'] ?? [])));
+                        @endphp
+                        @if($isRecruit && (!empty($item['is_premium']) || $helpDateLabels !== []))
                             <div class="rc-premium-row" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
                                 @if(!empty($item['is_premium']))
                                     <button type="button" class="premium-badge-btn stop-propagation" data-open-premium-info aria-haspopup="dialog" aria-controls="modal-premium-info" aria-label="優良店バッヂの達成条件">
                                         <x-ui.premium-badge />
                                     </button>
                                 @endif
-                                @if(!empty($item['available_active']))
-                                    <span class="shop-avail-tag" aria-label="本日すぐ入れます">
-                                        <i class="fas fa-bolt" aria-hidden="true"></i> 本日OK
+                                @if($helpDateLabels !== [])
+                                    <span class="shop-avail-tag" aria-label="日付指定のヘルプ募集">
+                                        <i class="fas fa-bolt" aria-hidden="true"></i> {{ implode('・', array_slice($helpDateLabels, 0, 3)) }} ヘルプ募集
                                     </span>
                                 @endif
                             </div>

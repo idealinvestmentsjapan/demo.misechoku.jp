@@ -54,44 +54,67 @@
             </div>
         </div>
 
-        {{-- ===== 「本日すぐ入れます」宣言（キャスト側と挙動 / 配置を統一） =====
-             設定した「その日中（本日 23:59 まで）」有効。
-             キャスト MyPage と同じく、アイコン+ひとことの直下・店舗名の上に配置。 --}}
+        {{-- ===== 「〇月〇日のヘルプ募集」宣言（最大5日・30日先まで） =====
+             募集日を宣言すると、キャストの日付検索・SWIPE の「◯/◯ ヘルプ募集」
+             バッジ対象になる。キャスト側の候補日カードと同一部品を使用。 --}}
         @php
-            $shopAvail = $shopAvailable ?? ['active' => false, 'until_iso' => null];
+            $availSelected   = $availabilityDates ?? [];
+            $availActive     = count($availSelected) > 0;
+            $availMaxDates   = \App\Services\AvailabilityService::MAX_DATES;
+            $availDayChoices = collect(range(0, \App\Services\AvailabilityService::MAX_DAYS_AHEAD))
+                ->map(fn ($i) => \Carbon\Carbon::today()->addDays($i));
+            $availWeekdays   = ['日', '月', '火', '水', '木', '金', '土'];
         @endphp
-        <div id="shop-availability-card"
-             class="shop-avail-card {{ $shopAvail['active'] ? 'is-on' : '' }} mb-4"
-             data-availability-declare-url="{{ route('shop.mypage.availability.declare') }}"
-             data-availability-clear-url="{{ route('shop.mypage.availability.clear') }}"
-             data-availability-until="{{ $shopAvail['until_iso'] ?? '' }}">
-            <div class="shop-avail-card__row">
-                <span class="shop-avail-card__badge" aria-hidden="true"><i class="fas fa-bolt"></i></span>
-                <div class="shop-avail-card__text">
-                    <p class="shop-avail-card__title" data-avail-title>
-                        {{ $shopAvail['active'] ? '本日すぐ入れます：宣言中' : '本日すぐ入れます' }}
+        <section id="availability-card"
+                 class="cast-avail {{ $availActive ? 'is-active' : '' }} mb-4"
+                 data-availability-declare-url="{{ route('shop.mypage.availability.declare') }}"
+                 data-availability-clear-url="{{ route('shop.mypage.availability.clear') }}"
+                 data-availability-max="{{ $availMaxDates }}"
+                 aria-labelledby="availability-card-title">
+            <div class="cast-avail__row">
+                <span class="cast-avail__icon" aria-hidden="true">
+                    <i class="fas {{ $availActive ? 'fa-bolt' : 'fa-calendar-days' }}"></i>
+                </span>
+                <div class="cast-avail__title-block">
+                    <p id="availability-card-title" class="cast-avail__title">
+                        日付指定のヘルプ募集
                     </p>
-                    <p class="shop-avail-card__lead" data-avail-lead>
-                        @if($shopAvail['active'])
-                            本日 23:59 まで、スワイプ・検索・プロフィールで優先表示されます。
+                    <p class="cast-avail__lead" data-availability-summary>
+                        @if($availActive)
+                            {{ collect($availSelected)->map(fn ($d) => \App\Services\AvailabilityService::shortLabel($d))->implode('・') }} で募集中
                         @else
-                            本日中、スワイプ・検索・プロフィールで優先表示されます。
+                            募集日を選ぶと（最大{{ $availMaxDates }}日）、キャストの検索・SWIPE で優先表示されます
                         @endif
                     </p>
                 </div>
-                <div class="shop-avail-card__actions" data-avail-actions>
-                    @if($shopAvail['active'])
-                        <button type="button" class="shop-avail-card__btn shop-avail-card__btn--danger" data-availability-clear>
-                            <i class="fas fa-xmark"></i> OFF
-                        </button>
-                    @else
-                        <button type="button" class="shop-avail-card__btn shop-avail-card__btn--primary" data-availability-declare>
-                            <i class="fas fa-bolt"></i> 本日 ON
+                <div class="cast-avail__actions">
+                    <button type="button" class="cast-avail__btn cast-avail__btn--primary" data-availability-save disabled>
+                        <i class="fas fa-check"></i> 保存
+                    </button>
+                    @if($availActive)
+                        <button type="button" class="cast-avail__btn cast-avail__btn--danger" data-availability-clear>
+                            <i class="fas fa-xmark"></i> 取消
                         </button>
                     @endif
                 </div>
             </div>
-        </div>
+            <div class="cast-avail__dates" data-availability-dates role="group" aria-label="ヘルプ募集日の選択（最大{{ $availMaxDates }}日）">
+                @foreach($availDayChoices as $day)
+                    @php
+                        $dateStr    = $day->toDateString();
+                        $isSelected = in_array($dateStr, $availSelected, true);
+                        $dayLabel   = $day->isToday() ? '今日' : ($day->copy()->isTomorrow() ? '明日' : $availWeekdays[$day->dayOfWeek]);
+                    @endphp
+                    <button type="button"
+                            class="cast-avail__date-chip {{ $isSelected ? 'is-selected' : '' }}"
+                            data-availability-date="{{ $dateStr }}"
+                            aria-pressed="{{ $isSelected ? 'true' : 'false' }}">
+                        <span class="cast-avail__date-day">{{ $dayLabel }}</span>
+                        <span class="cast-avail__date-num">{{ $day->format('n/j') }}</span>
+                    </button>
+                @endforeach
+            </div>
+        </section>
 
         {{-- ===== 店舗名 + 控えめバッヂ行 =====
              旧: 優良店/レビューの大型2カラムカード → 目立ちすぎのため
@@ -700,100 +723,9 @@
         color: var(--color-accent-text) !important;
     }
 
-    /* "Available today" declaration card: compact, low-emphasis 1-row layout */
-    .shop-avail-card {
-        border-radius: 10px;
-        padding: 8px 10px;
-        background: rgba(255,255,255,0.03);
-        border: 1px solid rgba(168, 85, 247, 0.22);
-    }
-    .shop-avail-card.is-on {
-        background: rgba(251, 191, 36, 0.06);
-        border-color: rgba(251, 191, 36, 0.40);
-    }
-    .shop-avail-card__row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .shop-avail-card__badge {
-        flex: 0 0 auto;
-        width: 26px;
-        height: 26px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        background: rgba(251, 191, 36, 0.14);
-        color: #fbbf24;
-        font-size: 0.78rem;
-    }
-    .shop-avail-card.is-on .shop-avail-card__badge {
-        background: rgba(251, 191, 36, 0.22);
-        color: #f59e0b;
-    }
-    .shop-avail-card__text { flex: 1 1 auto; min-width: 0; }
-    .shop-avail-card__title {
-        margin: 0;
-        font-size: 0.78rem;
-        font-weight: 700;
-        color: var(--color-text-header, #f5f5f5);
-        line-height: 1.25;
-    }
-    .shop-avail-card__lead {
-        margin: 1px 0 0;
-        font-size: 0.68rem;
-        line-height: 1.35;
-        color: var(--color-text-muted, #9ca3af);
-    }
-    .shop-avail-card__actions { flex: 0 0 auto; }
-    .shop-avail-card__btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 4px;
-        min-height: 28px;
-        padding: 4px 10px;
-        border-radius: 999px;
-        font-size: 0.72rem;
-        font-weight: 700;
-        cursor: pointer;
-        border: 1px solid transparent;
-        transition: background 0.15s ease, transform 0.12s ease;
-    }
-    .shop-avail-card__btn:active { transform: scale(0.96); }
-    .shop-avail-card__btn:disabled { opacity: 0.5; cursor: wait; }
-    .shop-avail-card__btn--primary {
-        background: transparent;
-        color: #fbbf24;
-        border-color: rgba(251, 191, 36, 0.55);
-    }
-    .shop-avail-card__btn--primary:hover { background: rgba(251, 191, 36, 0.10); }
-    .shop-avail-card__btn--danger {
-        background: transparent;
-        color: #f87171;
-        border-color: rgba(248, 113, 113, 0.45);
-    }
-    .shop-avail-card__btn--danger:hover { background: rgba(248, 113, 113, 0.10); }
-
-    /* Light theme override */
-    body.theme-light .shop-avail-card {
-        background: #ffffff;
-        border-color: rgba(124, 58, 237, 0.22);
-    }
-    body.theme-light .shop-avail-card.is-on {
-        background: rgba(251, 191, 36, 0.06);
-        border-color: rgba(251, 191, 36, 0.40);
-    }
-    body.theme-light .shop-avail-card__title { color: #1e1a30; }
-    body.theme-light .shop-avail-card__lead { color: #6b6482; }
-    body.theme-light .shop-avail-card__btn--primary {
-        color: #b45309;
-        border-color: rgba(180, 83, 9, 0.45);
-    }
-    body.theme-light .shop-avail-card__btn--primary:hover { background: rgba(180, 83, 9, 0.08); }
-    body.theme-light .shop-avail-card__btn--danger { color: #b91c1c; }
 </style>
+{{-- Candidate-date availability card styles (shared with cast mypage) --}}
+<link rel="stylesheet" href="{{ asset('assets/css/mypage-availability.css') }}?v=20260924-availability-dates">
 @endpush
 
 @push('scripts')
@@ -942,77 +874,9 @@ window.MYPAGE_GALLERY_CONFIG = {
 })();
 </script>
 
-{{-- 「本日すぐ入れます」宣言（24時間） --}}
+{{-- Candidate-date availability card behavior (shared with cast mypage) --}}
 <script>
-(function () {
-    var card = document.getElementById('shop-availability-card');
-    if (!card) return;
-    var declareUrl = card.getAttribute('data-availability-declare-url');
-    var clearUrl = card.getAttribute('data-availability-clear-url');
-    var csrfToken = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
-
-    function render(active) {
-        var actions = card.querySelector('[data-avail-actions]');
-        var title = card.querySelector('[data-avail-title]');
-        var lead = card.querySelector('[data-avail-lead]');
-        card.classList.toggle('is-on', !!active);
-        if (title) title.textContent = active ? '本日すぐ入れます：宣言中' : '本日すぐ入れます';
-        if (lead) lead.textContent = active
-            ? '本日 23:59 まで、スワイプ・検索・プロフィールで優先表示されます。'
-            : '本日中、スワイプ・検索・プロフィールで優先表示されます。';
-        if (actions) {
-            actions.innerHTML = active
-                ? '<button type="button" class="shop-avail-card__btn shop-avail-card__btn--danger" data-availability-clear><i class="fas fa-xmark"></i> OFF</button>'
-                : '<button type="button" class="shop-avail-card__btn shop-avail-card__btn--primary" data-availability-declare><i class="fas fa-bolt"></i> 本日 ON</button>';
-        }
-    }
-
-    card.addEventListener('click', function (e) {
-        var declareBtn = e.target.closest('[data-availability-declare]');
-        var clearBtn = e.target.closest('[data-availability-clear]');
-        if (declareBtn) {
-            declareBtn.disabled = true;
-            fetch(declareUrl, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                credentials: 'same-origin',
-                body: '{}'
-            })
-                .then(function (res) { return res.ok ? res.json() : Promise.reject(res); })
-                .then(function (json) {
-                    if (json && json.success) {
-                        render(true);
-                        if (window.appToast) window.appToast('「本日すぐ入れます」を本日 ON にしました', 'success');
-                    }
-                })
-                .catch(function () {
-                    if (window.appToast) window.appToast('宣言に失敗しました', 'error');
-                    declareBtn.disabled = false;
-                });
-        } else if (clearBtn) {
-            clearBtn.disabled = true;
-            fetch(clearUrl, {
-                method: 'DELETE',
-                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-                credentials: 'same-origin'
-            })
-                .then(function (res) { return res.ok ? res.json() : Promise.reject(res); })
-                .then(function (json) {
-                    if (json && json.success) {
-                        render(false);
-                        if (window.appToast) window.appToast('宣言を取り消しました', 'info');
-                    }
-                })
-                .catch(function () {
-                    if (window.appToast) window.appToast('取消に失敗しました', 'error');
-                    clearBtn.disabled = false;
-                });
-        }
-    });
-})();
+window.MYPAGE_AVAILABILITY_CONFIG = { csrfToken: @json(csrf_token()) };
 </script>
+<script src="{{ asset('assets/js/mypage-availability.js') }}?v=20260924-availability-dates"></script>
 @endpush

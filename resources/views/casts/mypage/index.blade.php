@@ -63,52 +63,67 @@
             </div>
         </div>
 
-        {{-- ===== 「今から入れます」宣言（Tier A 判定用） =====
-             店舗側の DISCOVERY で最上位に表示される導線。
-             設定した「その日中（本日 23:59 まで）」有効。店舗側の同機能と挙動を統一。
-             ボタンは控えめ配置（コンパクト・アウトライン系）。 --}}
+        {{-- ===== 「入れる候補日」宣言（最大5日・30日先まで） =====
+             本日を含む候補日を宣言すると、店舗側 DISCOVERY の Tier A と
+             日付検索（「〇月〇日に入れる子」）に表示される。 --}}
         @php
-            $availActive     = !empty($cast['available_is_active']);
-            $availRemaining  = (string) ($cast['available_remaining_label'] ?? '');
+            $availSelected   = $availabilityDates ?? [];
+            $availActive     = count($availSelected) > 0;
             $availDeclareUrl = route('cast.mypage.availability.declare');
             $availClearUrl   = route('cast.mypage.availability.clear');
+            $availMaxDates   = \App\Services\AvailabilityService::MAX_DATES;
+            $availDayChoices = collect(range(0, \App\Services\AvailabilityService::MAX_DAYS_AHEAD))
+                ->map(fn ($i) => \Carbon\Carbon::today()->addDays($i));
+            $availWeekdays   = ['日', '月', '火', '水', '木', '金', '土'];
         @endphp
         <section id="availability-card"
                  class="cast-avail {{ $availActive ? 'is-active' : '' }}"
                  data-availability-declare-url="{{ $availDeclareUrl }}"
                  data-availability-clear-url="{{ $availClearUrl }}"
+                 data-availability-max="{{ $availMaxDates }}"
                  aria-labelledby="availability-card-title">
             <div class="cast-avail__row">
                 <span class="cast-avail__icon" aria-hidden="true">
-                    <i class="fas {{ $availActive ? 'fa-bolt' : 'fa-clock' }}"></i>
+                    <i class="fas {{ $availActive ? 'fa-bolt' : 'fa-calendar-days' }}"></i>
                 </span>
                 <div class="cast-avail__title-block">
                     <p id="availability-card-title" class="cast-avail__title">
-                        @if($availActive)
-                            今から入れます：宣言中
-                        @else
-                            今から入れます
-                        @endif
+                        入れる候補日
                     </p>
-                    <p class="cast-avail__lead" data-availability-remaining>
+                    <p class="cast-avail__lead" data-availability-summary>
                         @if($availActive)
-                            {{ $availRemaining !== '' ? $availRemaining : '有効中' }}・本日 23:59 まで有効
+                            {{ collect($availSelected)->map(fn ($d) => \App\Services\AvailabilityService::shortLabel($d))->implode('・') }} を宣言中
                         @else
-                            本日中、近くの店舗の SWIPE で優先表示されます
+                            入れる日を選ぶと（最大{{ $availMaxDates }}日）、店舗の検索・SWIPE で優先表示されます
                         @endif
                     </p>
                 </div>
-                <div class="cast-avail__actions" data-availability-actions>
+                <div class="cast-avail__actions">
+                    <button type="button" class="cast-avail__btn cast-avail__btn--primary" data-availability-save disabled>
+                        <i class="fas fa-check"></i> 保存
+                    </button>
                     @if($availActive)
                         <button type="button" class="cast-avail__btn cast-avail__btn--danger" data-availability-clear>
-                            <i class="fas fa-xmark"></i> OFF
-                        </button>
-                    @else
-                        <button type="button" class="cast-avail__btn cast-avail__btn--primary" data-availability-declare>
-                            <i class="fas fa-bolt"></i> 本日 ON
+                            <i class="fas fa-xmark"></i> 取消
                         </button>
                     @endif
                 </div>
+            </div>
+            <div class="cast-avail__dates" data-availability-dates role="group" aria-label="入れる候補日の選択（最大{{ $availMaxDates }}日）">
+                @foreach($availDayChoices as $day)
+                    @php
+                        $dateStr    = $day->toDateString();
+                        $isSelected = in_array($dateStr, $availSelected, true);
+                        $dayLabel   = $day->isToday() ? '今日' : ($day->copy()->isTomorrow() ? '明日' : $availWeekdays[$day->dayOfWeek]);
+                    @endphp
+                    <button type="button"
+                            class="cast-avail__date-chip {{ $isSelected ? 'is-selected' : '' }}"
+                            data-availability-date="{{ $dateStr }}"
+                            aria-pressed="{{ $isSelected ? 'true' : 'false' }}">
+                        <span class="cast-avail__date-day">{{ $dayLabel }}</span>
+                        <span class="cast-avail__date-num">{{ $day->format('n/j') }}</span>
+                    </button>
+                @endforeach
             </div>
         </section>
 
@@ -450,7 +465,7 @@
 <script>
 window.MYPAGE_AVAILABILITY_CONFIG = { csrfToken: @json(csrf_token()) };
 </script>
-<script src="{{ asset('assets/js/mypage-availability.js') }}?v=20260811-availability-daily"></script>
+<script src="{{ asset('assets/js/mypage-availability.js') }}?v=20260924-availability-dates"></script>
 
 {{-- ===== ギャラリー機能：元のスクリプト群 ===== --}}
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
@@ -557,5 +572,5 @@ window.MYPAGE_GALLERY_CONFIG = {
 
 </style>
 {{-- 「今すぐ入れる」宣言カードの外部 CSS --}}
-<link rel="stylesheet" href="{{ asset('assets/css/mypage-availability.css') }}?v=20260811-availability-daily">
+<link rel="stylesheet" href="{{ asset('assets/css/mypage-availability.css') }}?v=20260924-availability-dates">
 @endpush

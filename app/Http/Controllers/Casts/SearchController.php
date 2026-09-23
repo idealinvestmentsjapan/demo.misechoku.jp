@@ -137,11 +137,6 @@ class SearchController extends BaseSearchController
             $jobSelect[] = 'shop_jobs.pr as shop_job_pr';
         }
 
-        // 「本日すぐ入れます」宣言（列があるときのみ include）
-        if (Schema::hasColumn('shop_profiles', 'available_until')) {
-            $jobSelect[] = 'shop_profiles.available_until';
-        }
-
         $rows = $rows->select(array_merge(
             [
                 'shops.id',
@@ -184,8 +179,21 @@ class SearchController extends BaseSearchController
             ? \App\Models\ShopSearchPreference::whereIn('shop_id', $allRows->pluck('id'))->get(['shop_id', 'shift_frequency', 'work_periods'])->keyBy('shop_id')
             : collect();
         $filterService = app(\App\Services\SearchFilterService::class);
+
+        // Dated help recruitment: labels for badges + optional date filter
+        $availabilityService = app(\App\Services\AvailabilityService::class);
+        $helpDatesByShop = $availabilityService->datesByOwner(
+            \App\Models\AvailabilityDate::OWNER_SHOP,
+            $allRows->pluck('id')->map(fn ($v) => (string) $v)->all()
+        );
+        $availableOn = $availabilityService->normalizeFilterDate($request->query('available_on'));
+        $todayStr = Carbon::today()->toDateString();
+
         $items = $allRows
-            ->filter(function ($row) use ($keywordTokens, $areas, $hourlyWage, $reward, $jobTagFilters, $shopTagFilters, $availabilityFilters, $shopAvailability, $filterService) {
+            ->filter(function ($row) use ($keywordTokens, $areas, $hourlyWage, $reward, $jobTagFilters, $shopTagFilters, $availabilityFilters, $shopAvailability, $filterService, $availableOn, $helpDatesByShop) {
+                if ($availableOn !== null && !in_array($availableOn, $helpDatesByShop[(string) $row->id] ?? [], true)) {
+                    return false;
+                }
                 if (!$filterService->matchesAvailability($availabilityFilters, $shopAvailability->get($row->id)?->toArray() ?? [])) {
                     return false;
                 }
@@ -227,7 +235,7 @@ class SearchController extends BaseSearchController
 
                 return true;
             })
-            ->map(function ($row) use ($scoring, $scoringContext) {
+            ->map(function ($row) use ($scoring, $scoringContext, $helpDatesByShop, $todayStr) {
                 $hitokotoUpdatedAt = $row->shop_post_updated_at
                     ? Carbon::parse($row->shop_post_updated_at)
                     : ($row->shop_post_created_at ? Carbon::parse($row->shop_post_created_at) : null);
@@ -248,14 +256,7 @@ class SearchController extends BaseSearchController
                     }
                 }
 
-                $availActive = false;
-                if (!empty($row->available_until ?? null)) {
-                    try {
-                        $availActive = Carbon::parse($row->available_until)->isFuture();
-                    } catch (\Throwable) {
-                        $availActive = false;
-                    }
-                }
+                $shopHelpDates = $helpDatesByShop[(string) $row->id] ?? [];
 
                 return [
                     'id'                  => $row->id,
@@ -265,7 +266,11 @@ class SearchController extends BaseSearchController
                     'catch'               => (string) ($row->shop_post_body ?? ''),
                     'overview'            => '',
                     'main_img'            => $this->getShopImages((string) $row->id)[0] ?? asset('assets/images/common/no-image.png'),
-                    'available_active'    => $availActive,
+                    'available_active'    => in_array($todayStr, $shopHelpDates, true),
+                    'help_date_labels'    => array_map(
+                        fn ($d) => \App\Services\AvailabilityService::shortLabel($d),
+                        $shopHelpDates
+                    ),
                     'hitokoto'            => $hitokotoBody,
                     'hitokoto_updated_at' => $hitokotoUpdatedAt?->locale('ja')->diffForHumans(),
                     'hitokoto_ts'         => $hitokotoUpdatedAt?->getTimestamp(),
