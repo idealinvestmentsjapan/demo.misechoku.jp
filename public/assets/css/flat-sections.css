@@ -1,0 +1,282 @@
+/* =============================================================================
+   flat-sections.css  (2026-09-24)
+   Convert rounded-card section containers into a flat, divider-line layout.
+   Applies to Profile edits, Account settings, Notification settings,
+   Recruit / Employment / Documents / Reviews / Support form / Subscription.
+
+   Design principles (iOS Settings / modern app-form style):
+   - No background fill, no border box, no border-radius, no drop shadow.
+   - Sibling sections are separated by a 1px hairline (border-bottom).
+   - Vertical padding preserved for breathing room; horizontal padding
+     reduced so content sits flush with the page gutter.
+   - Section titles keep their bold + accent-icon treatment.
+   - Works for both dark (default) and light / premium-white themes.
+
+   Specificity note: All selectors are prefixed with `#app` (the root wrapper
+   in layouts/app-v2.blade.php). That gives every rule specificity 110+
+   which reliably beats the older `body.theme-light .setting-section`
+   rules in light-theme.css (specificity 21), so we don't need to
+   duplicate every rule per theme.
+   ============================================================================= */
+
+/* Design tokens local to this file */
+:root {
+    --flat-divider-dark:  rgba(255, 255, 255, 0.09);
+    --flat-divider-light: rgba(36, 31, 51, 0.10);
+    --flat-title-muted:   #8b84a1;
+    --flat-title-accent:  #7c3aed;
+    --flat-gap-y: 22px;
+}
+
+/* -----------------------------------------------------------------------------
+   1) Account & Notification settings  (.setting-section)
+   ----------------------------------------------------------------------------- */
+#app .setting-section,
+#app .setting-section.setting-section--danger {
+    margin: 0 !important;
+    padding: var(--flat-gap-y) 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--flat-divider-dark) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+#app .setting-section:last-of-type { border-bottom: 0 !important; }
+
+#app .setting-section--danger .setting-section-title { color: #fca5a5 !important; }
+
+body.theme-light #app .setting-section,
+body.theme-premium-white #app .setting-section {
+    border-bottom-color: var(--flat-divider-light) !important;
+}
+body.theme-light #app .setting-section--danger .setting-section-title,
+body.theme-premium-white #app .setting-section--danger .setting-section-title {
+    color: #b91c1c !important;
+}
+
+/* -----------------------------------------------------------------------------
+   2) Cast profile edit  (.cast-edit-section)
+   ----------------------------------------------------------------------------- */
+#app .cast-edit-section {
+    margin: 0 !important;
+    padding: var(--flat-gap-y) 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--flat-divider-light) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+#app .cast-edit-form > .cast-edit-section:last-of-type,
+#app .cast-edit-section:last-of-type { border-bottom: 0 !important; }
+
+body:not(.theme-light):not(.theme-premium-white) #app .cast-edit-section {
+    border-bottom-color: var(--flat-divider-dark) !important;
+}
+
+/* -----------------------------------------------------------------------------
+   3) Shop profile edit  (.shop-profile-edit__form > section)
+   ----------------------------------------------------------------------------- */
+#app .shop-profile-edit__form > section {
+    margin: 0 !important;
+    padding: var(--flat-gap-y) 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--flat-divider-light) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+#app .shop-profile-edit__form > section:last-of-type { border-bottom: 0 !important; }
+
+body:not(.theme-light):not(.theme-premium-white) #app .shop-profile-edit__form > section {
+    border-bottom-color: var(--flat-divider-dark) !important;
+}
+
+/* -----------------------------------------------------------------------------
+   4) Recruit case cards  (.case-card — employment & shop management timelines)
+   Each card represents one recruitment case, so keep more vertical padding
+   than a settings row but still flatten the frame.
+   ----------------------------------------------------------------------------- */
+#app .case-card {
+    margin: 0 !important;
+    padding: 20px 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--flat-divider-light) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+#app .case-card.is-actionable {
+    /* Subtle left accent bar instead of a full amethyst-frame highlight. */
+    background: transparent !important;
+    box-shadow: inset 3px 0 0 var(--flat-title-accent) !important;
+    padding-left: 12px !important;
+}
+#app .case-card.is-completed { opacity: 0.75 !important; }
+#app .case-card:last-of-type { border-bottom: 0 !important; }
+
+body:not(.theme-light):not(.theme-premium-white) #app .case-card {
+    border-bottom-color: var(--flat-divider-dark) !important;
+}
+
+/* The actor badge was pinned to the top-right of a padded card; keep it
+   pinned to the row's top-right after we removed the internal padding. */
+#app .case-card .case-actor { top: 22px !important; right: 0 !important; }
+#app .case-card.is-actionable .case-actor { right: 0 !important; }
+#app .case-card .case-card__head { padding-right: 108px !important; }
+
+/* -----------------------------------------------------------------------------
+   5) Identity / License document hero panels
+   ----------------------------------------------------------------------------- */
+#app .identity-hero,
+#app .license-hero {
+    margin: 0 0 8px !important;
+    padding: var(--flat-gap-y) 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--flat-divider-light) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+body:not(.theme-light):not(.theme-premium-white) #app .identity-hero,
+body:not(.theme-light):not(.theme-premium-white) #app .license-hero {
+    border-bottom-color: var(--flat-divider-dark) !important;
+}
+
+/* -----------------------------------------------------------------------------
+   6) Review list card  (.review-card)
+   ----------------------------------------------------------------------------- */
+#app .review-card {
+    margin: 0 !important;
+    padding: 18px 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--flat-divider-light) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+#app .review-card:last-of-type { border-bottom: 0 !important; }
+
+body:not(.theme-light):not(.theme-premium-white) #app .review-card {
+    border-bottom-color: var(--flat-divider-dark) !important;
+}
+
+/* -----------------------------------------------------------------------------
+   7) Support form  (.support-form-card)
+   ----------------------------------------------------------------------------- */
+#app .support-form-card {
+    margin: 0 !important;
+    padding: var(--flat-gap-y) 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+/* -----------------------------------------------------------------------------
+   8) Subscription plan cards  (.plan-status-card / .plan-card / .plan-transfer-card)
+   These are decision-support cards; the "current / premium" one still needs
+   a light emphasis, so we use an accent left-border instead of the full frame.
+   ----------------------------------------------------------------------------- */
+#app .plan-status-card,
+#app .plan-card,
+#app .plan-transfer-card {
+    margin: 0 !important;
+    padding: var(--flat-gap-y) 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--flat-divider-light) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+#app .plan-status-card.is-premium,
+#app .plan-card.is-current,
+#app .plan-card--premium {
+    box-shadow: inset 3px 0 0 var(--flat-title-accent) !important;
+    padding-left: 12px !important;
+}
+#app .plan-status-card:last-of-type,
+#app .plan-card:last-of-type,
+#app .plan-transfer-card:last-of-type { border-bottom: 0 !important; }
+
+body:not(.theme-light):not(.theme-premium-white) #app .plan-status-card,
+body:not(.theme-light):not(.theme-premium-white) #app .plan-card,
+body:not(.theme-light):not(.theme-premium-white) #app .plan-transfer-card {
+    border-bottom-color: var(--flat-divider-dark) !important;
+}
+
+/* -----------------------------------------------------------------------------
+   9) Shop recruit status / job edit sections
+   ----------------------------------------------------------------------------- */
+#app .status-card,
+#app .job-edit-v2__form > section,
+#app .job-edit-v2__form > fieldset {
+    margin: 0 !important;
+    padding: var(--flat-gap-y) 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--flat-divider-light) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+#app .status-card:last-of-type,
+#app .job-edit-v2__form > section:last-of-type,
+#app .job-edit-v2__form > fieldset:last-of-type { border-bottom: 0 !important; }
+
+body:not(.theme-light):not(.theme-premium-white) #app .status-card,
+body:not(.theme-light):not(.theme-premium-white) #app .job-edit-v2__form > section,
+body:not(.theme-light):not(.theme-premium-white) #app .job-edit-v2__form > fieldset {
+    border-bottom-color: var(--flat-divider-dark) !important;
+}
+
+/* -----------------------------------------------------------------------------
+   10) Section title uplift (shared across the flattened surfaces)
+   Now that the card frame no longer signals the section boundary, the
+   title takes over that role: slightly larger weight, tighter tracking,
+   accent icon retained. Colors tuned per theme so the hierarchy still
+   reads on dark and light surfaces.
+   ----------------------------------------------------------------------------- */
+#app .setting-section-title,
+#app .cast-edit-section h3,
+#app .shop-profile-edit__form > section > h2,
+#app .shop-profile-edit__form > section > h3,
+#app .identity-hero h2,
+#app .license-hero h2,
+#app .status-card h2,
+#app .status-card h3 {
+    font-size: 0.88rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.06em !important;
+    margin: 0 0 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    color: #e6dffc !important;
+}
+body.theme-light #app .setting-section-title,
+body.theme-light #app .cast-edit-section h3,
+body.theme-light #app .shop-profile-edit__form > section > h2,
+body.theme-light #app .shop-profile-edit__form > section > h3,
+body.theme-light #app .identity-hero h2,
+body.theme-light #app .license-hero h2,
+body.theme-light #app .status-card h2,
+body.theme-light #app .status-card h3,
+body.theme-premium-white #app .setting-section-title,
+body.theme-premium-white #app .cast-edit-section h3,
+body.theme-premium-white #app .shop-profile-edit__form > section > h2,
+body.theme-premium-white #app .shop-profile-edit__form > section > h3,
+body.theme-premium-white #app .identity-hero h2,
+body.theme-premium-white #app .license-hero h2,
+body.theme-premium-white #app .status-card h2,
+body.theme-premium-white #app .status-card h3 {
+    color: #1e1a30 !important;
+}
+#app .setting-section-title i,
+#app .cast-edit-section h3 i,
+#app .shop-profile-edit__form > section > h2 i,
+#app .identity-hero h2 i,
+#app .license-hero h2 i,
+#app .status-card h2 i,
+#app .status-card h3 i {
+    color: var(--flat-title-accent) !important;
+    font-size: 0.85rem !important;
+}

@@ -2134,6 +2134,56 @@ body.page-search #pane-ai.tab-pane.active .ai-chat__thread {
     font-weight: 600;
 }
 
+/* Secondary-action chip (go back / restart / escape hatches):
+   ghost style so answer choices stay visually dominant. */
+.ai-chat__quick--back {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    color: rgba(243, 236, 255, 0.55);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    min-height: 32px;
+    padding: 6px 10px;
+}
+.ai-chat__quick--back:hover {
+    background: transparent;
+    border-color: transparent;
+    color: #f3ecff;
+}
+
+/* Step progress bar above the chips (QA flow only) */
+.ai-chat__progress {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px 0;
+}
+.ai-chat__progress[hidden] { display: none; }
+.ai-chat__progress-bar {
+    flex: 1 1 auto;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(168, 85, 247, 0.18);
+    overflow: hidden;
+}
+.ai-chat__progress-fill {
+    display: block;
+    height: 100%;
+    width: 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #a78bfa, #7c3aed);
+    transition: width 0.25s ease;
+}
+.ai-chat__progress-label {
+    flex: 0 0 auto;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #c4b5fd;
+}
+
 /* 入力フォーム */
 .ai-chat__form {
     display: flex; gap: 8px;

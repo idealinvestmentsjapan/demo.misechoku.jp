@@ -76,7 +76,8 @@ body.theme-light.is-policy-document {
 .policy-md { color: var(--policy-text); }
 .policy-md > *:first-child { margin-top: 0; }
 .policy-md > *:last-child { margin-bottom: 0; }
-.policy-md p { margin: 0 0 1em; }
+.policy-md p { margin: 0 0 1.1em; }
+.policy-md p:last-child { margin-bottom: 0; }
 
 .policy-md h1,
 .policy-md h2,

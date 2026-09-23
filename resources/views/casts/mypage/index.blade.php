@@ -1,4 +1,4 @@
-@extends('layouts.app-v2')
+﻿@extends('layouts.app-v2')
 
 @section('title', 'マイページ')
 @section('body-class', 'page-cast-mypage')
@@ -72,15 +72,15 @@
             $availDeclareUrl = route('cast.mypage.availability.declare');
             $availClearUrl   = route('cast.mypage.availability.clear');
             $availMaxDates   = \App\Services\AvailabilityService::MAX_DATES;
-            $availDayChoices = collect(range(0, \App\Services\AvailabilityService::MAX_DAYS_AHEAD))
-                ->map(fn ($i) => \Carbon\Carbon::today()->addDays($i));
-            $availWeekdays   = ['日', '月', '火', '水', '木', '金', '土'];
+            $availDaysAhead  = \App\Services\AvailabilityService::MAX_DAYS_AHEAD;
         @endphp
         <section id="availability-card"
                  class="cast-avail {{ $availActive ? 'is-active' : '' }}"
                  data-availability-declare-url="{{ $availDeclareUrl }}"
                  data-availability-clear-url="{{ $availClearUrl }}"
                  data-availability-max="{{ $availMaxDates }}"
+                 data-availability-days-ahead="{{ $availDaysAhead }}"
+                 data-availability-selected="{{ json_encode(array_values($availSelected)) }}"
                  aria-labelledby="availability-card-title">
             <div class="cast-avail__row">
                 <span class="cast-avail__icon" aria-hidden="true">
@@ -107,24 +107,13 @@
                             <i class="fas fa-xmark"></i> 取消
                         </button>
                     @endif
+                    <button type="button" class="cast-avail__toggle" data-availability-toggle
+                            aria-expanded="{{ $availActive ? 'false' : 'true' }}" aria-label="カレンダーを開閉">
+                        <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                    </button>
                 </div>
             </div>
-            <div class="cast-avail__dates" data-availability-dates role="group" aria-label="入れる候補日の選択（最大{{ $availMaxDates }}日）">
-                @foreach($availDayChoices as $day)
-                    @php
-                        $dateStr    = $day->toDateString();
-                        $isSelected = in_array($dateStr, $availSelected, true);
-                        $dayLabel   = $day->isToday() ? '今日' : ($day->copy()->isTomorrow() ? '明日' : $availWeekdays[$day->dayOfWeek]);
-                    @endphp
-                    <button type="button"
-                            class="cast-avail__date-chip {{ $isSelected ? 'is-selected' : '' }}"
-                            data-availability-date="{{ $dateStr }}"
-                            aria-pressed="{{ $isSelected ? 'true' : 'false' }}">
-                        <span class="cast-avail__date-day">{{ $dayLabel }}</span>
-                        <span class="cast-avail__date-num">{{ $day->format('n/j') }}</span>
-                    </button>
-                @endforeach
-            </div>
+            <div class="cast-avail__cal" data-availability-calendar></div>
         </section>
 
         {{-- ===== Name + 閲覧数 + 共有（自分のプロフィールを SNS 共有） ===== --}}
@@ -465,7 +454,7 @@
 <script>
 window.MYPAGE_AVAILABILITY_CONFIG = { csrfToken: @json(csrf_token()) };
 </script>
-<script src="{{ asset('assets/js/mypage-availability.js') }}?v=20260924-availability-dates"></script>
+<script src="{{ asset('assets/js/mypage-availability.js') }}?v=20260924-availability-cal"></script>
 
 {{-- ===== ギャラリー機能：元のスクリプト群 ===== --}}
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
@@ -572,5 +561,5 @@ window.MYPAGE_GALLERY_CONFIG = {
 
 </style>
 {{-- 「今すぐ入れる」宣言カードの外部 CSS --}}
-<link rel="stylesheet" href="{{ asset('assets/css/mypage-availability.css') }}?v=20260924-availability-dates">
+<link rel="stylesheet" href="{{ asset('assets/css/mypage-availability.css') }}?v=20260924-availability-cal">
 @endpush

@@ -8,7 +8,7 @@
         $metaDescription = trim($__env->yieldContent('meta_description')) ?: 'ミセチョクのデモサイトです。';
         $metaImage = trim($__env->yieldContent('meta_image')) ?: asset('assets/images/pwa/icon-512.png');
         $canonicalUrl = trim($__env->yieldContent('canonical')) ?: url()->current();
-        $assetVersion = '20260923-concierge';
+        $assetVersion = '20260924-flat-sections';
         $resolvedTitle = $metaTitle !== ''
             ? $metaTitle
             : ($pageTitle !== '' ? $pageTitle . ' | ' . config('app.name', 'ミセチョク') : config('app.name', 'ミセチョク'));
@@ -279,6 +279,7 @@
             padding-top: 0 !important;
             padding-bottom: 0 !important;
             min-height: 100vh !important;
+            min-height: 100dvh !important;
             max-width: 100% !important;
         }
 
@@ -487,8 +488,16 @@
 
         /* --- ボトムナビ：ニュートラルなすりガラス（グラスモーフィズム 2026-07-20）。
               色味（アメジストグラデ）は撤去し、blur + 彩度ブーストのフロスト面のみ。
-              ダーク面 = 白文字 / ライトテーマ = 濃色文字 で可読性を確保する --- */
+              ダーク面 = 白文字 / ライトテーマ = 濃色文字 で可読性を確保する。
+              Safe-area fix (2026-09-24): Tailwind の h-[75px] + pb-[env(safe-area-inset-bottom)]
+              + box-border では、ノッチ端末の safe-area (~34px) が 75px の内側に食い込み、
+              タブアイコン+ラベルの実表示領域が 41px まで潰れていた。総高さを
+              「コンテンツ 75px + 安全域」に切り替え、タブ本体が常に 75px 分の
+              余裕を持てるようにする。main の padding-bottom（75+safe-area）とも一致し、
+              コンテンツ末尾とナビ上端の間の無駄な空白も消える。 --- */
         nav[data-bottom-nav] {
+            height: calc(var(--footer-height, 75px) + env(safe-area-inset-bottom, 0px)) !important;
+            box-sizing: border-box !important;
             background: linear-gradient(0deg,
                 rgba(24, 20, 34, 0.48) 0%,
                 rgba(18, 15, 26, 0.36) 100%) !important;
@@ -715,12 +724,21 @@
              ヘッダー/フッターが fixed で被さるため、旧 app.css と同じく main に
              padding-top: --header-height、padding-bottom: --footer-height を確保する。 --}}
         */
+        /* Mobile-viewport fix (2026-09-24):
+           `100vh` on iOS Safari / Android Chrome is the *large* viewport (URL bar hidden),
+           so a page first opened with the URL bar visible then navigated-to reads
+           `100vh` as taller than the actually visible area. Fixed footer at `bottom:0`
+           tracks the visible bottom, so short pages end up with their bottom
+           padding + last elements clipped by the URL bar / off-screen. Switch to
+           `100dvh` which tracks the currently visible viewport. Keep `100vh` first
+           as a fallback for browsers without dvh support. */
         main#main-content {
             display: flex;
             flex-direction: column;
             flex: 1;
             min-width: 0;
             min-height: 100vh;
+            min-height: 100dvh;
             padding-top: var(--header-height, 60px);
             padding-bottom: calc(var(--footer-height, 75px) + env(safe-area-inset-bottom, 0px));
             box-sizing: border-box;
@@ -805,6 +823,10 @@
     {{-- プレミアムホワイト（MyPage）: 全ルールが body.theme-premium-white スコープ。同上で常時ロード --}}
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700;900&family=Cinzel:wght@600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('assets/css/premium-white.css') }}?v=20260720-pwhite-09">
+    {{-- フラット化：プロフィール／設定／管理系の丸角カード枠を廃し、区切り線ベースの
+         モダンなセクション表示に統一する（2026-09-24）。ページ固有の inline <style> / light-theme /
+         premium-white の全てより後に読み込んで確実に上書きするため、最後尾に置く。 --}}
+    <link rel="stylesheet" href="{{ asset('assets/css/flat-sections.css') }}?v={{ $assetVersion }}">
 </head>
 <body class="@yield('body-class') {{ $isLightTheme ? 'theme-light' : '' }} {{ $isPremiumWhite ? 'theme-premium-white' : '' }} bg-base text-text-main"
       data-navigation-scope="{{ $navPrefix }}:{{ auth()->guard($navPrefix === 'cast' ? 'member' : 'shop')->id() }}"
@@ -890,8 +912,12 @@
     @include('layouts.parts.header_popover.notification')
     @include('layouts.parts.header_popover.task')
 
-    {{-- 共通ライトボックス（プロフィール画像クリック等） --}}
-    <div id="global-lightbox-overlay" class="lightbox-overlay" role="dialog" aria-modal="true" aria-label="画像の拡大表示" aria-hidden="true" onclick="window._closeGlobalLightbox && window._closeGlobalLightbox(event)">
+    {{-- 共通ライトボックス（プロフィール画像クリック等）。
+         hidden 属性で常時 display:none にしておく。外部 CSS（app.css / *_profile.css）を
+         読み込まないページで、中の「閉じる」ボタン（position:absolute; top:20px; right:20px）
+         がグローバルヘッダーに被って常駐してしまう問題を防ぐため、JS 側でも開閉時に
+         hidden 属性を切り替える。 --}}
+    <div id="global-lightbox-overlay" class="lightbox-overlay" role="dialog" aria-modal="true" aria-label="画像の拡大表示" aria-hidden="true" hidden onclick="window._closeGlobalLightbox && window._closeGlobalLightbox(event)">
         <button type="button" class="btn-secondary-cta" style="position:absolute;top:20px;right:20px" onclick="event.stopPropagation(); window._closeGlobalLightbox()">閉じる</button>
         <img id="global-lightbox-image" src="" alt="拡大したプロフィール画像" class="lightbox-image">
     </div>
@@ -914,6 +940,7 @@
         window.openImageLightbox = function (src) {
             if (!src) return;
             img.src = src;
+            overlay.hidden = false;
             overlay.classList.add('is-open');
             overlay.setAttribute('aria-hidden', 'false');
         };
@@ -923,6 +950,7 @@
                 e.stopPropagation();
             }
             overlay.classList.remove('is-open');
+            overlay.hidden = true;
             overlay.setAttribute('aria-hidden', 'true');
             img.src = '';
         };

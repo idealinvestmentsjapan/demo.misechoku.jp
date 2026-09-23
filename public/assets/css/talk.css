@@ -199,11 +199,15 @@
 }
 
 /* --- Talk Room (詳細画面) --- */
+/* Use 100dvh so the room tracks the actually visible viewport when the mobile
+   URL bar shows or hides. `100vh` remains as a fallback for older browsers. */
 #talk-room-container {
     display: flex;
     flex-direction: column;
     min-height: calc(100vh - var(--header-height) - var(--footer-height));
+    min-height: calc(100dvh - var(--header-height) - var(--footer-height));
     height: calc(100vh - var(--header-height) - var(--footer-height));
+    height: calc(100dvh - var(--header-height) - var(--footer-height));
     background:
         radial-gradient(circle at top, rgba(168, 85, 247, 0.14), transparent 32%),
         linear-gradient(180deg, var(--talk-bg-main) 0%, var(--talk-bg-base) 100%);

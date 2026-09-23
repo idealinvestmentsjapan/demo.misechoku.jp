@@ -4,7 +4,7 @@
 @section('body-class', request()->is('cast/*') && ($activeTab ?? null) === 'pane-ai' ? 'page-search page-search-ai' : 'page-search')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/search.css') }}?v=20260923-concierge">
+<link rel="stylesheet" href="{{ asset('assets/css/search.css') }}?v=20260924-concierge-ui">
 <link rel="stylesheet" href="{{ asset('assets/css/search-location-bar.css') }}?v=20260808-footer-clear">
 <link rel="stylesheet" href="{{ asset('assets/css/sub-header.css') }}">
 <style>
@@ -211,6 +211,6 @@
 })();
 </script>
 @if($showAiTab)
-<script src="{{ asset('assets/js/ai-chat.js') }}?v=20260923-concierge"></script>
+<script src="{{ asset('assets/js/ai-chat.js') }}?v=20260924-concierge-ui"></script>
 @endif
 @endpush

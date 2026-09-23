@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\UserReport;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 /**
@@ -68,6 +69,18 @@ class UserReportController extends Controller
             'status'             => UserReport::STATUS_PENDING,
             'created_at'         => now(),
             'updated_at'         => now(),
+        ]);
+
+        // Ops notification: same scheme as support inquiries
+        // (DB record + ops log; mail/Slack can hook in later via .env).
+        Log::channel(config('logging.default', 'stack'))->info('ユーザー通報を受け付けました', [
+            'report_id'     => $report->id,
+            'reporter_type' => $reporterType,
+            'reporter_id'   => $reporterId,
+            'target_type'   => $data['target_type'],
+            'target_id'     => $data['target_id'],
+            'reason'        => $data['reason'],
+            'context_type'  => $data['context_type'] ?? null,
         ]);
 
         return response()->json([

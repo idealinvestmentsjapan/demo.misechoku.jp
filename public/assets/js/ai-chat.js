@@ -3,11 +3,14 @@
  *
  * Guided QA flow: each question shows 2-3 personalized choice chips
  * (built from saved search preferences / profile address passed via
- * data-ai-suggest) plus an "other" chip that reveals a free-text input.
+ * data-ai-suggest) plus an "other" chip. The free-text input is always
+ * visible (chat-app style); the "other" chip just focuses it, and the
+ * placeholder changes per question so users know what to type.
+ * A progress bar above the chips shows the current step.
  * Answers are combined and sent to /cast/search/ai-chat, which returns
- * DB-grounded shop recommendations (LLM reply when enabled).
- * After the first recommendation the input stays open for free chat,
- * with conversation history sent along for context.
+ * DB-grounded shop recommendations (LLM-selected when enabled).
+ * After the first recommendation the flow switches to free chat with
+ * conversation history sent along for context.
  */
 (function () {
     'use strict';
@@ -49,6 +52,7 @@
         var history = []; // {role: 'user'|'ai', content} pairs sent for LLM context
 
         var OTHER_LABEL = 'その他（入力する）';
+        var CHAT_PLACEHOLDER = '追加の希望や質問を入力してね';
 
         function parseJsonAttr(name, fallback) {
             try {
@@ -60,7 +64,7 @@
         }
 
         // ------------------------------------------------------------
-        // QA flow: 2-3 personalized chips per question + "other" input
+        // QA flow: 2-3 personalized chips per question + free input
         // ------------------------------------------------------------
         var suggest = parseJsonAttr('data-ai-suggest', {});
         var allAreas = parseJsonAttr('data-area-options', []);
@@ -231,33 +235,66 @@
         }
 
         // ------------------------------------------------------------
-        // Free-text input (shown by the "other" chip / free chat mode)
+        // Step progress bar (created above the chips)
         // ------------------------------------------------------------
-        function showInput(placeholder, focus) {
-            if (!inputForm || !inputField) return;
-            inputForm.hidden = false;
-            if (placeholder) inputField.placeholder = placeholder;
-            if (focus) inputField.focus();
+        var progressEl = null;
+        var progressFill = null;
+        var progressLabel = null;
+
+        function ensureProgress() {
+            if (progressEl || !quickReplyArea || !quickReplyArea.parentNode) return;
+            progressEl = document.createElement('div');
+            progressEl.className = 'ai-chat__progress';
+            progressEl.setAttribute('data-ai-progress', '');
+            progressEl.setAttribute('role', 'progressbar');
+            progressEl.setAttribute('aria-label', '質問の進み具合');
+            progressEl.innerHTML =
+                '<div class="ai-chat__progress-bar"><span class="ai-chat__progress-fill" data-ai-progress-fill></span></div>' +
+                '<span class="ai-chat__progress-label" data-ai-progress-label></span>';
+            quickReplyArea.parentNode.insertBefore(progressEl, quickReplyArea);
+            progressFill = progressEl.querySelector('[data-ai-progress-fill]');
+            progressLabel = progressEl.querySelector('[data-ai-progress-label]');
         }
 
-        function hideInput() {
-            if (!inputForm || !inputField) return;
-            if (mode === 'chat') return; // stays open during free chat
-            inputForm.hidden = true;
-            inputField.value = '';
+        function updateProgress(current, total) {
+            ensureProgress();
+            if (!progressEl) return;
+            progressEl.hidden = false;
+            progressEl.setAttribute('aria-valuemin', '1');
+            progressEl.setAttribute('aria-valuemax', String(total));
+            progressEl.setAttribute('aria-valuenow', String(current));
+            if (progressFill) progressFill.style.width = Math.round((current / total) * 100) + '%';
+            if (progressLabel) progressLabel.textContent = current + '/' + total;
+        }
+
+        function hideProgress() {
+            if (progressEl) progressEl.hidden = true;
+        }
+
+        // ------------------------------------------------------------
+        // Free-text input: always visible (chat-app style)
+        // ------------------------------------------------------------
+        function setInputPlaceholder(placeholder) {
+            if (inputField && placeholder) inputField.placeholder = placeholder;
+        }
+
+        function focusInput() {
+            if (inputField) inputField.focus();
         }
 
         if (inputForm && inputField) {
+            inputForm.hidden = false;
             inputForm.addEventListener('submit', function (e) {
                 e.preventDefault();
                 if (isBusy) return;
                 var text = inputField.value.trim();
                 if (text === '') return;
-                inputField.value = '';
                 if (mode === 'qa') {
-                    inputForm.hidden = true;
+                    if (isAnswering) return; // between questions: keep the draft
+                    inputField.value = '';
                     handleAnswer(text);
                 } else {
+                    inputField.value = '';
                     sendFollowUp(text);
                 }
             });
@@ -275,7 +312,8 @@
             }
             var step = QA_FLOW[qaIndex];
             isAnswering = false;
-            hideInput();
+            updateProgress(qaIndex + 1, QA_FLOW.length);
+            setInputPlaceholder(step.placeholder || '希望を入力してね');
             appendAi('Q' + (qaIndex + 1) + '/' + QA_FLOW.length + '　' + step.q, { instant: qaIndex > 0 });
             var choices = step.opts.map(function (opt) {
                 return { label: opt, onClick: handleAnswer };
@@ -283,11 +321,11 @@
             choices.push({
                 label: OTHER_LABEL,
                 className: 'ai-chat__quick--other',
-                onClick: function () {
-                    showInput(step.placeholder || '希望を入力してね', true);
-                },
+                onClick: focusInput,
             });
-            if (qaIndex > 0) choices.push({ label: '前の質問に戻る', onClick: previousQuestion });
+            if (qaIndex > 0) {
+                choices.push({ label: '前の質問に戻る', className: 'ai-chat__quick--back', onClick: previousQuestion });
+            }
             renderChoices(choices);
         }
 
@@ -303,7 +341,6 @@
         function previousQuestion() {
             if (isBusy || isAnswering || qaIndex < 1) return;
             window.clearTimeout(nextQuestionTimer);
-            hideInput();
             qaAnswers.pop();
             qaIndex -= 2;
             appendAi('前の回答を変更できます。', { instant: true });
@@ -317,7 +354,6 @@
             qaIndex = -1;
             qaAnswers = [];
             renderChoices([]);
-            hideInput();
             appendAi('もう一度ヒアリングするね！✨', { instant: true });
             nextQuestionTimer = window.setTimeout(askNext, 250);
         }
@@ -329,6 +365,7 @@
             if (personalityType) parts.push('接客タイプ' + personalityType);
             var msg = (parts.length ? parts.join(' ') : 'おすすめ') + ' に合うお店を探して';
 
+            hideProgress();
             appendAi('ありがとう✨ 回答に合わせてピッタリのお店を探すね！', { instant: true });
             fetchRecommendation(msg);
         }
@@ -347,6 +384,7 @@
             if (isBusy) return;
             isBusy = true;
             renderChoices([]);
+            hideProgress();
 
             var typingEl = appendTyping();
             var minWait = 700 + Math.floor(Math.random() * 400);
@@ -382,13 +420,13 @@
                         if (history.length > 12) history = history.slice(-12);
 
                         mode = 'chat';
-                        showInput('追加の希望や質問を入力してね', false);
+                        setInputPlaceholder(CHAT_PLACEHOLDER);
                         var chips = (Array.isArray(data.quick_replies) ? data.quick_replies : [])
                             .slice(0, 2)
                             .map(function (label) {
                                 return { label: label, onClick: sendFollowUp };
                             });
-                        chips.push({ label: '条件を変えてやり直す', onClick: restartQa });
+                        chips.push({ label: '条件を変えてやり直す', className: 'ai-chat__quick--back', onClick: restartQa });
                         renderChoices(chips);
                         isBusy = false;
                     }, wait);
@@ -399,8 +437,8 @@
                         appendAi('ごめん、いま少し繋がりにくいみたい💦 もう一度試してみてね。', { instant: true });
                         renderChoices([
                             { label: '同じ条件で再試行する', onClick: function () { fetchRecommendation(msg); } },
-                            { label: '条件を変更する', onClick: restartQa },
-                            { label: '通常の検索で探す', onClick: function () { window.location.href = '/cast/search/list'; } }
+                            { label: '条件を変更する', className: 'ai-chat__quick--back', onClick: restartQa },
+                            { label: '通常の検索で探す', className: 'ai-chat__quick--back', onClick: function () { window.location.href = '/cast/search/list'; } }
                         ]);
                         isBusy = false;
                     }, 500);
@@ -428,7 +466,6 @@
                 mode = 'qa';
                 history = [];
                 renderChoices([]);
-                hideInput();
                 thread.innerHTML = '';
                 qaIndex = -1;
                 qaAnswers = [];

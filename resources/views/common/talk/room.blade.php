@@ -1316,92 +1316,15 @@
 })();
 </script>
 
-{{-- ===== ユーザー通報モーダル ===== --}}
-<script>
-(function () {
-    var modal = document.querySelector('[data-user-report-modal]');
-    if (!modal) return;
-    var form = modal.querySelector('[data-user-report-form]');
-    var feedback = modal.querySelector('[data-user-report-feedback]');
-    var submitBtn = modal.querySelector('[data-user-report-submit]');
-    var targetTypeInput = modal.querySelector('[data-target-type]');
-    var targetIdInput = modal.querySelector('[data-target-id]');
-    var endpoint = form.getAttribute('data-endpoint');
-    var csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
-
-    function setFeedback(kind, text) {
-        if (!feedback) return;
-        if (!kind) { feedback.hidden = true; feedback.className = 'user-report-modal__feedback'; return; }
-        feedback.className = 'user-report-modal__feedback is-' + kind;
-        feedback.textContent = text;
-        feedback.hidden = false;
-    }
-    function openModal(targetType, targetId) {
-        targetTypeInput.value = targetType;
-        targetIdInput.value = targetId;
-        setFeedback(null);
-        form.reset();
-        targetTypeInput.value = targetType;
-        targetIdInput.value = targetId;
-        modal.hidden = false;
-        document.body.style.overflow = 'hidden';
-    }
-    function closeModal() {
-        modal.hidden = true;
-        document.body.style.overflow = '';
-    }
-
-    // 開閉トリガー
-    document.querySelectorAll('[data-user-report-open]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            openModal(btn.getAttribute('data-target-type'), btn.getAttribute('data-target-id'));
-        });
-    });
-    modal.querySelectorAll('[data-user-report-close]').forEach(function (el) {
-        el.addEventListener('click', closeModal);
-    });
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && !modal.hidden) closeModal();
-    });
-
-    // 送信
-    form.addEventListener('submit', function (e) {
-        e.preventDefault();
-        setFeedback(null);
-        submitBtn.disabled = true;
-
-        var fd = new FormData(form);
-        var payload = {};
-        fd.forEach(function (v, k) { payload[k] = v; });
-
-        fetch(endpoint, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-            body: JSON.stringify(payload),
-        })
-        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
-        .then(function (res) {
-            if (res.ok && res.body && res.body.success) {
-                setFeedback('success', res.body.message || '通報を受け付けました。');
-                setTimeout(function () { closeModal(); }, 1800);
-            } else {
-                submitBtn.disabled = false;
-                setFeedback('error', (res.body && res.body.message) || '通報の送信に失敗しました。時間をおいて再度お試しください。');
-            }
-        })
-        .catch(function () {
-            submitBtn.disabled = false;
-            setFeedback('error', '通信エラーで通報を送信できませんでした。');
-        });
-    });
-})();
-</script>
 @endpush
 @endif
+
+{{-- ===== User report modal (both cast and shop) =====
+     Logic lives in public/assets/js/user-report.js (covered by frontend tests).
+     Keep this OUTSIDE the @if($isCast) push above: it once lived inside that
+     block, which made the report button dead for shop users. --}}
+@push('scripts')
+<script src="{{ asset('assets/js/user-report.js') }}?v=20260924-report-fix"></script>
+@endpush
 
 @endsection

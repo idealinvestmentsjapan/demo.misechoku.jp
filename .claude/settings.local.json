@@ -200,7 +200,15 @@
       "PowerShell(php artisan tinker --execute=\"`$req = Illuminate\\\\Http\\\\Request::create\\('/share/recruit/1', 'GET'\\); `$res = app\\(\\)->handle\\(`$req\\); echo 'STATUS: ' . `$res->getStatusCode\\(\\) . PHP_EOL; `$html = `$res->getContent\\(\\); echo \\(strpos\\(`$html, 'maps.google.com/maps?q='\\) !== false ? 'IFRAME FOUND' : 'iframe not found'\\) . PHP_EOL; if \\(preg_match\\('#maps\\\\.google\\\\.com/maps\\\\?q=\\([^&\\\\x22]+\\)#', `$html, `$m\\)\\) { echo 'Q=' . `$m[1] . PHP_EOL; } echo \\(strpos\\(`$html, 'maps/search/?api=1'\\) !== false ? 'LINK FOUND' : 'link not found'\\) . PHP_EOL;\")",
       "PowerShell(php -l app/Services/AvailabilityService.php; php -l app/Models/AvailabilityDate.php; php -l app/Http/Controllers/Casts/MypageController.php; php -l app/Http/Controllers/Shops/MypageController.php; php -l app/Http/Controllers/Common/DiscoveryController.php; php -l app/Http/Controllers/Shops/SearchController.php; php -l app/Http/Controllers/Casts/SearchController.php; php -l app/Http/Controllers/Casts/RecruitmentController.php; php -l app/Http/Controllers/Common/SettingController.php; php -l app/Support/SalesDemoFixture.php)",
       "PowerShell(php -l tests/Feature/Cast/AvailabilityDeclarationTest.php; php -l tests/Feature/Discovery/TierRankingTest.php)",
-      "PowerShell(php -l app/Services/BillingManagementService.php)"
+      "PowerShell(php -l app/Services/BillingManagementService.php)",
+      "PowerShell(Select-String -Path 'resources\\\\views\\\\common\\\\talk\\\\room.blade.php' -Pattern '@push|@endpush' | ForEach-Object { \"$\\($_.LineNumber\\): $\\($_.Line.Trim\\(\\)\\)\" })",
+      "PowerShell(Select-String -Path 'resources\\\\views\\\\common\\\\talk\\\\room.blade.php' -Pattern '===== |^\\\\\\(function|{{-- ' | Where-Object { $_.LineNumber -ge 950 -and $_.LineNumber -le 1410 } | ForEach-Object { \"$\\($_.LineNumber\\): $\\($_.Line.Trim\\(\\)\\)\" })",
+      "PowerShell(Select-String -Path 'resources\\\\views\\\\common\\\\talk\\\\room.blade.php' -Pattern '@push|@endpush|@endsection|User report modal' | ForEach-Object { \"$\\($_.LineNumber\\): $\\($_.Line.Trim\\(\\)\\)\" }; php tests/Support/check-uiux-syntax.php | Select-Object -First 8)",
+      "Read(//c/c/Users/Lenovo/OneDrive/デスクトップ/mearin0424-tech/demo.misechoku.jp/docs/**)",
+      "PowerShell(Set-Content *)",
+      "PowerShell(node --check public/assets/js/mypage-availability.js)",
+      "Bash(git status *)",
+      "Bash(git commit *)"
     ]
   }
 }

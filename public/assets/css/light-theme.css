@@ -1119,6 +1119,19 @@ body.theme-light .support-column-empty,
 body.theme-light .support-column-back {
     color: #5f5876 !important;
 }
+body.theme-light .support-column-article-header,
+body.theme-light .support-notice-detail .support-column-article-header {
+    border-bottom-color: rgba(36, 31, 51, 0.14) !important;
+}
+body.theme-light .support-notice-detail .support-column-title {
+    color: #4b465c !important;
+}
+body.theme-light .support-notice-detail .support-column-body {
+    color: #4b465c !important;
+}
+body.theme-light .support-notice-detail .support-column-item-meta {
+    color: #6d6685 !important;
+}
 
 /* --- トーク一覧 (page-talk-list / talk-list-container) --------------------
    talk.css の !important 白色を、白面で読める濃紫系に上書き。
@@ -1555,6 +1568,18 @@ body.theme-light .ai-chat__input {
     color: #4b465c;
 }
 body.theme-light .ai-chat__input::placeholder { color: rgba(36, 31, 51, 0.35); }
+
+/* QA flow accents: other/back chips + step progress bar */
+body.theme-light .ai-chat__quick--other { background: transparent; }
+body.theme-light .ai-chat__quick--back,
+body.theme-light .ai-chat__quick--back:hover {
+    background: transparent;
+    border-color: transparent;
+    color: #857ca0;
+}
+body.theme-light .ai-chat__quick--back:hover { color: #4b465c; }
+body.theme-light .ai-chat__progress-bar { background: rgba(124, 58, 237, 0.12); }
+body.theme-light .ai-chat__progress-label { color: #6d28d9; }
 
 
 /* ============================================================

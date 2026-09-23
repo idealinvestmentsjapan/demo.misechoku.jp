@@ -114,26 +114,32 @@ test('AIコンシェルジュは選択肢を絞り、連打で質問を飛ばさ
     const choice = doc.querySelector('.ai-chat__quick'); assert.equal(choice.textContent, '大阪府 大阪市');
     // Q1 = personalized areas (max 2) + no-preference + other = 4 chips at most
     assert.equal(doc.querySelectorAll('.ai-chat__quick').length, 4);
+    assert.equal(doc.querySelector('[data-ai-progress-label]').textContent, '1/5');
     choice.click(); choice.click(); tick(250);
     assert.equal(doc.querySelectorAll('.ai-chat__msg--user').length, 1);
     assert.ok(doc.querySelector('[data-ai-thread]').textContent.includes('Q2/5'));
+    assert.equal(doc.querySelector('[data-ai-progress-label]').textContent, '2/5');
     [...doc.querySelectorAll('.ai-chat__quick')].find(el => el.textContent === '前の質問に戻る').click();
     assert.equal(doc.querySelector('.ai-chat__quick').textContent, '大阪府 大阪市');
+    assert.equal(doc.querySelector('[data-ai-progress-label]').textContent, '1/5');
 });
-test('AIコンシェルジュの「その他」で自由入力の回答を送れる', async t => {
+test('AIコンシェルジュは入力欄を常時表示し、自由入力で回答できる', async t => {
     const d = await page(aiHtml); t.after(() => { assert.deepEqual(d.__errors, []); d.window.close(); }); const tick = timers(d.window); boot(d, 'ai-chat'); tick(300);
     const doc = d.window.document;
     const form = doc.querySelector('[data-ai-input-form]');
-    assert.equal(form.hidden, true);
-    [...doc.querySelectorAll('.ai-chat__quick')].find(el => el.textContent === 'その他（入力する）').click();
     assert.equal(form.hidden, false);
     const input = doc.querySelector('[data-ai-input]');
+    assert.equal(input.placeholder, 'エリアを入力してね（例：中目黒）');
+    [...doc.querySelectorAll('.ai-chat__quick')].find(el => el.textContent === 'その他（入力する）').click();
+    assert.equal(doc.activeElement, input);
     input.value = '中目黒あたり';
     form.dispatchEvent(new d.window.Event('submit', { cancelable: true }));
     tick(250);
-    assert.equal(form.hidden, true);
+    assert.equal(form.hidden, false);
+    assert.equal(input.value, '');
     assert.ok([...doc.querySelectorAll('.ai-chat__msg--user')].some(el => el.textContent.includes('中目黒あたり')));
     assert.ok(doc.querySelector('[data-ai-thread]').textContent.includes('Q2/5'));
+    assert.equal(input.placeholder, '業種を入力してね（例：スナック）');
 });
 test('AIコンシェルジュは保存済みの希望条件を選択肢へ優先反映する', async t => {
     const suggestHtml = aiHtml.replace('data-area-options=', `data-ai-suggest='{"areas":["東京都 港区","東京都 新宿区"],"industries":["ラウンジ","スナック"],"wage_min":4000}' data-area-options=`);
@@ -153,6 +159,43 @@ test('AIの通信失敗後に5問の回答を維持して再試行できる', as
     await settle(); tick(500);
     [...d.window.document.querySelectorAll('.ai-chat__quick')].find(el => el.textContent === '同じ条件で再試行する').click();
     await settle(); assert.equal(bodies.length, 2); assert.equal(bodies[0], bodies[1]);
+});
+const reportHtml = `<button data-user-report-open data-target-type="cast" data-target-id="c0001">通報</button>
+<div class="user-report-modal" data-user-report-modal hidden><div data-user-report-close></div>
+<form data-user-report-form data-endpoint="/user-report"><input type="hidden" name="target_type" data-target-type><input type="hidden" name="target_id" data-target-id><input type="hidden" name="context_type" value="talk">
+<select name="reason"><option value="">選択</option><option value="harassment" selected>ハラスメント</option></select>
+<p data-user-report-feedback hidden></p><button type="submit" data-user-report-submit>通報する</button></form></div>`;
+test('通報ボタンはモーダルを開き、店舗側トークでも運営へ送信できる', async t => {
+    const d = await page(reportHtml, '/shop/talk/room/c0001'); t.after(() => { assert.deepEqual(d.__errors, []); d.window.close(); });
+    let sent;
+    d.window.fetch = async (url, options) => { sent = { url, body: JSON.parse(options.body) }; return { ok: true, json: async () => ({ success: true, message: '通報を受け付けました。運営で内容を確認いたします。' }) }; };
+    boot(d, 'user-report');
+    const doc = d.window.document;
+    doc.querySelector('[data-user-report-open]').click();
+    assert.equal(doc.querySelector('[data-user-report-modal]').hidden, false);
+    assert.equal(doc.querySelector('input[data-target-type]').value, 'cast');
+    assert.equal(doc.querySelector('input[data-target-id]').value, 'c0001');
+    doc.querySelector('[data-user-report-form]').dispatchEvent(new d.window.Event('submit', { cancelable: true }));
+    await settle();
+    assert.equal(sent.url, '/user-report');
+    assert.equal(sent.body.target_type, 'cast');
+    assert.equal(sent.body.target_id, 'c0001');
+    assert.equal(sent.body.reason, 'harassment');
+    const feedback = doc.querySelector('[data-user-report-feedback]');
+    assert.equal(feedback.hidden, false);
+    assert.ok(feedback.textContent.includes('通報を受け付けました'));
+});
+test('通報の送信失敗時はエラーを表示し、再送信できる状態に戻す', async t => {
+    const d = await page(reportHtml, '/shop/talk/room/c0001'); t.after(() => { assert.deepEqual(d.__errors, []); d.window.close(); });
+    d.window.fetch = async () => ({ ok: false, json: async () => ({ success: false, message: '時間をおいてお試しください。' }) });
+    boot(d, 'user-report');
+    const doc = d.window.document;
+    doc.querySelector('[data-user-report-open]').click();
+    doc.querySelector('[data-user-report-form]').dispatchEvent(new d.window.Event('submit', { cancelable: true }));
+    await settle();
+    assert.equal(doc.querySelector('[data-user-report-submit]').disabled, false);
+    assert.ok(doc.querySelector('[data-user-report-feedback]').className.includes('is-error'));
+    assert.equal(doc.querySelector('[data-user-report-modal]').hidden, false);
 });
 test('モーダルを開くとフォーカスを移し、Tabで閉じ込め、閉じると戻す', async t => {
     const d = await page('<main id="background"><button id="open">開く</button></main><div id="dialog" role="dialog" aria-modal="true" hidden><button id="first">閉じる</button><button id="last">保存</button></div>'); t.after(() => { assert.deepEqual(d.__errors, []); d.window.close(); });

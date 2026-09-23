@@ -90,46 +90,105 @@
     background: rgba(248, 113, 113, 0.10);
 }
 
-/* Candidate-date chips (horizontal scroll, max 5 selectable) */
-.cast-avail__dates {
-    display: flex;
-    gap: 6px;
-    margin-top: 8px;
-    padding-bottom: 4px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-}
-.cast-avail__date-chip {
+/* Toggle chevron (open/close the calendar panel) */
+.cast-avail__toggle {
     flex: 0 0 auto;
-    min-width: 46px;
-    padding: 5px 8px;
-    border-radius: 10px;
-    border: 1px solid rgba(197, 160, 89, 0.30);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
     background: transparent;
     color: var(--color-text-muted, #9ca3af);
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1px;
     cursor: pointer;
-    transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    transition: transform 0.18s ease;
 }
-.cast-avail__date-chip:active { transform: scale(0.95); }
-.cast-avail__date-day {
+.cast-avail.is-open .cast-avail__toggle { transform: rotate(180deg); }
+
+/* Month-grid calendar (visible while .is-open) */
+.cast-avail__cal {
+    display: none;
+    margin-top: 8px;
+}
+.cast-avail.is-open .cast-avail__cal { display: block; }
+
+.cast-avail__cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+.cast-avail__cal-month {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--color-text-header, #fff);
+}
+.cast-avail__cal-nav {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: 1px solid rgba(197, 160, 89, 0.30);
+    background: transparent;
+    color: var(--gold-light, #f0c46b);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    transition: background 0.15s ease;
+}
+.cast-avail__cal-nav:hover:not(:disabled) { background: rgba(197, 160, 89, 0.10); }
+.cast-avail__cal-nav:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.cast-avail__cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+}
+.cast-avail__cal-weekday {
+    text-align: center;
     font-size: 0.6rem;
     font-weight: 600;
-    line-height: 1;
+    color: var(--color-text-muted, #9ca3af);
+    padding: 2px 0;
 }
-.cast-avail__date-num {
+.cast-avail__cal-weekday.is-sun { color: #f87171; }
+.cast-avail__cal-weekday.is-sat { color: #60a5fa; }
+.cast-avail__cal-blank { min-height: 34px; }
+.cast-avail__cal-day {
+    min-height: 34px;
+    border-radius: 8px;
+    border: 1px solid rgba(197, 160, 89, 0.22);
+    background: transparent;
+    color: var(--color-text-header, #e5e7eb);
     font-size: 0.76rem;
-    font-weight: 700;
-    line-height: 1.2;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
 }
-.cast-avail__date-chip.is-selected {
-    background: rgba(74, 222, 128, 0.14);
-    border-color: rgba(74, 222, 128, 0.55);
+.cast-avail__cal-day:active { transform: scale(0.94); }
+.cast-avail__cal-day.is-sun { color: #fca5a5; }
+.cast-avail__cal-day.is-sat { color: #93c5fd; }
+.cast-avail__cal-day.is-today {
+    border-color: var(--gold-light, #f0c46b);
+    box-shadow: inset 0 0 0 1px var(--gold-light, #f0c46b);
+}
+.cast-avail__cal-day.is-selected {
+    background: rgba(74, 222, 128, 0.18);
+    border-color: rgba(74, 222, 128, 0.60);
     color: #4ade80;
+}
+.cast-avail__cal-day.is-disabled {
+    border-color: transparent;
+    color: rgba(156, 163, 175, 0.35);
+    cursor: default;
+    pointer-events: none;
 }
 
 /* Light theme override */
@@ -151,13 +210,33 @@ body.theme-light .cast-avail__btn--primary:hover {
     background: rgba(124, 58, 237, 0.08);
 }
 body.theme-light .cast-avail__btn--danger { color: #b91c1c; }
-body.theme-light .cast-avail__date-chip {
-    border-color: rgba(124, 58, 237, 0.28);
-    color: #6b6482;
-    background: #ffffff;
+body.theme-light .cast-avail__cal-month { color: #1e1a30; }
+body.theme-light .cast-avail__cal-nav {
+    border-color: rgba(124, 58, 237, 0.35);
+    color: #7c3aed;
 }
-body.theme-light .cast-avail__date-chip.is-selected {
-    background: rgba(34, 197, 94, 0.10);
-    border-color: rgba(34, 197, 94, 0.55);
+body.theme-light .cast-avail__cal-nav:hover:not(:disabled) { background: rgba(124, 58, 237, 0.08); }
+body.theme-light .cast-avail__cal-weekday { color: #6b6482; }
+body.theme-light .cast-avail__cal-weekday.is-sun { color: #dc2626; }
+body.theme-light .cast-avail__cal-weekday.is-sat { color: #2563eb; }
+body.theme-light .cast-avail__cal-day {
+    border-color: rgba(124, 58, 237, 0.22);
+    background: #ffffff;
+    color: #1e1a30;
+}
+body.theme-light .cast-avail__cal-day.is-sun { color: #dc2626; }
+body.theme-light .cast-avail__cal-day.is-sat { color: #2563eb; }
+body.theme-light .cast-avail__cal-day.is-today {
+    border-color: #7c3aed;
+    box-shadow: inset 0 0 0 1px #7c3aed;
+}
+body.theme-light .cast-avail__cal-day.is-selected {
+    background: rgba(34, 197, 94, 0.12);
+    border-color: rgba(34, 197, 94, 0.60);
     color: #15803d;
+}
+body.theme-light .cast-avail__cal-day.is-disabled {
+    border-color: transparent;
+    background: transparent;
+    color: rgba(107, 100, 130, 0.35);
 }
