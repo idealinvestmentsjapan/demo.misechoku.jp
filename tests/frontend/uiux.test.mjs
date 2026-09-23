@@ -107,16 +107,43 @@ test('登録送信時、以前のステップの未入力を検出する', async
     assert.equal(event.defaultPrevented, true);
     assert.equal(d.window.document.querySelector('[name="email"]').closest('.register-card').hidden, false);
 });
-const aiHtml = `<section data-ai-chat-root data-endpoint="/cast/search/ai-chat" data-area-options='["大阪府 大阪市","福岡県 福岡市"]'><header class="ai-chat__header"></header><div data-ai-thread></div><div data-ai-quick-replies></div></section>`;
-test('AI診断は地域に対応し、連打で質問を飛ばさず前問に戻れる', async t => {
+const aiHtml = `<section data-ai-chat-root data-endpoint="/cast/search/ai-chat" data-area-options='["大阪府 大阪市","福岡県 福岡市"]'><header class="ai-chat__header"></header><div data-ai-thread></div><div data-ai-quick-replies></div><form data-ai-input-form hidden><input data-ai-input><button type="submit">送信</button></form></section>`;
+test('AIコンシェルジュは選択肢を絞り、連打で質問を飛ばさず前問に戻れる', async t => {
     const d = await page(aiHtml); t.after(() => { assert.deepEqual(d.__errors, []); d.window.close(); }); const tick = timers(d.window); boot(d, 'ai-chat'); tick(300);
     const doc = d.window.document;
     const choice = doc.querySelector('.ai-chat__quick'); assert.equal(choice.textContent, '大阪府 大阪市');
+    // Q1 = personalized areas (max 2) + no-preference + other = 4 chips at most
+    assert.equal(doc.querySelectorAll('.ai-chat__quick').length, 4);
     choice.click(); choice.click(); tick(250);
     assert.equal(doc.querySelectorAll('.ai-chat__msg--user').length, 1);
     assert.ok(doc.querySelector('[data-ai-thread]').textContent.includes('Q2/5'));
     [...doc.querySelectorAll('.ai-chat__quick')].find(el => el.textContent === '前の質問に戻る').click();
     assert.equal(doc.querySelector('.ai-chat__quick').textContent, '大阪府 大阪市');
+});
+test('AIコンシェルジュの「その他」で自由入力の回答を送れる', async t => {
+    const d = await page(aiHtml); t.after(() => { assert.deepEqual(d.__errors, []); d.window.close(); }); const tick = timers(d.window); boot(d, 'ai-chat'); tick(300);
+    const doc = d.window.document;
+    const form = doc.querySelector('[data-ai-input-form]');
+    assert.equal(form.hidden, true);
+    [...doc.querySelectorAll('.ai-chat__quick')].find(el => el.textContent === 'その他（入力する）').click();
+    assert.equal(form.hidden, false);
+    const input = doc.querySelector('[data-ai-input]');
+    input.value = '中目黒あたり';
+    form.dispatchEvent(new d.window.Event('submit', { cancelable: true }));
+    tick(250);
+    assert.equal(form.hidden, true);
+    assert.ok([...doc.querySelectorAll('.ai-chat__msg--user')].some(el => el.textContent.includes('中目黒あたり')));
+    assert.ok(doc.querySelector('[data-ai-thread]').textContent.includes('Q2/5'));
+});
+test('AIコンシェルジュは保存済みの希望条件を選択肢へ優先反映する', async t => {
+    const suggestHtml = aiHtml.replace('data-area-options=', `data-ai-suggest='{"areas":["東京都 港区","東京都 新宿区"],"industries":["ラウンジ","スナック"],"wage_min":4000}' data-area-options=`);
+    const d = await page(suggestHtml); t.after(() => { assert.deepEqual(d.__errors, []); d.window.close(); }); const tick = timers(d.window); boot(d, 'ai-chat'); tick(300);
+    const doc = d.window.document;
+    assert.equal(doc.querySelector('.ai-chat__quick').textContent, '東京都 港区');
+    doc.querySelector('.ai-chat__quick').click(); tick(250);
+    assert.equal(doc.querySelector('.ai-chat__quick').textContent, 'ラウンジ');
+    doc.querySelector('.ai-chat__quick').click(); tick(250);
+    assert.equal(doc.querySelector('.ai-chat__quick').textContent, '時給4,000円以上');
 });
 test('AIの通信失敗後に5問の回答を維持して再試行できる', async t => {
     const d = await page(aiHtml); t.after(() => { assert.deepEqual(d.__errors, []); d.window.close(); }); const tick = timers(d.window); const bodies = [];

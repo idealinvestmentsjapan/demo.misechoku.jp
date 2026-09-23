@@ -83,6 +83,7 @@ class AiChatTemplateService
                 $grounded['intent'],
                 count($grounded['recommendations']),
                 $grounded['relaxed'] ?? [],
+                (int) ($grounded['exact_count'] ?? 0),
             ),
             'recommendations' => $grounded['recommendations'],
             'quick_replies'   => $this->pickQuickReplies($grounded['intent']),
@@ -92,31 +93,38 @@ class AiChatTemplateService
     /**
      * ユーザー発話から intent と候補店舗を作り、外部（LLM 連携等）から利用できるように返す。
      *
-     * 「条件どんぴしゃ」で 0 件のときは段階的に条件を緩めて、最終的に必ず 1〜N 件
-     * を返す（DB がほぼ空でない限り）。どの条件を緩めたかは `relaxed` で報告し、
-     * 返答テキストが「近いお店を出したよ」ニュアンスを添えられるようにする。
+     * `$limit` 件を最低保証ラインとして扱う：条件どんぴしゃが `$limit` 件未満なら
+     * 段階的に条件を緩めて近い候補を「補充」し、最終的に必ず `$limit` 件
+     * を返す（DB の登録店舗がそもそも足りない場合を除く）。
+     * どの条件を緩めたかは `relaxed`、どんぴしゃの件数は `exact_count`、
+     * 各候補が完全一致か補充かは recommendation の `matched` で報告する。
      *
      * @return array{
      *   intent: array<string,mixed>,
      *   recommendations: array<int, array<string,mixed>>,
-     *   relaxed: array<int, string>
+     *   relaxed: array<int, string>,
+     *   exact_count: int
      * }
      */
     public function buildGroundedContext(string $userMessage, int $limit = 3): array
     {
         $userMessage = trim($userMessage);
         if ($userMessage === '') {
-            return ['intent' => $this->extractIntent(''), 'recommendations' => [], 'relaxed' => []];
+            return ['intent' => $this->extractIntent(''), 'recommendations' => [], 'relaxed' => [], 'exact_count' => 0];
         }
+        $limit = max(1, $limit);
         $intent = $this->extractIntent($userMessage);
 
-        // 1) まずは完全条件で試す
+        // 1) Strict match first.
         $shops = $this->pickShops($intent, $limit);
+        $exactCount = count($shops);
+        $seen = array_map(fn ($s) => (string) $s->id, $shops);
         $relaxed = [];
 
-        // 2) 0 件なら段階的に条件を落として再検索
-        //    重視度の低い順に外していく（雰囲気 → 報酬下限 → 時給下限/高時給 → 業種 → エリア）
-        if ($shops === []) {
+        // 2) Top up with progressively relaxed filters until we reach $limit.
+        //    Drop the least important condition first
+        //    (atmosphere -> reward floor -> wage floor -> industry -> area).
+        if (count($shops) < $limit) {
             $relaxSteps = [
                 'atmosphere'  => ['atmosphere' => null],
                 'reward_min'  => ['reward_min' => 0],
@@ -126,32 +134,57 @@ class AiChatTemplateService
             ];
             $working = $intent;
             foreach ($relaxSteps as $label => $override) {
-                // その条件が実際に指定されていなければスキップ（相対的に緩和とは呼ばない）
+                // Skip conditions the user never specified (not a real relaxation).
                 $wasActive = $this->isFilterActive($working, $label);
                 $working = array_merge($working, $override);
                 if (!$wasActive) {
                     continue;
                 }
                 $relaxed[] = $label;
-                $shops = $this->pickShops($working, $limit);
-                if ($shops !== []) {
+                foreach ($this->pickShops($working, $limit * 2) as $row) {
+                    if (in_array((string) $row->id, $seen, true)) {
+                        continue;
+                    }
+                    $shops[] = $row;
+                    $seen[] = (string) $row->id;
+                    if (count($shops) >= $limit) {
+                        break;
+                    }
+                }
+                if (count($shops) >= $limit) {
                     break;
                 }
             }
         }
 
-        // 3) それでも 0 件なら「新着 or 人気」で無条件に候補を出す（最終保険）
-        if ($shops === []) {
-            $shops = $this->pickFallbackShops($limit);
-            if ($shops !== []) {
-                $relaxed[] = 'all_filters';
+        // 3) Still short: fill from the unconditional pool (newest first).
+        $countBeforeFallback = count($shops);
+        if (count($shops) < $limit) {
+            foreach ($this->pickFallbackShops($limit * 2) as $row) {
+                if (in_array((string) $row->id, $seen, true)) {
+                    continue;
+                }
+                $shops[] = $row;
+                $seen[] = (string) $row->id;
+                if (count($shops) >= $limit) {
+                    break;
+                }
+            }
+            // Nothing matched at all and only the fallback produced shops.
+            if ($exactCount === 0 && $countBeforeFallback === 0 && $shops !== []) {
+                $relaxed = ['all_filters'];
             }
         }
 
         return [
             'intent'          => $intent,
-            'recommendations' => array_map(fn ($s) => $this->toRecommendation($s, $intent), $shops),
+            'recommendations' => array_values(array_map(
+                fn ($i, $s) => $this->toRecommendation($s, $intent, $i < $exactCount),
+                array_keys($shops),
+                $shops,
+            )),
             'relaxed'         => $relaxed,
+            'exact_count'     => $exactCount,
         ];
     }
 
@@ -437,7 +470,7 @@ class AiChatTemplateService
      * @param array<string,mixed> $intent
      * @return array<string, mixed>
      */
-    private function toRecommendation(object $row, array $intent): array
+    private function toRecommendation(object $row, array $intent, bool $matched = true): array
     {
         $wage = (int) ($row->regular_hourly_wage ?? $row->hourly_wage_regular ?? 0);
         $reward = (int) ($row->bonus_reward ?? $row->noruma_reward ?? 0);
@@ -452,6 +485,7 @@ class AiChatTemplateService
             'reward'     => $reward,
             'reason'     => $this->reasonText($row, $intent),
             'url'        => url('/cast/shopprofiles/' . $row->id),
+            'matched'    => $matched,
         ];
     }
 
@@ -500,11 +534,18 @@ class AiChatTemplateService
     /**
      * @param array<string,mixed> $intent
      * @param array<int, string>  $relaxed  緩和した条件ラベル（'area','industry','wage','reward_min','atmosphere','all_filters'）
+     * @param int                 $exactCount  条件どんぴしゃで見つかった件数（残りは補充）
      */
-    private function pickReplyTemplate(array $intent, int $count, array $relaxed = []): string
+    private function pickReplyTemplate(array $intent, int $count, array $relaxed = [], int $exactCount = 0): string
     {
         // 条件を緩めて拾ったときは、冒頭で「ちょうどのお店はまだない」と正直に伝える
-        if ($relaxed !== []) {
+        if ($relaxed !== [] && $exactCount > 0) {
+            // Partial fill: some strict matches exist, the rest are near matches.
+            $opener = $this->randomPick([
+                "条件ぴったりのお店は{$exactCount}件見つかったよ！近い雰囲気のお店も一緒に並べるね✨",
+                "どんぴしゃは{$exactCount}件！ほかにも良さそうな近い候補を足しておいたよ💎",
+            ]);
+        } elseif ($relaxed !== []) {
             $opener = $this->buildRelaxedOpener($relaxed);
         } else {
             $opener = $this->randomPick([

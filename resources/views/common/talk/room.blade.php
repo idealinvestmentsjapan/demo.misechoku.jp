@@ -353,7 +353,7 @@
     <div class="chat-messages" id="chat-messages" data-delete-url="{{ $deleteUrl }}">
         @forelse($messages as $msg)
             @php
-                $isAutoTypeMessage = in_array((int) $msg->type, [2, 3, 7], true);
+                $isAutoTypeMessage = in_array((int) $msg->type, [2, 3, 7, 8], true);
                 $isAutoTextMessage = in_array((int) $msg->type, [1, 4, 5], true)
                     && \Illuminate\Support\Str::startsWith(trim((string) $msg->content), '【自動送信】');
                 $renderAsIncoming = $isAutoTypeMessage || $isAutoTextMessage;
@@ -516,6 +516,23 @@
                             @if($isCast && !$msg->is_mine && empty($blockState['is_blocked']))
                                 <button type="button" class="interview-change-schedule-btn js-interview-cancel-accept">承諾する</button>
                             @endif
+                        </div>
+                    @elseif($msg->type === 8)
+                        <div class="message-bubble message-bubble-interview message-bubble-auto">
+                            <div class="interview-card-head">
+                                <div class="interview-title">
+                                    <span class="auto-msg-chip"><i class="fas fa-robot" aria-hidden="true"></i>自動送信</span>
+                                    <span>{{ $msg->billing_title ?? '入金手続きの進捗' }}</span>
+                                </div>
+                                <span class="interview-badge">採用ボーナス</span>
+                            </div>
+                            <p class="interview-body-copy">{!! nl2br(e($msg->content)) !!}</p>
+                            <p class="interview-change-schedule-wrap">
+                                <a
+                                    href="{{ $isCast ? route('cast.mypage.management') : route('shop.mypage.management', ['tab' => 'payment']) }}"
+                                    class="interview-change-schedule-btn"
+                                >採用・入金管理を開く</a>
+                            </p>
                         </div>
                     @else
                         @php

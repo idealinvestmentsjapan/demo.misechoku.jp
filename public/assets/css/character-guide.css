@@ -133,23 +133,55 @@
     opacity: 0.92;
 }
 
-/* AI バッジ（キャラクターの真上に「AIコンシェルジュ」ラベル） */
+/* AI badge (pill above the character). Pulse + glow so the tap target reads
+   as the AI concierge entry point, not just a mascot. */
 .guide-ai-badge {
     position: absolute;
-    top: -20px;
+    top: -24px;
     left: 50%;
     transform: translateX(-50%);
-    padding: 4px 10px;
+    padding: 5px 12px;
     border-radius: 999px;
     background: linear-gradient(135deg, #a78bfa, #7c3aed);
     color: #ffffff;
-    font-size: 0.60rem;
+    font-size: 0.66rem;
     font-weight: 800;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.05em;
     line-height: 1;
     white-space: nowrap;
-    box-shadow: 0 3px 10px rgba(124, 58, 237, 0.45);
+    box-shadow: 0 3px 12px rgba(124, 58, 237, 0.55);
     pointer-events: none;
+    animation: guide-ai-badge-pulse 2.4s ease-in-out infinite;
+}
+.guide-ai-badge i {
+    font-size: 0.62rem;
+    margin-right: 3px;
+}
+/* Speech-bubble tail so the badge visually points at the character */
+.guide-ai-badge::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px 5px 0;
+    border-style: solid;
+    border-color: #7c3aed transparent transparent;
+}
+@keyframes guide-ai-badge-pulse {
+    0%, 100% { transform: translateX(-50%) translateY(0); box-shadow: 0 3px 12px rgba(124, 58, 237, 0.55); }
+    50%      { transform: translateX(-50%) translateY(-3px); box-shadow: 0 6px 16px rgba(124, 58, 237, 0.75); }
+}
+
+/* Glow ring behind the character while it acts as the AI entry */
+.discovery-guide.guide--ai-entry .guide-character-wrap img {
+    filter:
+        drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3))
+        drop-shadow(0 0 10px rgba(167, 139, 250, 0.55));
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .guide-ai-badge { animation: none; }
 }
 
 

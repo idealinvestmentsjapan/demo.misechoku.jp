@@ -558,6 +558,31 @@
                                 <span class="text-[13px] font-bold text-text-main text-right">{{ $businessHours }}</span>
                             </div>
                         @endif
+                        @if($addressLine !== '')
+                            {{-- Keyless Google Maps embed (no API key). Swap to Maps Embed API once key referrer restriction is configured. --}}
+                            <div class="border-t border-line pt-3 flex flex-col gap-2">
+                                <div class="rounded-xl overflow-hidden border border-line">
+                                    <iframe
+                                        src="https://maps.google.com/maps?q={{ urlencode($addressLine) }}&z=16&hl=ja&output=embed"
+                                        width="100%"
+                                        height="220"
+                                        style="border:0; display:block;"
+                                        loading="lazy"
+                                        referrerpolicy="no-referrer-when-downgrade"
+                                        title="{{ $addressLine }}の地図"
+                                    ></iframe>
+                                </div>
+                                <a
+                                    href="https://www.google.com/maps/search/?api=1&query={{ urlencode($addressLine) }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="inline-flex items-center gap-1.5 self-end text-[12px] font-medium text-accent-text"
+                                >
+                                    <i class="fas fa-arrow-up-right-from-square text-[10px]" aria-hidden="true"></i>
+                                    Google マップで開く
+                                </a>
+                            </div>
+                        @endif
                     </div>
                 </x-ui.card>
 

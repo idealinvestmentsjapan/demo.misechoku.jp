@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\BankAccount;
+use App\Models\Message;
 use App\Support\ShopJobApplicationView;
 use App\Models\PaymentTask;
 use App\Models\SystemAccount;
@@ -27,6 +28,16 @@ class BillingManagementService
     private const INVOICE_DUE_DAYS = 7;
     /** 銀行振込手数料（円）。マスタ化する場合はここを参照にせずマスタから取得すること */
     private const BANK_FEE_AMOUNT = 220;
+
+    /** Card titles for auto-sent talk messages on deposit status transitions */
+    private const BILLING_TALK_TITLES = [
+        self::STATUS_CAST_REQUESTED => '入金申請が届きました',
+        self::STATUS_SHOP_APPROVED => '入金申請が承認されました',
+        self::STATUS_INVOICE_ISSUED => '請求書が発行されました',
+        self::STATUS_SHOP_PAYMENT_CONFIRMED => '店舗入金を確認しました',
+        self::STATUS_CAST_TRANSFERRED => '採用ボーナスを振込みました',
+        self::STATUS_COMPLETED => 'お手続きが完了しました',
+    ];
 
     public function __construct(private readonly BankLookupService $bankLookupService)
     {
@@ -254,6 +265,10 @@ class BillingManagementService
 
         $this->appendHistory($depositId, self::STATUS_CAST_REQUESTED);
 
+        $this->postBillingTalkMessages((string) $application->cast_id, (string) $application->shop_id, self::STATUS_CAST_REQUESTED, [
+            'shop' => 'キャストから採用ボーナスの入金申請が届きました。採用・入金管理から内容を確認し、承認をお願いします。',
+        ]);
+
         return ['success' => true, 'message' => '入金申請を受け付けました。店舗・運営の確認をお待ちください。'];
     }
 
@@ -285,6 +300,10 @@ class BillingManagementService
             ]));
 
         $this->appendHistory((int) $deposit->id, self::STATUS_SHOP_APPROVED);
+
+        $this->postBillingTalkMessages((string) $deposit->cast_id, (string) $deposit->shop_id, self::STATUS_SHOP_APPROVED, [
+            'cast' => '店舗が入金申請を承認しました。運営が請求書を発行するまでお待ちください。',
+        ]);
 
         return ['success' => true, 'message' => 'ノルマ達成・店舗審査を完了しました。運営による請求書発行をお待ちください。'];
     }
@@ -338,6 +357,12 @@ class BillingManagementService
 
         // 店舗マネージャー宛おしらせ：請求書発行
         $this->notifyInvoiceIssued($deposit);
+
+        $dueLabel = $issuedAt->copy()->addDays(self::INVOICE_DUE_DAYS)->format('Y年n月j日');
+        $this->postBillingTalkMessages((string) $deposit->cast_id, (string) $deposit->shop_id, self::STATUS_INVOICE_ISSUED, [
+            'cast' => '店舗へ請求書を発行しました。店舗の入金確認後、振込準備に進みます。',
+            'shop' => "請求書を発行しました。お支払い期限（{$dueLabel}）までにお振込をお願いします。",
+        ]);
 
         return [
             'success' => true,
@@ -452,6 +477,12 @@ class BillingManagementService
             $mailSent = $this->sendInvoiceMail($depositId, (string) $invoice['shop_email']);
         }
 
+        $dueLabel = $issuedAt->copy()->addDays(self::INVOICE_DUE_DAYS)->format('Y年n月j日');
+        $this->postBillingTalkMessages((string) $deposit->cast_id, (string) $deposit->shop_id, self::STATUS_INVOICE_ISSUED, [
+            'cast' => '店舗へ請求書を発行しました。店舗の入金確認後、振込準備に進みます。',
+            'shop' => "請求書を発行しました。お支払い期限（{$dueLabel}）までにお振込をお願いします。",
+        ]);
+
         return [
             'success' => true,
             'message' => '手動で請求書を発行しました。' . ($mailSent ? ' 店舗へメール送付済みです。' : ' メール送付は行っていません。'),
@@ -524,6 +555,11 @@ class BillingManagementService
         $this->appendHistory($depositId, self::STATUS_SHOP_PAYMENT_CONFIRMED);
 
         $this->ensurePaymentTaskForDeposit($depositId);
+
+        $this->postBillingTalkMessages((string) $deposit->cast_id, (string) $deposit->shop_id, self::STATUS_SHOP_PAYMENT_CONFIRMED, [
+            'cast' => '店舗からの入金を確認しました。採用ボーナスの振込準備に入ります。',
+            'shop' => 'お振込を確認しました。お支払いの手続きは完了です。',
+        ]);
 
         return ['success' => true, 'message' => '店舗からの入金を確認しました。キャストへの振込準備に進めます。'];
     }
@@ -668,6 +704,10 @@ class BillingManagementService
         // キャスト宛おしらせ：振込実行通知
         $this->notifyCastTransferred($depositId);
 
+        $this->postBillingTalkMessages((string) $deposit->cast_id, (string) $deposit->shop_id, self::STATUS_CAST_TRANSFERRED, [
+            'cast' => $this->castTransferredTalkText($deposit),
+        ]);
+
         return ['success' => true, 'message' => 'キャストへの振込を記録しました。キャストの入金確認をお待ちください。'];
     }
 
@@ -807,6 +847,10 @@ class BillingManagementService
         $this->appendHistory($depositId, self::STATUS_CAST_TRANSFERRED);
         $this->notifyCastTransferred($depositId);
 
+        $this->postBillingTalkMessages((string) $deposit->cast_id, (string) $deposit->shop_id, self::STATUS_CAST_TRANSFERRED, [
+            'cast' => $this->castTransferredTalkText($deposit),
+        ]);
+
         return ['success' => true, 'message' => 'キャストへの振込手続きを記録しました。キャストの入金確認待ちです。'];
     }
 
@@ -827,6 +871,11 @@ class BillingManagementService
             ]));
 
         $this->appendHistory((int) $deposit->id, self::STATUS_COMPLETED);
+
+        $this->postBillingTalkMessages((string) $deposit->cast_id, (string) $deposit->shop_id, self::STATUS_COMPLETED, [
+            'cast' => '採用ボーナスのお手続きがすべて完了しました。ご利用ありがとうございました。',
+            'shop' => '採用ボーナスのお手続きがすべて完了しました。ご利用ありがとうございました。',
+        ]);
 
         return ['success' => true, 'message' => '入金確認を記録しました。今回の請求・振込フローは完了です。'];
     }
@@ -1828,6 +1877,59 @@ class BillingManagementService
             'invoice_amount' => $invoiceAmount,
             'cast_transfer_amount' => $castTransferAmount,
         ];
+    }
+
+    /**
+     * Post audience-scoped auto messages into the cast-shop talk when the
+     * deposit status changes. Each row is visible only to its target role
+     * (sender_type 3 = cast, 4 = shop) so the shared is_read flag never
+     * conflicts between the two viewers. Failures never block the transition.
+     *
+     * @param array{cast?: string, shop?: string} $texts
+     */
+    private function postBillingTalkMessages(?string $castId, ?string $shopId, int $status, array $texts): void
+    {
+        if (!$castId || !$shopId || !Schema::hasTable('messages')) {
+            return;
+        }
+
+        try {
+            $senderByAudience = [
+                'cast' => Message::SENDER_SYSTEM_TO_CAST,
+                'shop' => Message::SENDER_SYSTEM_TO_SHOP,
+            ];
+
+            foreach ($senderByAudience as $audience => $senderType) {
+                $text = trim((string) ($texts[$audience] ?? ''));
+                if ($text === '') {
+                    continue;
+                }
+
+                Message::create([
+                    'cast_id' => $castId,
+                    'shop_id' => $shopId,
+                    'sender_type' => $senderType,
+                    'type' => Message::TYPE_BILLING_SYSTEM,
+                    'content' => json_encode([
+                        'kind' => 'billing_deposit',
+                        'deposit_status' => $status,
+                        'title' => self::BILLING_TALK_TITLES[$status] ?? '入金手続きの進捗',
+                        'text' => $text,
+                    ], JSON_UNESCAPED_UNICODE),
+                    'is_read' => false,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Billing talk message post failed: ' . $e->getMessage());
+        }
+    }
+
+    private function castTransferredTalkText(?object $deposit): string
+    {
+        $amount = (int) ($deposit->cast_transfer_amount ?? 0);
+
+        return ($amount > 0 ? '採用ボーナス ¥' . number_format($amount) . ' の振込が完了しました。' : '採用ボーナスの振込が完了しました。')
+            . '入金をご確認のうえ、採用・入金管理から受取確認をお願いします。';
     }
 
     private function appendHistory(int $depositId, int $status): void

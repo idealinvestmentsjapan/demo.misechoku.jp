@@ -1,10 +1,10 @@
 @extends('layouts.app-v2')
 
-@section('title', 'SEARCH')
+@section('title', ($activeTab ?? '') === 'pane-ai' ? 'AIコンシェルジュ' : 'SEARCH')
 @section('body-class', request()->is('cast/*') && ($activeTab ?? null) === 'pane-ai' ? 'page-search page-search-ai' : 'page-search')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/search.css') }}?v=20260913-uiux">
+<link rel="stylesheet" href="{{ asset('assets/css/search.css') }}?v=20260923-concierge">
 <link rel="stylesheet" href="{{ asset('assets/css/search-location-bar.css') }}?v=20260808-footer-clear">
 <link rel="stylesheet" href="{{ asset('assets/css/sub-header.css') }}">
 <style>
@@ -27,16 +27,17 @@
     $activeTab = $activeTab ?? 'pane-list';
     $searchTab = $searchTab ?? 'list';
 
-    // タブ：cast / shop とも「検索／保存済み（旧キープ）」。
-    // AI診断はガイドの表示設定に依存せず、サブヘッダーから常に利用できる。
-    // キープリストは旧 KEEPS（フッターメニュー）から SEARCH 内へ移設。
-    // ラベルは「保存済み」に統一し、ブックマークアイコンを添えて保存物置き場だと直感的に伝える。
+    // Tabs: both cast / shop show "search / saved" only.
+    // The AI concierge is NOT a sub-header tab: it opens full-screen (like TALK)
+    // via the okojo character (bottom-right) on cast search pages.
+    // On the AI pane itself, hide the tabs and show the header title instead.
     $searchQuery = request()->except(['tab', 'page']);
-    if ($showAiTab) {
+    if ($activeTab === 'pane-ai') {
+        $tabsForHeader = [];
+    } elseif ($showAiTab) {
         $tabsForHeader = [
             ['id' => 'pane-list', 'label' => '検索', 'icon' => 'fas fa-magnifying-glass', 'url' => route('cast.search.index', array_merge($searchQuery, ['tab' => 'list'])), 'active' => $activeTab === 'pane-list'],
             ['id' => 'pane-keep', 'label' => '保存済み', 'icon' => 'fas fa-bookmark', 'url' => route('cast.search.index', array_merge($searchQuery, ['tab' => 'keep'])), 'active' => $activeTab === 'pane-keep'],
-            ['id' => 'pane-ai', 'label' => 'AI診断', 'url' => route('cast.search.index', array_merge($searchQuery, ['tab' => 'ai'])), 'active' => $activeTab === 'pane-ai'],
         ];
     } else {
         $tabsForHeader = [
@@ -49,6 +50,38 @@
     $aiPersonalityTestUrl = $showAiTab
         ? asset('personality-test') . '?' . http_build_query(['return_to' => $aiTabUrl])
         : null;
+
+    // Personalized suggestions for the AI concierge QA flow (2-3 chips per question).
+    // Areas: prefer ones matching the cast's profile address. Industries: prefer saved preferences.
+    $aiSuggest = null;
+    if ($showAiTab && $activeTab === 'pane-ai') {
+        $aiAreaNames = collect($detailSearchOptions['areas'] ?? [])->pluck('name')->filter()->values();
+        $aiProfileAddress = (string) ($savedPreferences['profile_address'] ?? '');
+        $aiScoredAreas = $aiAreaNames->sortByDesc(function ($name) use ($aiProfileAddress) {
+            if ($aiProfileAddress === '') { return 0; }
+            $score = 0;
+            foreach (preg_split('/\s+/u', (string) $name) as $i => $part) {
+                if ($part !== '' && mb_strpos($aiProfileAddress, $part) !== false) {
+                    $score += ($i === 0 ? 1 : 2); // city match outweighs pref match
+                }
+            }
+            return $score;
+        })->values();
+
+        $savedIndustryIds = array_map('intval', (array) ($savedPreferences['industry_ids'] ?? []));
+        $aiIndustryList = collect($detailSearchOptions['industries'] ?? []);
+        $aiPreferredIndustries = $aiIndustryList
+            ->filter(fn ($row) => in_array((int) data_get($row, 'id', 0), $savedIndustryIds, true))
+            ->pluck('name')->filter()->values();
+        $aiOtherIndustries = $aiIndustryList->pluck('name')->filter()
+            ->reject(fn ($name) => $aiPreferredIndustries->contains($name))->values();
+
+        $aiSuggest = [
+            'areas'      => $aiScoredAreas->take(2)->values()->all(),
+            'industries' => $aiPreferredIndustries->concat($aiOtherIndustries)->take(2)->values()->all(),
+            'wage_min'   => (int) ($savedPreferences['hourly_wage_min'] ?? 0),
+        ];
+    }
 @endphp
 
 @if(!empty($tabsForHeader))
@@ -84,7 +117,7 @@
                     <p class="text-text-sub my-3">エリアを広げるか、条件を減らしてお試しください。</p>
                     <button type="button" class="btn-secondary-cta" onclick="document.getElementById('open-detail-search').click()">検索条件を変更する</button>
                     <a class="btn-ghost-cta" href="{{ $prefix === 'cast' ? route('cast.search.index', ['tab' => 'list', 'filters_applied' => 1, 'location_mode' => 'none']) : route('shop.search.index', ['filters_applied' => 1, 'location_mode' => 'none']) }}">すべての条件を外す</a>
-                    @if($showAiTab)<a class="btn-ghost-cta" href="{{ $aiTabUrl }}">AI診断で探す</a>@endif
+                    @if($showAiTab)<a class="btn-ghost-cta" href="{{ $aiTabUrl }}">AIコンシェルジュに相談する</a>@endif
                 </li>
             @endforelse
         </ul>
@@ -107,12 +140,13 @@
                 data-avatar="{{ asset('assets/images/guide/guide-character.png') }}"
                 data-personality-type="{{ $personalityType ?? '' }}"
                 data-area-options="{{ json_encode(collect($detailSearchOptions['areas'] ?? [])->pluck('name')->filter()->values()->all(), JSON_UNESCAPED_UNICODE) }}"
+                data-ai-suggest="{{ json_encode($aiSuggest ?? (object) [], JSON_UNESCAPED_UNICODE) }}"
             >
                 <header class="ai-chat__header">
                     <div class="ai-chat__header-icon"><i class="fas fa-wand-magic-sparkles"></i></div>
                     <div class="ai-chat__header-text">
-                        <p class="ai-chat__header-title">5問でお店診断</p>
-                        <p class="ai-chat__header-sub">選択肢に答えると、希望に合うお店を提案します。エリアは掲載店舗の所在地から選べます。</p>
+                        <p class="ai-chat__header-title">AIコンシェルジュ</p>
+                        <p class="ai-chat__header-sub">希望を教えると、AIがあなたに合うお店を提案します。選択肢のほか自由入力もOK。</p>
                     </div>
                 </header>
 
@@ -133,10 +167,16 @@
 
                 <div class="ai-chat__thread" data-ai-thread aria-live="polite"></div>
 
-                {{-- コンポーザー：クイックリプライ + 入力欄（チャット最下部に固定） --}}
+                {{-- Composer: quick-reply chips + free-text input (pinned to bottom).
+                     The input is hidden during QA steps and revealed by the "other" chip,
+                     then stays visible for free chat after the recommendation. --}}
                 <div class="ai-chat__composer">
                     <div class="ai-chat__quick-replies" data-ai-quick-replies></div>
-                    <p class="text-sm text-text-sub">上の選択肢から回答してください。</p>
+                    <form class="ai-chat__form" data-ai-input-form hidden>
+                        <input type="text" class="ai-chat__input" data-ai-input maxlength="200"
+                               placeholder="希望を入力してね（例：新宿で時給4,000円以上）" autocomplete="off">
+                        <button type="submit" class="ai-chat__send" aria-label="送信"><i class="fas fa-paper-plane"></i></button>
+                    </form>
                 </div>
             </section>
         </div>
@@ -171,6 +211,6 @@
 })();
 </script>
 @if($showAiTab)
-<script src="{{ asset('assets/js/ai-chat.js') }}?v=20260913-uiux"></script>
+<script src="{{ asset('assets/js/ai-chat.js') }}?v=20260923-concierge"></script>
 @endif
 @endpush

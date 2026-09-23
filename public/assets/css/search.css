@@ -2126,6 +2126,14 @@ body.page-search #pane-ai.tab-pane.active .ai-chat__thread {
 }
 .ai-chat__quick:active { transform: scale(0.97); }
 
+/* "Other (type it)" chip: dashed outline so it reads as a free-input opener,
+   distinct from the personalized answer chips. */
+.ai-chat__quick--other {
+    background: transparent;
+    border-style: dashed;
+    font-weight: 600;
+}
+
 /* 入力フォーム */
 .ai-chat__form {
     display: flex; gap: 8px;

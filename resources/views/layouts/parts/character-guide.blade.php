@@ -45,7 +45,7 @@
          @if($aiEntryUrl) role="link" tabindex="0" aria-label="AIコンシェルジュを開く" @endif>
         <img src="{{ asset('assets/images/guide/guide-character.png') }}" alt="ガイド">
         @if($aiEntryUrl)
-            <span class="guide-ai-badge" aria-hidden="true">AIコンシェルジュ</span>
+            <span class="guide-ai-badge" aria-hidden="true"><i class="fas fa-wand-magic-sparkles"></i> AIコンシェルジュ</span>
         @endif
         <button type="button" class="guide-close-btn" id="character-guide-close" aria-label="ガイドを閉じる">
             <i class="fas fa-times" aria-hidden="true"></i>

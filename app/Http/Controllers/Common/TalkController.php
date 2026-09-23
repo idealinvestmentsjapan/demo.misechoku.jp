@@ -26,6 +26,7 @@ class TalkController extends Controller
     private const MESSAGE_TYPE_REJECTED = 5;
     private const MESSAGE_TYPE_IMAGE = 6;
     private const MESSAGE_TYPE_INTERVIEW_CANCEL_REQUEST = 7;
+    private const MESSAGE_TYPE_BILLING_SYSTEM = \App\Models\Message::TYPE_BILLING_SYSTEM;
     private const APPLICATION_STATUS_CHATTING = 1;
     private const APPLICATION_STATUS_INTERVIEW_PENDING = 2;
     private const APPLICATION_STATUS_INTERVIEW_FIXED = 3;
@@ -131,6 +132,7 @@ class TalkController extends Controller
         $rawMessages = DB::table('messages')
             ->where($isCastPortal ? 'cast_id' : 'shop_id', $currentId)
             ->where($isCastPortal ? 'shop_id' : 'cast_id', $partnerId)
+            ->whereIn('sender_type', $this->visibleSenderTypes($isCastPortal))
             ->orderBy('created_at')
             ->orderBy('id')
             ->get();
@@ -141,7 +143,10 @@ class TalkController extends Controller
         DB::table('messages')
             ->where($isCastPortal ? 'cast_id' : 'shop_id', $currentId)
             ->where($isCastPortal ? 'shop_id' : 'cast_id', $partnerId)
-            ->where('sender_type', $isCastPortal ? 2 : 1)
+            // Partner messages + system messages addressed to my role
+            ->whereIn('sender_type', $isCastPortal
+                ? [2, \App\Models\Message::SENDER_SYSTEM_TO_CAST]
+                : [1, \App\Models\Message::SENDER_SYSTEM_TO_SHOP])
             ->where('is_read', false)
             ->update([
                 'is_read' => true,
@@ -704,6 +709,7 @@ class TalkController extends Controller
 
         $rows = DB::table('messages')
             ->where($isCastPortal ? 'cast_id' : 'shop_id', $currentId)
+            ->whereIn('sender_type', $this->visibleSenderTypes($isCastPortal))
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->get();
@@ -808,7 +814,14 @@ class TalkController extends Controller
                 'type' => $type,
                 'content' => $type === self::MESSAGE_TYPE_TEXT || $type === self::MESSAGE_TYPE_HIRED || $type === self::MESSAGE_TYPE_REJECTED
                     ? $message->content
-                    : ($type === self::MESSAGE_TYPE_IMAGE ? (string) ($meta['caption'] ?? '') : ($meta['selected_option'] ?? '')),
+                    : ($type === self::MESSAGE_TYPE_IMAGE
+                        ? (string) ($meta['caption'] ?? '')
+                        : ($type === self::MESSAGE_TYPE_BILLING_SYSTEM
+                            ? (string) ($meta['text'] ?? '')
+                            : ($meta['selected_option'] ?? ''))),
+                'billing_title' => $type === self::MESSAGE_TYPE_BILLING_SYSTEM
+                    ? (string) ($meta['title'] ?? '入金手続きの進捗')
+                    : null,
                 'is_mine' => $isMine,
                 'created_at' => $createdAt,
                 'can_delete' => $canDelete,
@@ -952,6 +965,21 @@ class TalkController extends Controller
         return $isCastPortal ? 1 : 2;
     }
 
+    /**
+     * Sender types visible to the current portal: both parties plus
+     * system messages addressed to the viewer's role.
+     */
+    private function visibleSenderTypes(bool $isCastPortal): array
+    {
+        return [
+            1,
+            2,
+            $isCastPortal
+                ? \App\Models\Message::SENDER_SYSTEM_TO_CAST
+                : \App\Models\Message::SENDER_SYSTEM_TO_SHOP,
+        ];
+    }
+
     private function decodeMessageMeta($message): array
     {
         $decoded = json_decode((string) $message->content, true);
@@ -981,6 +1009,7 @@ class TalkController extends Controller
             self::MESSAGE_TYPE_INTERVIEW_CANCEL_REQUEST => $isMine
                 ? '面談キャンセル依頼を送りました'
                 : '面談キャンセル依頼が届いています',
+            self::MESSAGE_TYPE_BILLING_SYSTEM => (string) ($meta['title'] ?? '入金手続きの進捗があります'),
             default => Str::limit(preg_replace('/\s+/u', ' ', trim((string) $message->content)), 60, '...'),
         };
     }
