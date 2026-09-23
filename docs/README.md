@@ -6,8 +6,7 @@
 
 店舗や営業先へ公開できる資料だけを置きます。GitHub Pagesは、このフォルダだけを配信します。
 
-- `index.html`：店舗向け動画スライド
-- `shop-introduction-storyline.md`：読み上げ原稿
+- `index.html`：店舗向け動画スライド（読み上げ台本・制作メモも同ファイル内に集約）
 - `shop-sales-manual.html`：店舗営業マニュアル
 
 アプリの仕様を資料へ反映するときは、同じリポジトリ内のBlade、サービス、`database/mock_demo.sql`、`DESIGN.md`を確認します。

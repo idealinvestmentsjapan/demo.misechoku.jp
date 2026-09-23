@@ -4,8 +4,7 @@
 
 公開対象：
 
-- `index.html`（店舗向け動画スライド・トップページ）
-- `shop-introduction-storyline.md`
+- `index.html`（店舗向け動画スライド・トップページ。読み上げ台本・制作メモも同ファイル内に集約）
 - `shop-sales-manual.html`
 
 `docs/internal/` に置くデモ環境の設定資料、テスト結果、QA画像と、アプリ本体は公開物に含めません。
