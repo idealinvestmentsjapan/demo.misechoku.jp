@@ -194,7 +194,7 @@
 @push('scripts')
 <script src="{{ asset('assets/js/sub-header.js') }}"></script>
 <script src="{{ asset('assets/js/search-detail.js') }}?v=20260913-uiux"></script>
-<script src="{{ asset('assets/js/favorite-quick.js') }}?v=20260815-saved-copy"></script>
+<script src="{{ asset('assets/js/favorite-quick.js') }}?v=20260924-coalesce"></script>
 <script>
 {{-- 上部検索バーの開閉：デフォルトは閉じ（HTML初期状態）→ タップで開閉するだけ。
      localStorage 保存はやめて、SEARCH を開くたびに常に閉じた状態からスタートさせる --}}

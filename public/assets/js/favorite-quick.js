@@ -62,25 +62,65 @@
         });
     }
 
-    async function toggleFavorite(btn) {
-        if (btn.classList.contains('is-busy')) return;
-        btn.classList.add('is-busy');
+    /* ---------------- 連打対応：コアレスされたトグル ----------------
+       旧実装は fetch 完了まで `is-busy` で入力をブロックしていたため:
+         (a) 連打すると 2 発目以降が黙って捨てられて "切り替えできない" 体感になる
+         (b) 押した直後に他の場所をタップして誤操作を修正しようとしても、
+             既に送信中のトグルは取り消せず「解除されたように見える」ズレが起きる
+       そこで:
+         - クリックごとに UI（aria-pressed）は即時反転（楽観的更新）
+         - サーバ通信は "サーバ側の確定値" と "UI 上の目標値" の差分に対して
+           1 回だけ送るように 300ms でコアレス
+         - コアレス中に再度クリックされたらタイマーを再セットして最新の目標値を反映
+         - 偶数回の連打（結果的に元に戻る）は通信そのものを送らない
+       これで連打しても最終状態がユーザーの意図と一致し、
+       誤操作の "解除に見える" 症状も消える。 */
+    const COALESCE_MS = 300;
+    const pending = new Map(); // key -> { serverState, targetState, timer, action, itemType, itemId, btn }
 
-        const payload = {
-            action: btn.dataset.action,
-            item_type: btn.dataset.itemType,
-            item_id: btn.dataset.itemId,
-        };
+    function toggleKey(btn) {
+        return btn.dataset.action + ':' + btn.dataset.itemType + ':' + btn.dataset.itemId;
+    }
 
-        /* ---- 楽観的更新：押した瞬間に UI を反転 ----
-           失敗時は prev の状態にロールバックする。 */
-        const prevActive = btn.getAttribute('aria-pressed') === 'true';
-        const nextActive = !prevActive;
-        applyStateToDom(payload.action, payload.item_type, payload.item_id, nextActive);
+    function queueToggle(btn) {
+        const key = toggleKey(btn);
+        let entry = pending.get(key);
+        if (!entry) {
+            entry = {
+                serverState: btn.getAttribute('aria-pressed') === 'true', // last known committed state
+                targetState: btn.getAttribute('aria-pressed') === 'true',
+                timer: null,
+                action: btn.dataset.action,
+                itemType: btn.dataset.itemType,
+                itemId: btn.dataset.itemId,
+                btn: btn,
+            };
+            pending.set(key, entry);
+        }
+        entry.targetState = !entry.targetState;
+        entry.btn = btn; // remember the most recently-tapped instance for row-removal UX
+        applyStateToDom(entry.action, entry.itemType, entry.itemId, entry.targetState);
         if (navigator.vibrate) { try { navigator.vibrate(10); } catch (e) {} }
 
+        if (entry.timer) clearTimeout(entry.timer);
+        entry.timer = setTimeout(function () { flush(key); }, COALESCE_MS);
+    }
+
+    async function flush(key) {
+        const entry = pending.get(key);
+        if (!entry) return;
+        // Net-zero clicks (odd->even) — no request needed, just clean up.
+        if (entry.targetState === entry.serverState) {
+            pending.delete(key);
+            return;
+        }
+        const payload = { action: entry.action, item_type: entry.itemType, item_id: entry.itemId };
+        const targetState = entry.targetState;
+        const prevServerState = entry.serverState;
+        pending.delete(key);
+
         function rollback() {
-            applyStateToDom(payload.action, payload.item_type, payload.item_id, prevActive);
+            applyStateToDom(entry.action, entry.itemType, entry.itemId, prevServerState);
         }
 
         try {
@@ -97,7 +137,6 @@
             });
 
             if (res.status === 401) {
-                // 未ログイン → 現在の URL からロールを判定して該当ログイン画面へ
                 rollback();
                 const path = window.location.pathname || '';
                 const loginUrl = path.startsWith('/cast')
@@ -107,7 +146,6 @@
                 return;
             }
             if (res.status === 419) {
-                // CSRF トークン失効（長時間放置後など）→ リロードで再取得
                 rollback();
                 showToast('セッションの有効期限が切れました。再読み込みします…');
                 setTimeout(function () { window.location.reload(); }, 900);
@@ -125,24 +163,31 @@
                 return;
             }
 
-            // サーバーの正の値で最終確定（楽観値とズレていればここで補正される）
             const data = await res.json();
             const isActive = !!data.is_active;
+            // If the user tapped again during the fetch, a new pending entry
+            // may already exist. Fold the server response into that entry so
+            // the next flush uses the true committed baseline.
+            const later = pending.get(key);
+            if (later) {
+                later.serverState = isActive;
+                // Don't overwrite the user's in-progress targetState.
+                writeSyncState(payload.action, payload.item_type, payload.item_id, later.targetState);
+                return;
+            }
+            // No further taps queued — commit server truth to the DOM.
             applyStateToDom(payload.action, payload.item_type, payload.item_id, isActive);
-            // 他画面（bfcache で戻った時など）との状態同期用に保存
             writeSyncState(payload.action, payload.item_type, payload.item_id, isActive);
 
-            // interaction 一覧では「解除した」=「行が消える」UX に寄せる
+            // KEEP 一覧では「解除した」=「行が消える」UX
             if (!isActive) {
-                const row = btn.closest('[data-fav-remove-on-deactivate]');
+                const row = entry.btn.closest('[data-fav-remove-on-deactivate]');
                 if (row) {
                     row.classList.add('tl-row--removing');
                     setTimeout(function () { row.remove(); }, 280);
                 }
             }
 
-            // 🔖 KEEP = 自分だけのリスト（プライベート）
-            // 保存後は「どこで見返せるか」を明示して、SEARCH の「保存済み」タブへ誘導する
             showToast(
                 isActive
                     ? '🔖 保存しました（SEARCH ＞ 保存済みから確認できます）'
@@ -152,8 +197,6 @@
         } catch (e) {
             rollback();
             showToast('通信エラーが発生しました');
-        } finally {
-            btn.classList.remove('is-busy');
         }
     }
 
@@ -221,13 +264,24 @@
         e.preventDefault();
         e.stopPropagation();
 
-        // キープ一覧（解除で行が消える画面）で ON→OFF にする時だけ確認を挟む
+        // キープ一覧（解除で行が消える画面）で ON→OFF にする時だけ確認を挟む。
+        // 一覧では「取り消せない不可逆操作」なので debounce 経由ではなく、
+        // 明示的な確認 → 即トグル送信のフローを維持する。
         const isDeactivating = btn.getAttribute('aria-pressed') === 'true';
         const inRemovableList = !!btn.closest('[data-fav-remove-on-deactivate]');
         if (isDeactivating && inRemovableList) {
-            showKeepConfirm(function () { toggleFavorite(btn); });
+            showKeepConfirm(function () { queueToggle(btn); flushNow(btn); });
             return;
         }
-        toggleFavorite(btn);
+        queueToggle(btn);
     }, true);
+
+    function flushNow(btn) {
+        const key = toggleKey(btn);
+        const entry = pending.get(key);
+        if (entry && entry.timer) {
+            clearTimeout(entry.timer);
+            flush(key);
+        }
+    }
 })();

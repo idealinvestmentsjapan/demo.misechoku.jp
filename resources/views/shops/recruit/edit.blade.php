@@ -363,6 +363,58 @@
         color: var(--je-gold);
         letter-spacing: 0.08em;
     }
+    /* Nav card that replaces the inline help wage section — points to /shop/help-recruitment */
+    .job-edit-v2__nav-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 14px;
+        margin-bottom: 20px;
+        background: rgba(168, 85, 247, 0.06);
+        border: 1px solid rgba(168, 85, 247, 0.22);
+        border-radius: 12px;
+        text-decoration: none;
+        color: inherit;
+        transition: background 0.12s ease, border-color 0.12s ease;
+    }
+    .job-edit-v2__nav-card:hover {
+        background: rgba(168, 85, 247, 0.10);
+        border-color: rgba(168, 85, 247, 0.36);
+    }
+    .job-edit-v2__nav-card-icon {
+        flex-shrink: 0;
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: rgba(168, 85, 247, 0.16);
+        color: #a78bfa;
+    }
+    .job-edit-v2__nav-card-body {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+    .job-edit-v2__nav-card-title {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #f5f5f5;
+        line-height: 1.4;
+    }
+    .job-edit-v2__nav-card-sub {
+        font-size: 0.72rem;
+        color: #a1a1aa;
+        line-height: 1.4;
+    }
+    .job-edit-v2__nav-card-chev {
+        flex-shrink: 0;
+        color: #a1a1aa;
+        font-size: 0.85rem;
+    }
     .job-edit-v2__shift-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -768,40 +820,23 @@
                                     </div>
                                 </div>
 
+                                {{-- Help recruitment moved to dedicated page (/shop/help-recruitment).
+                                     Hidden inputs preserve current values on save; users edit them on the new page. --}}
                                 <p class="job-edit-v2__kind-subtitle">ヘルプ</p>
-                                <div class="job-edit-v2__status">
-                                    <div>
-                                        <p class="job-edit-v2__status-label">ヘルプを公開</p>
-                                        <p class="job-edit-v2__status-hint">オフにすると非公開になります</p>
-                                    </div>
-                                    <div class="job-edit-v2__status-right">
-                                        <span class="job-edit-v2__pub-label {{ $pubHelp ? 'is-on' : '' }}" id="published-help-label">{{ $pubHelp ? '公開中' : '非公開' }}</span>
-                                        <label class="job-edit-v2__switch">
-                                            <input type="checkbox" name="published_help" value="1" class="js-kind-pub" data-label-id="published-help-label" @checked($pubHelp)>
-                                            <span class="job-edit-v2__switch-track"><span class="job-edit-v2__switch-knob"></span></span>
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="job-edit-v2__grid2">
-                                    <div class="job-edit-v2__field">
-                                        <label class="job-edit-v2__label" for="help_hourly_wage">時給（下限）</label>
-                                        <div class="job-edit-v2__unit-wrap">
-                                            <input type="text" id="help_hourly_wage" name="help_hourly_wage" class="job-edit-v2__input recruit-input"
-                                                   value="{{ old('help_hourly_wage', !empty($recruit['help_hourly_wage']) ? number_format((float) $recruit['help_hourly_wage']) : '') }}"
-                                                   placeholder="4,000" inputmode="numeric" data-type="currency">
-                                            <span class="job-edit-v2__unit-suffix">円</span>
-                                        </div>
-                                    </div>
-                                    <div class="job-edit-v2__field">
-                                        <label class="job-edit-v2__label" for="help_hourly_wage_max">時給（上限）</label>
-                                        <div class="job-edit-v2__unit-wrap">
-                                            <input type="text" id="help_hourly_wage_max" name="help_hourly_wage_max" class="job-edit-v2__input recruit-input"
-                                                   value="{{ old('help_hourly_wage_max', isset($recruit['help_hourly_wage_max']) && $recruit['help_hourly_wage_max'] !== null ? number_format((float) $recruit['help_hourly_wage_max']) : '') }}"
-                                                   placeholder="任意" inputmode="numeric" data-type="currency" data-optional-currency>
-                                            <span class="job-edit-v2__unit-suffix">円</span>
-                                        </div>
-                                    </div>
-                                </div>
+                                <a href="{{ route('shop.help-recruitment.index') }}" class="job-edit-v2__nav-card">
+                                    <span class="job-edit-v2__nav-card-icon"><i class="fas fa-bolt"></i></span>
+                                    <span class="job-edit-v2__nav-card-body">
+                                        <span class="job-edit-v2__nav-card-title">ヘルプ募集は専用画面で管理します</span>
+                                        <span class="job-edit-v2__nav-card-sub">募集日・時給・応募状況を1画面で編集</span>
+                                    </span>
+                                    <span class="job-edit-v2__nav-card-chev"><i class="fas fa-chevron-right"></i></span>
+                                </a>
+                                @if($pubHelp)
+                                    <input type="hidden" name="published_help" value="1">
+                                @endif
+                                <input type="hidden" name="has_help" value="{{ $pubHelp ? 1 : 0 }}">
+                                <input type="hidden" name="help_hourly_wage" value="{{ old('help_hourly_wage', !empty($recruit['help_hourly_wage']) ? (int) $recruit['help_hourly_wage'] : '') }}">
+                                <input type="hidden" name="help_hourly_wage_max" value="{{ old('help_hourly_wage_max', isset($recruit['help_hourly_wage_max']) && $recruit['help_hourly_wage_max'] !== null ? (int) $recruit['help_hourly_wage_max'] : '') }}">
                             @else
                                 <p class="job-edit-v2__kind-subtitle">新規入店</p>
                                 <div class="job-edit-v2__status">
@@ -838,45 +873,23 @@
                                     </div>
                                 </div>
 
+                                {{-- Help recruitment moved to dedicated page (/shop/help-recruitment).
+                                     Hidden inputs preserve current values on save; users edit them on the new page. --}}
                                 <p class="job-edit-v2__kind-subtitle">ヘルプ</p>
-                                <button type="button" class="job-edit-v2__copy-btn" id="copy-trial-tags-btn" style="margin-bottom:12px;">
-                                    <i class="fas fa-copy"></i>
-                                    新規入店と同じタグをコピー
-                                </button>
-                                <div class="job-edit-v2__status">
-                                    <div>
-                                        <p class="job-edit-v2__status-label">ヘルプを公開</p>
-                                        <p class="job-edit-v2__status-hint">オフにすると非公開になります</p>
-                                    </div>
-                                    <div class="job-edit-v2__status-right">
-                                        <span class="job-edit-v2__pub-label {{ $pubHelp ? 'is-on' : '' }}" id="published-help-label">{{ $pubHelp ? '公開中' : '非公開' }}</span>
-                                        <label class="job-edit-v2__switch">
-                                            <input type="checkbox" name="published_help" value="1" class="js-kind-pub" data-label-id="published-help-label" @checked($pubHelp)>
-                                            <span class="job-edit-v2__switch-track"><span class="job-edit-v2__switch-knob"></span></span>
-                                        </label>
-                                    </div>
-                                </div>
+                                <a href="{{ route('shop.help-recruitment.index') }}" class="job-edit-v2__nav-card">
+                                    <span class="job-edit-v2__nav-card-icon"><i class="fas fa-bolt"></i></span>
+                                    <span class="job-edit-v2__nav-card-body">
+                                        <span class="job-edit-v2__nav-card-title">ヘルプ募集は専用画面で管理します</span>
+                                        <span class="job-edit-v2__nav-card-sub">募集日・時給・応募状況を1画面で編集</span>
+                                    </span>
+                                    <span class="job-edit-v2__nav-card-chev"><i class="fas fa-chevron-right"></i></span>
+                                </a>
+                                @if($pubHelp)
+                                    <input type="hidden" name="published_help" value="1">
+                                @endif
                                 <input type="hidden" name="has_help" value="1">
-                                <div class="job-edit-v2__grid2">
-                                    <div class="job-edit-v2__field">
-                                        <label class="job-edit-v2__label" for="help_hourly_wage">時給（下限） <span class="job-edit-v2__req">必須</span></label>
-                                        <div class="job-edit-v2__unit-wrap">
-                                            <input type="text" id="help_hourly_wage" name="help_hourly_wage" class="job-edit-v2__input recruit-input"
-                                                   value="{{ old('help_hourly_wage', !empty($recruit['help_hourly_wage']) ? number_format((float) $recruit['help_hourly_wage']) : '') }}"
-                                                   placeholder="4,000" inputmode="numeric" data-type="currency">
-                                            <span class="job-edit-v2__unit-suffix">円</span>
-                                        </div>
-                                    </div>
-                                    <div class="job-edit-v2__field">
-                                        <label class="job-edit-v2__label" for="help_hourly_wage_max">時給（上限）</label>
-                                        <div class="job-edit-v2__unit-wrap">
-                                            <input type="text" id="help_hourly_wage_max" name="help_hourly_wage_max" class="job-edit-v2__input recruit-input"
-                                                   value="{{ old('help_hourly_wage_max', isset($recruit['help_hourly_wage_max']) && $recruit['help_hourly_wage_max'] !== null ? number_format((float) $recruit['help_hourly_wage_max']) : '') }}"
-                                                   placeholder="任意" inputmode="numeric" data-type="currency" data-optional-currency>
-                                            <span class="job-edit-v2__unit-suffix">円</span>
-                                        </div>
-                                    </div>
-                                </div>
+                                <input type="hidden" name="help_hourly_wage" value="{{ old('help_hourly_wage', !empty($recruit['help_hourly_wage']) ? (int) $recruit['help_hourly_wage'] : '') }}">
+                                <input type="hidden" name="help_hourly_wage_max" value="{{ old('help_hourly_wage_max', isset($recruit['help_hourly_wage_max']) && $recruit['help_hourly_wage_max'] !== null ? (int) $recruit['help_hourly_wage_max'] : '') }}">
                             @endif
 
                             <div class="job-edit-v2__field">

@@ -132,7 +132,7 @@
 @push('scripts')
 {{-- KEEP / LIKE トグル（data-fav-toggle）+ トースト。従来の #btn-profile-keep/like は
      ハンドラ未実装の死にボタンだったため、共通機構に載せ替え --}}
-<script src="{{ asset('assets/js/favorite-quick.js') }}?v=20260720-keep-confirm"></script>
+<script src="{{ asset('assets/js/favorite-quick.js') }}?v=20260924-coalesce"></script>
 <script>
 (function () {
     'use strict';

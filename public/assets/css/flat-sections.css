@@ -143,6 +143,51 @@ body:not(.theme-light):not(.theme-premium-white) #app .license-hero {
 }
 
 /* -----------------------------------------------------------------------------
+   5b) Identity documents  (.doc-card — 身分証・住所確認の各書類)
+       Documents page  (.license-accordion — 風営許可・深夜酒類の各許可証)
+   These are the per-document containers on the registration pages. Flatten
+   the frame but keep each document row visibly separated by a hairline.
+   ----------------------------------------------------------------------------- */
+#app .doc-card,
+#app .license-accordion {
+    margin: 0 !important;
+    padding: 20px 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--flat-divider-light) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+}
+#app .doc-card:last-of-type,
+#app .license-accordion:last-of-type { border-bottom: 0 !important; }
+#app .license-accordion-list { gap: 0 !important; }
+
+/* Status-colored border edges on the license accordion used to
+   communicate the review outcome; now that the frame is gone we shift
+   the signal to a left accent bar (color = status). */
+#app .license-accordion.is-approved { box-shadow: inset 3px 0 0 rgba(5, 150, 105, 0.55) !important; padding-left: 12px !important; }
+#app .license-accordion.is-pending  { box-shadow: inset 3px 0 0 rgba(180, 83, 9, 0.55) !important; padding-left: 12px !important; }
+#app .license-accordion.is-rejected { box-shadow: inset 3px 0 0 rgba(220, 38, 38, 0.55) !important; padding-left: 12px !important; }
+
+/* The accordion head was designed for a padded card; strip its inner
+   horizontal padding so the title lines up with other flush content. */
+#app .license-accordion__head { padding: 0 0 12px !important; }
+#app .license-accordion__body {
+    padding: 0 !important;
+    background: transparent !important;
+    border-top: 1px solid var(--flat-divider-light) !important;
+    padding-top: 14px !important;
+}
+
+body:not(.theme-light):not(.theme-premium-white) #app .doc-card,
+body:not(.theme-light):not(.theme-premium-white) #app .license-accordion,
+body:not(.theme-light):not(.theme-premium-white) #app .license-accordion__body {
+    border-bottom-color: var(--flat-divider-dark) !important;
+    border-top-color: var(--flat-divider-dark) !important;
+}
+
+/* -----------------------------------------------------------------------------
    6) Review list card  (.review-card)
    ----------------------------------------------------------------------------- */
 #app .review-card {
@@ -173,36 +218,14 @@ body:not(.theme-light):not(.theme-premium-white) #app .review-card {
 }
 
 /* -----------------------------------------------------------------------------
-   8) Subscription plan cards  (.plan-status-card / .plan-card / .plan-transfer-card)
-   These are decision-support cards; the "current / premium" one still needs
-   a light emphasis, so we use an accent left-border instead of the full frame.
+   8) Subscription plan cards  — INTENTIONALLY LEFT AS CARDS (2026-09-24)
+   Plan comparison is one of the few places where distinct cards read better
+   than dividers: users need to compare features per-plan and the "recommended"
+   frame is a load-bearing visual signal. The page-local <style> block in
+   `resources/views/common/setting/subscription.blade.php` defines
+   `.plan-status-card`, `.plan-card`, `.plan-card--premium`,
+   `.plan-transfer-card` and we intentionally do not override them here.
    ----------------------------------------------------------------------------- */
-#app .plan-status-card,
-#app .plan-card,
-#app .plan-transfer-card {
-    margin: 0 !important;
-    padding: var(--flat-gap-y) 0 !important;
-    background: transparent !important;
-    border: 0 !important;
-    border-bottom: 1px solid var(--flat-divider-light) !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-}
-#app .plan-status-card.is-premium,
-#app .plan-card.is-current,
-#app .plan-card--premium {
-    box-shadow: inset 3px 0 0 var(--flat-title-accent) !important;
-    padding-left: 12px !important;
-}
-#app .plan-status-card:last-of-type,
-#app .plan-card:last-of-type,
-#app .plan-transfer-card:last-of-type { border-bottom: 0 !important; }
-
-body:not(.theme-light):not(.theme-premium-white) #app .plan-status-card,
-body:not(.theme-light):not(.theme-premium-white) #app .plan-card,
-body:not(.theme-light):not(.theme-premium-white) #app .plan-transfer-card {
-    border-bottom-color: var(--flat-divider-dark) !important;
-}
 
 /* -----------------------------------------------------------------------------
    9) Shop recruit status / job edit sections

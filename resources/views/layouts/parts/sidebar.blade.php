@@ -1,6 +1,19 @@
 @php
-    $isCast = Request::is('cast*');
-    $isShop = Request::is('shop*');
+    // Role detection: URL prefix first, then fall back to the authenticated
+    // guard. The URL-only detection used to silently return the shop menu
+    // on shared routes (/setting/*, /support/*, /about, /terms, /privacy)
+    // even when a cast was logged in — because those paths don't start
+    // with 'cast*' or 'shop*'.
+    if (Request::is('cast*')) {
+        $isCast = true;
+        $isShop = false;
+    } elseif (Request::is('shop*')) {
+        $isCast = false;
+        $isShop = true;
+    } else {
+        $isCast = auth()->guard('member')->check();
+        $isShop = !$isCast && auth()->guard('shop')->check();
+    }
     $typePath = $isCast ? 'cast' : 'shop';
 
     // 書類系の未済判定：ヘッダー共有の $todoList（InjectHeaderBadges）から算出
@@ -43,10 +56,12 @@
                         </a>
                     </li>
                 @else
-                    {{-- 店舗：許可証の提出・管理（本人確認と同格の導線） --}}
+                    {{-- 店舗：許可証の提出・管理（本人確認と同格の導線）
+                         `fa-file-shield` は Font Awesome 6 Pro のみ（CDN 6.0.0 では非描画）
+                         のため、Free で確実に描画される `fa-file-signature` に変更。 --}}
                     <li>
                         <a href="{{ route('shop.mypage.documents.index') }}">
-                            <i class="fas fa-file-shield"></i> 許可証の提出・管理
+                            <i class="fas fa-file-signature"></i> 許可証の提出・管理
                             @if($licensePendingBadge)<span class="sidebar-badge-pending">未済</span>@endif
                         </a>
                     </li>

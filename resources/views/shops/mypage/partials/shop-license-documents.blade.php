@@ -6,7 +6,7 @@
     {{-- タイトル：英字ラベルのみ → アイコン + 日本語 + 一言説明のわかりやすい見出しに --}}
     <div class="license-section__head">
         <h3 class="license-section__title">
-            <i class="fas fa-file-shield" aria-hidden="true"></i>許可証の登録
+            <i class="fas fa-file-signature" aria-hidden="true"></i>許可証の登録
             <span class="license-section__title-en">LICENSES</span>
         </h3>
         <p class="license-section__lead">掲載に必要な書類です。すべて承認されると求人票を公開できます。</p>

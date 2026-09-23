@@ -440,7 +440,10 @@
             var last = step === stepCards.length - 1;
             nextBtn.hidden = last;
             submitBtn.hidden = !last;
-            backBtn.disabled = step === 0;
+            // Back button stays enabled on step 0 too, so users can back out
+            // of the registration flow (with a confirmation prompt). The click
+            // handler branches on step === 0 vs. later steps.
+            backBtn.disabled = false;
             errBox.hidden = true;
             numEl.textContent = 'STEP ' + (step + 1) + ' / ' + stepCards.length;
             titleEl.textContent = cardTitle(stepCards[step]);
@@ -467,7 +470,23 @@
             }
             if (step < stepCards.length - 1) { step++; render(); }
         });
-        backBtn.addEventListener('click', function () { if (step > 0) { step--; render(); } });
+        backBtn.addEventListener('click', function () {
+            if (step > 0) {
+                // Mid-wizard: move to the previous step. Values already entered
+                // on earlier steps are preserved by the form itself, so no
+                // confirmation is needed here.
+                step--; render();
+                return;
+            }
+            // Step 0: pressing 戻る means exiting the registration flow.
+            // Warn that the input on this screen will be lost before we
+            // navigate away, per the user's requested UX.
+            var escapeUrl = form.getAttribute('data-rw-escape-url') || '/';
+            var msg = '登録画面を閉じます。\n入力した内容は保存されません。よろしいですか？';
+            if (window.confirm(msg)) {
+                window.location.href = escapeUrl;
+            }
+        });
         submitBtn.addEventListener('click', function (e) {
             var terms = form.querySelector('input[name="terms"]');
             if (terms && !terms.checked) {

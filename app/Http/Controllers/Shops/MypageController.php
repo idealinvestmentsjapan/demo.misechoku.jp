@@ -268,13 +268,9 @@ class MypageController extends Controller
 
         $searchLocationSettings = app(UserLocationService::class)->loadProfileSettings();
 
-        $availabilityDates = app(\App\Services\AvailabilityService::class)
-            ->getDates(\App\Models\AvailabilityDate::OWNER_SHOP, $this->currentShopId());
-
         return view('shops.mypage.index', [
             'pageId'    => 'mypage',
             'shopData'  => $shopData,
-            'availabilityDates' => $availabilityDates,
             'subImages' => $subImages,
             'documents' => $documentData['documents'],
             'allDocumentsApproved' => $documentData['all_approved'],
@@ -337,46 +333,6 @@ class MypageController extends Controller
             'success' => true,
             'appeal_updated_at' => $now->format('Y/m/d H:i'),
         ]);
-    }
-
-    /**
-     * Dated help recruitment declaration (up to 5 dates, 30 days ahead).
-     * POST /shop/mypage/availability with dates[] = ['Y-m-d', ...]
-     */
-    public function declareAvailability(Request $request)
-    {
-        $validated = $request->validate([
-            'dates' => ['required', 'array', 'max:' . \App\Services\AvailabilityService::MAX_DATES],
-            'dates.*' => ['date_format:Y-m-d'],
-        ]);
-
-        $service = app(\App\Services\AvailabilityService::class);
-        $result = $service->setDates(
-            \App\Models\AvailabilityDate::OWNER_SHOP,
-            $this->currentShopId(),
-            $validated['dates']
-        );
-
-        if (!$result['success']) {
-            return response()->json($result, 422);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => $result['message'],
-            'dates' => $service->getDates(\App\Models\AvailabilityDate::OWNER_SHOP, $this->currentShopId()),
-        ]);
-    }
-
-    /**
-     * Clear all dated help recruitment declarations.
-     */
-    public function clearAvailability()
-    {
-        app(\App\Services\AvailabilityService::class)
-            ->clearDates(\App\Models\AvailabilityDate::OWNER_SHOP, $this->currentShopId());
-
-        return response()->json(['success' => true]);
     }
 
     /**

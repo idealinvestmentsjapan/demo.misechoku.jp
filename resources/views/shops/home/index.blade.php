@@ -22,6 +22,51 @@
 @endphp
 @section('content')
 <div id="home-screen" data-discovery-mode="{{ $itemType }}">
+    {{-- Help recruitment ribbon (top-overlay, ~52px). Shop entry / Cast band. --}}
+    @php $helpBand = $helpBand ?? null; @endphp
+    @if($helpBand && ($helpBand['kind'] ?? '') === 'shop-entry')
+        <a href="{{ route('shop.help-recruitment.index') }}" class="home-help-band home-help-band--shop">
+            <span class="home-help-band__icon"><i class="fas fa-bolt"></i></span>
+            <span class="home-help-band__text">
+                <span class="home-help-band__title">ヘルプ募集を管理する</span>
+                <span class="home-help-band__sub">
+                    @if(!empty($helpBand['has_dates']))
+                        {{ implode('・', $helpBand['dates']) }} で募集中
+                    @else
+                        募集日を選ぶとキャストの検索・SWIPE で優先表示
+                    @endif
+                </span>
+            </span>
+            <span class="home-help-band__chev"><i class="fas fa-chevron-right"></i></span>
+        </a>
+    @elseif($helpBand && ($helpBand['kind'] ?? '') === 'cast-band' && !empty($helpBand['shops']))
+        <div class="home-help-band home-help-band--cast">
+            <div class="home-help-band__header">
+                <span class="home-help-band__badge">
+                    <i class="fas fa-bolt"></i>
+                    <span>本日・明日ヘルプ募集中 <span class="home-help-band__count">{{ count($helpBand['shops']) }}</span></span>
+                </span>
+                <a href="{{ route('cast.search.index', ['tab' => 'search']) }}" class="home-help-band__more">全部見る <i class="fas fa-chevron-right"></i></a>
+            </div>
+            <ul class="home-help-band__chips">
+                @foreach($helpBand['shops'] as $s)
+                    <li class="home-help-band__chip">
+                        <a href="{{ route('cast.shopprofile.show', ['id' => $s['id']]) }}" class="home-help-band__chip-link">
+                            <img src="{{ $s['image'] }}" alt="" class="home-help-band__chip-img" loading="lazy">
+                            <span class="home-help-band__chip-info">
+                                <span class="home-help-band__chip-date">{{ $s['date_label'] }}</span>
+                                <span class="home-help-band__chip-name">{{ $s['name'] }}</span>
+                                @if($s['wage_label'] !== '')
+                                    <span class="home-help-band__chip-wage">{{ $s['wage_label'] }}</span>
+                                @endif
+                            </span>
+                        </a>
+                    </li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     {{-- メインスワイパー（上下） --}}
     <div class="main-swiper swiper">
         <div class="swiper-wrapper">
@@ -306,5 +351,5 @@
 @push('scripts')
 <script src="{{ asset('assets/js/home.js') }}?v=20260811-relayout-on-return"></script>
 {{-- LIKE / KEEP の共通トグル（全画面この1本に統一） --}}
-<script src="{{ asset('assets/js/favorite-quick.js') }}?v=20260720-keep-confirm"></script>
+<script src="{{ asset('assets/js/favorite-quick.js') }}?v=20260924-coalesce"></script>
 @endpush

@@ -79,6 +79,7 @@ class DiscoveryController extends Controller
                 'pageId' => 'home',
                 'items' => $recruits,
                 'itemType' => 'recruit',
+                'helpBand' => $this->buildCastHelpBand(),
             ]);
         }
 
@@ -87,7 +88,130 @@ class DiscoveryController extends Controller
             'pageId' => 'home',
             'items' => $casts,
             'itemType' => 'cast',
+            'helpBand' => $this->buildShopHelpBandEntry(),
         ]);
+    }
+
+    /**
+     * Shop-side entry ribbon leading to /shop/help-recruitment.
+     * Shows currently active dates as a short summary when present.
+     *
+     * @return array{kind:string, dates:list<string>, has_dates:bool}
+     */
+    private function buildShopHelpBandEntry(): array
+    {
+        $shopId = (string) (auth()->guard('shop')->user()->shop_id ?? '');
+        if ($shopId === '') {
+            return ['kind' => 'shop-entry', 'dates' => [], 'has_dates' => false];
+        }
+
+        $dates = app(\App\Services\AvailabilityService::class)
+            ->getDates(\App\Models\AvailabilityDate::OWNER_SHOP, $shopId);
+
+        return [
+            'kind' => 'shop-entry',
+            'dates' => array_map(
+                static fn ($d) => \App\Services\AvailabilityService::shortLabel($d),
+                array_slice($dates, 0, 3)
+            ),
+            'has_dates' => $dates !== [],
+        ];
+    }
+
+    /**
+     * Cast-side horizontal band of shops with help recruitment today/tomorrow.
+     *
+     * @return array{kind:string, shops:list<array{id:string,name:string,image:string,wage_label:string,date_label:string}>}
+     */
+    private function buildCastHelpBand(): array
+    {
+        if (!Schema::hasTable('availability_dates')) {
+            return ['kind' => 'cast-band', 'shops' => []];
+        }
+
+        $today = Carbon::today()->toDateString();
+        $tomorrow = Carbon::today()->addDay()->toDateString();
+
+        $rows = DB::table('availability_dates')
+            ->where('owner_type', \App\Models\AvailabilityDate::OWNER_SHOP)
+            ->whereIn('available_on', [$today, $tomorrow])
+            ->orderBy('available_on')
+            ->get(['owner_id', 'available_on']);
+
+        if ($rows->isEmpty()) {
+            return ['kind' => 'cast-band', 'shops' => []];
+        }
+
+        // Group by shop_id → keep earliest date only for display
+        $shopDateMap = [];
+        foreach ($rows as $r) {
+            $sid = (string) $r->owner_id;
+            if (!isset($shopDateMap[$sid])) {
+                $shopDateMap[$sid] = (string) $r->available_on;
+            }
+        }
+        $shopIds = array_keys($shopDateMap);
+        if ($shopIds === []) {
+            return ['kind' => 'cast-band', 'shops' => []];
+        }
+
+        $shopRows = DB::table('shops')->whereIn('id', $shopIds)->pluck('shop_name', 'id');
+
+        // Wage lookup from shop_jobs (main row)
+        $wageRows = collect();
+        if (Schema::hasTable('shop_jobs')) {
+            $cols = ['shop_id'];
+            foreach (['help_hourly_wage', 'help_hourly_wage_max'] as $c) {
+                if (Schema::hasColumn('shop_jobs', $c)) {
+                    $cols[] = $c;
+                }
+            }
+            $q = DB::table('shop_jobs')->whereIn('shop_id', $shopIds)->select($cols);
+            if (Schema::hasColumn('shop_jobs', 'job_type') && !Schema::hasColumn('shop_jobs', 'regular_status')) {
+                $q->where('job_type', 1);
+            }
+            $wageRows = $q->get()->keyBy('shop_id');
+        }
+
+        $imgRows = collect();
+        if (Schema::hasTable('shop_images')) {
+            $imgRows = DB::table('shop_images')
+                ->whereIn('shop_id', $shopIds)
+                ->orderBy('main_order')
+                ->orderBy('id')
+                ->get()
+                ->groupBy('shop_id')
+                ->map(fn ($rs) => $rs->first());
+        }
+
+        $shops = [];
+        foreach ($shopDateMap as $sid => $date) {
+            $wageRow = $wageRows->get($sid);
+            $wageMin = $wageRow && !empty($wageRow->help_hourly_wage) ? (int) $wageRow->help_hourly_wage : 0;
+            $wageMax = $wageRow && !empty($wageRow->help_hourly_wage_max) ? (int) $wageRow->help_hourly_wage_max : 0;
+
+            $wageLabel = '';
+            if ($wageMin > 0 && $wageMax > 0 && $wageMax > $wageMin) {
+                $wageLabel = '¥' . number_format($wageMin) . '〜' . number_format($wageMax);
+            } elseif ($wageMin > 0) {
+                $wageLabel = '¥' . number_format($wageMin);
+            }
+
+            $img = $imgRows->get($sid);
+            $imgUrl = $img && !empty($img->image_path)
+                ? (str_starts_with((string) $img->image_path, 'http') ? (string) $img->image_path : asset('storage/' . $img->image_path))
+                : asset('assets/images/common/no-image.png');
+
+            $shops[] = [
+                'id' => (string) $sid,
+                'name' => (string) ($shopRows[$sid] ?? '店舗'),
+                'image' => $imgUrl,
+                'wage_label' => $wageLabel,
+                'date_label' => $date === $today ? '本日' : '明日',
+            ];
+        }
+
+        return ['kind' => 'cast-band', 'shops' => array_slice($shops, 0, 12)];
     }
 
     private function getHomeCasts(): array

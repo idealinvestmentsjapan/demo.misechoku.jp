@@ -54,56 +54,8 @@
             </div>
         </div>
 
-        {{-- ===== 「〇月〇日のヘルプ募集」宣言（最大5日・30日先まで） =====
-             募集日を宣言すると、キャストの日付検索・SWIPE の「◯/◯ ヘルプ募集」
-             バッジ対象になる。キャスト側の候補日カードと同一部品を使用。 --}}
-        @php
-            $availSelected   = $availabilityDates ?? [];
-            $availActive     = count($availSelected) > 0;
-            $availMaxDates   = \App\Services\AvailabilityService::MAX_DATES;
-            $availDaysAhead  = \App\Services\AvailabilityService::MAX_DAYS_AHEAD;
-        @endphp
-        <section id="availability-card"
-                 class="cast-avail {{ $availActive ? 'is-active' : '' }} mb-4"
-                 data-availability-declare-url="{{ route('shop.mypage.availability.declare') }}"
-                 data-availability-clear-url="{{ route('shop.mypage.availability.clear') }}"
-                 data-availability-max="{{ $availMaxDates }}"
-                 data-availability-days-ahead="{{ $availDaysAhead }}"
-                 data-availability-selected="{{ json_encode(array_values($availSelected)) }}"
-                 aria-labelledby="availability-card-title">
-            <div class="cast-avail__row">
-                <span class="cast-avail__icon" aria-hidden="true">
-                    <i class="fas {{ $availActive ? 'fa-bolt' : 'fa-calendar-days' }}"></i>
-                </span>
-                <div class="cast-avail__title-block">
-                    <p id="availability-card-title" class="cast-avail__title">
-                        日付指定のヘルプ募集
-                    </p>
-                    <p class="cast-avail__lead" data-availability-summary>
-                        @if($availActive)
-                            {{ collect($availSelected)->map(fn ($d) => \App\Services\AvailabilityService::shortLabel($d))->implode('・') }} で募集中
-                        @else
-                            募集日を選ぶと（最大{{ $availMaxDates }}日）、キャストの検索・SWIPE で優先表示されます
-                        @endif
-                    </p>
-                </div>
-                <div class="cast-avail__actions">
-                    <button type="button" class="cast-avail__btn cast-avail__btn--primary" data-availability-save disabled>
-                        <i class="fas fa-check"></i> 保存
-                    </button>
-                    @if($availActive)
-                        <button type="button" class="cast-avail__btn cast-avail__btn--danger" data-availability-clear>
-                            <i class="fas fa-xmark"></i> 取消
-                        </button>
-                    @endif
-                    <button type="button" class="cast-avail__toggle" data-availability-toggle
-                            aria-expanded="{{ $availActive ? 'false' : 'true' }}" aria-label="カレンダーを開閉">
-                        <i class="fas fa-chevron-down" aria-hidden="true"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="cast-avail__cal" data-availability-calendar></div>
-        </section>
+        {{-- Help recruitment (dates + wage + applicants) moved to /shop/help-recruitment.
+             The MyPage availability card was deprecated on 2026-09-24. --}}
 
         {{-- ===== 店舗名 + 控えめバッヂ行 =====
              旧: 優良店/レビューの大型2カラムカード → 目立ちすぎのため
@@ -284,7 +236,7 @@
                     @unless($isJobPublished)
                         <p class="mt-2.5 pt-2.5 border-t border-line text-[11px] leading-relaxed text-text-sub">
                             @if(!$licenseApproved)
-                                <i class="fas fa-file-shield text-danger text-[10px] mr-1"></i>掲載には営業許可証の承認が必要です。
+                                <i class="fas fa-file-signature text-danger text-[10px] mr-1"></i>掲載には営業許可証の承認が必要です。
                                 <a href="{{ route('shop.mypage.documents.index') }}" class="font-bold text-accent-text underline">許可証を登録する</a>
                             @else
                                 <i class="fas fa-circle-info text-[10px] mr-1"></i>公開すると検索・スワイプに表示されます。公開設定はオーナーが変更できます。
@@ -526,7 +478,7 @@
                         <div class="flex items-center justify-between gap-3 flex-wrap">
                             <div class="min-w-0">
                                 <h3 class="app-title text-[13px] tracking-widest text-amber-300 mb-1">
-                                    <i class="fas fa-file-shield mr-1" aria-hidden="true"></i>許可証の登録
+                                    <i class="fas fa-file-signature mr-1" aria-hidden="true"></i>許可証の登録
                                 </h3>
                                 <p class="text-[12px] text-text-sub">
                                     承認 {{ $docApproved }}/{{ $docTotal }}件
@@ -594,9 +546,15 @@
     <div class="gallery-preview-inner">
         <img id="modal-img" src="" alt="" class="mypage-modal-preview-img">
         <div class="gallery-preview-actions">
-            <button type="button" class="btn-action btn-action-secondary gallery-preview-btn-close" id="gallery-preview-close-btn">閉じる</button>
-            <button type="button" id="gallery-preview-recrop-btn" class="btn-action">再切り抜き</button>
-            <button type="button" id="gallery-preview-delete-btn" class="btn-action gallery-preview-btn-delete">削除</button>
+            <button type="button" class="gpv-btn gpv-btn--ghost" id="gallery-preview-close-btn" aria-label="閉じる">
+                <i class="fas fa-xmark" aria-hidden="true"></i><span>閉じる</span>
+            </button>
+            <button type="button" class="gpv-btn gpv-btn--primary" id="gallery-preview-recrop-btn" aria-label="編集">
+                <i class="fas fa-crop-simple" aria-hidden="true"></i><span>編集</span>
+            </button>
+            <button type="button" class="gpv-btn gpv-btn--danger" id="gallery-preview-delete-btn" aria-label="削除">
+                <i class="fas fa-trash-can" aria-hidden="true"></i><span>削除</span>
+            </button>
         </div>
     </div>
 </div>

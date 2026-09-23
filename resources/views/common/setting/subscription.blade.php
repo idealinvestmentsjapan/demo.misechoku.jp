@@ -71,49 +71,78 @@
     @endif
 
     {{-- プラン内容 --}}
+    @php
+        $yearlyMonthlyEquivalent = (int) round($prices['yearly'] / 12);
+        $yearlySavings           = max(0, $prices['monthly'] * 12 - $prices['yearly']);
+    @endphp
     <section class="plan-compare">
+        {{-- Free plan --}}
         <div class="plan-card">
             <div class="plan-card__head">
-                <div>
-                    <div class="plan-card__name">無料プラン</div>
-                    <div class="plan-card__price">¥0</div>
-                </div>
+                <div class="plan-card__name">無料プラン</div>
                 @if(!$activeSub && !$pendingSub)<span class="plan-chip">適用中</span>@endif
+            </div>
+            <div class="plan-card__price-block">
+                <div class="plan-card__price-main">¥0<span class="plan-card__price-unit">／月</span></div>
+                <div class="plan-card__price-sub">ずっと無料</div>
             </div>
             <ul class="plan-card__features">
                 <li><i class="fas fa-check"></i> 求人掲載・応募管理・トーク</li>
                 <li><i class="fas fa-check"></i> スカウト送信 1日{{ $scoutLimitFree }}件まで</li>
-                <li class="is-off"><i class="fas fa-minus"></i> AIレコメンドの優先表示</li>
-                <li class="is-off"><i class="fas fa-minus"></i> 求人を閲覧したキャスト一覧</li>
+                <li class="is-off"><i class="fas fa-xmark"></i> AIレコメンドの優先表示</li>
+                <li class="is-off"><i class="fas fa-xmark"></i> 求人を閲覧したキャスト一覧</li>
             </ul>
         </div>
 
+        {{-- Premium plan --}}
         <div class="plan-card plan-card--premium">
+            <span class="plan-card__ribbon" aria-hidden="true">おすすめ</span>
             <div class="plan-card__head">
-                <div>
-                    <div class="plan-card__name"><i class="fas fa-crown"></i> Premiumプラン</div>
-                    <div class="plan-card__price">月払い ¥{{ number_format($prices['monthly']) }} ／ 年払い ¥{{ number_format($prices['yearly']) }}</div>
-                </div>
+                <div class="plan-card__name"><i class="fas fa-crown"></i> Premium プラン</div>
                 @if($activeSub)<span class="plan-chip plan-chip--premium">適用中</span>@endif
             </div>
+            <div class="plan-card__price-block">
+                <div class="plan-card__price-main">¥{{ number_format($prices['monthly']) }}<span class="plan-card__price-unit">／月</span></div>
+                <div class="plan-card__price-sub">
+                    年払いなら
+                    <strong>¥{{ number_format($prices['yearly']) }}／年</strong>
+                    <span class="plan-card__price-hint">（月換算 ¥{{ number_format($yearlyMonthlyEquivalent) }}）</span>
+                </div>
+                @if($yearlySavings > 0)
+                    <div class="plan-card__save-badge">
+                        <i class="fas fa-piggy-bank"></i>
+                        年払いなら年間 <strong>¥{{ number_format($yearlySavings) }}</strong> おトク
+                    </div>
+                @endif
+            </div>
             <ul class="plan-card__features">
-                <li><i class="fas fa-check"></i> <strong>AIレコメンドの優先表示</strong>（キャストのおすすめ検索で上位に表示）</li>
+                <li><i class="fas fa-check"></i> <strong>AIレコメンドで上位表示</strong>（キャスト検索の推薦枠）</li>
                 <li><i class="fas fa-check"></i> <strong>求人を閲覧したキャスト一覧</strong>の表示</li>
-                <li><i class="fas fa-check"></i> <strong>スカウト送信 1日{{ $scoutLimitPremium }}件まで</strong>（既存キャストとのやりとりは無制限）</li>
+                <li><i class="fas fa-check"></i> <strong>スカウト送信 1日{{ $scoutLimitPremium }}件まで</strong>（既存キャストは無制限）</li>
                 <li><i class="fas fa-check"></i> 請求書・領収書の発行</li>
             </ul>
 
             @if($isShop && !$activeSub && !$pendingSub)
                 <div class="plan-contract-actions">
-                    <form method="POST" action="{{ route('subscription.contract') }}" onsubmit="return confirm('Premiumプラン（月払い ¥{{ number_format($prices['monthly']) }}）を申し込みます。よろしいですか？');">
-                        @csrf
-                        <input type="hidden" name="billing_cycle" value="monthly">
-                        <button type="submit" class="plan-contract-btn">月払いで申し込む<span>¥{{ number_format($prices['monthly']) }}/月</span></button>
-                    </form>
+                    {{-- Yearly CTA is the recommended (お得) option — placed first. --}}
                     <form method="POST" action="{{ route('subscription.contract') }}" onsubmit="return confirm('Premiumプラン（年払い ¥{{ number_format($prices['yearly']) }}）を申し込みます。よろしいですか？');">
                         @csrf
                         <input type="hidden" name="billing_cycle" value="yearly">
-                        <button type="submit" class="plan-contract-btn plan-contract-btn--yearly">年払いで申し込む<span>¥{{ number_format($prices['yearly']) }}/年（2ヶ月分おトク）</span></button>
+                        <button type="submit" class="plan-contract-btn plan-contract-btn--yearly">
+                            <span class="plan-contract-btn__title">年払いで申し込む</span>
+                            <span class="plan-contract-btn__amount">¥{{ number_format($prices['yearly']) }}／年</span>
+                            @if($yearlySavings > 0)
+                                <span class="plan-contract-btn__save">年間 ¥{{ number_format($yearlySavings) }} おトク</span>
+                            @endif
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ route('subscription.contract') }}" onsubmit="return confirm('Premiumプラン（月払い ¥{{ number_format($prices['monthly']) }}）を申し込みます。よろしいですか？');">
+                        @csrf
+                        <input type="hidden" name="billing_cycle" value="monthly">
+                        <button type="submit" class="plan-contract-btn">
+                            <span class="plan-contract-btn__title">月払いで申し込む</span>
+                            <span class="plan-contract-btn__amount">¥{{ number_format($prices['monthly']) }}／月</span>
+                        </button>
                     </form>
                     <p class="plan-contract-note">お申し込み後、振込先・金額・期限をメールと画面でご案内します。</p>
                 </div>
@@ -181,38 +210,161 @@
     background: transparent; border: 1px solid rgba(109, 102, 133, 0.4); color: #6d6685; cursor: pointer;
 }
 
-.plan-compare { display: flex; flex-direction: column; gap: 12px; }
-.plan-card { background: #ffffff; border: 1px solid rgba(124, 58, 237, 0.20); border-radius: 14px; padding: 14px 16px; }
-.plan-card--premium {
-    border-color: rgba(212, 160, 23, 0.55);
-    background: linear-gradient(180deg, rgba(212, 160, 23, 0.06), #ffffff 45%);
-    box-shadow: 0 4px 18px rgba(180, 130, 10, 0.10);
+/* ============================================================
+   Plan comparison cards (2026-09-24 clarity pass)
+   - Larger, more prominent prices
+   - "おすすめ" ribbon on Premium
+   - Explicit yearly-savings badge
+   - Yearly CTA promoted to first + labelled with savings
+   ============================================================ */
+.plan-compare { display: flex; flex-direction: column; gap: 14px; }
+
+.plan-card {
+    background: #ffffff;
+    border: 1px solid rgba(124, 58, 237, 0.20);
+    border-radius: 14px;
+    padding: 16px 18px;
+    position: relative;
 }
-.plan-card__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
-.plan-card__name { font-size: 0.98rem; font-weight: 800; color: #241f33; }
+.plan-card--premium {
+    border: 2px solid rgba(212, 160, 23, 0.60);
+    background: linear-gradient(180deg, rgba(212, 160, 23, 0.08), #ffffff 45%);
+    box-shadow: 0 8px 26px rgba(180, 130, 10, 0.16);
+    padding-top: 22px; /* extra room for the ribbon */
+}
+
+/* おすすめ ribbon（Premium 専用） */
+.plan-card__ribbon {
+    position: absolute;
+    top: -1px;
+    right: 14px;
+    padding: 4px 14px 5px;
+    border-radius: 0 0 8px 8px;
+    background: linear-gradient(135deg, #f0b842, #b8860b);
+    color: #ffffff;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    box-shadow: 0 4px 10px rgba(184, 134, 11, 0.35);
+}
+
+.plan-card__head {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    margin-bottom: 4px;
+}
+.plan-card__name { font-size: 1.02rem; font-weight: 800; color: #241f33; }
 .plan-card__name i { color: #b8860b; margin-right: 4px; }
-.plan-card__price { font-size: 0.78rem; color: #5f5876; margin-top: 2px; font-weight: 600; }
-.plan-chip { flex: 0 0 auto; font-size: 0.68rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: rgba(5, 150, 105, 0.10); color: #047857; }
+.plan-chip {
+    flex: 0 0 auto; font-size: 0.68rem; font-weight: 700;
+    padding: 4px 10px; border-radius: 999px;
+    background: rgba(5, 150, 105, 0.10); color: #047857;
+}
 .plan-chip--premium { background: rgba(212, 160, 23, 0.14); color: #92650a; }
-.plan-card__features { list-style: none; margin: 0; padding: 0; font-size: 0.8rem; color: #2d2742; }
-.plan-card__features li { padding: 5px 0; line-height: 1.6; }
-.plan-card__features li i { color: #059669; margin-right: 6px; font-size: 0.72rem; }
+
+/* Price block — reads as one clear "price sticker" */
+.plan-card__price-block {
+    margin: 4px 0 14px;
+    padding: 10px 12px;
+    background: rgba(124, 58, 237, 0.04);
+    border-radius: 10px;
+    border: 1px solid rgba(124, 58, 237, 0.10);
+}
+.plan-card--premium .plan-card__price-block {
+    background: rgba(212, 160, 23, 0.06);
+    border-color: rgba(212, 160, 23, 0.22);
+}
+.plan-card__price-main {
+    font-size: 1.85rem;
+    font-weight: 900;
+    color: #241f33;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+}
+.plan-card--premium .plan-card__price-main { color: #7c1a06; color: #241f33; }
+.plan-card__price-unit {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #5f5876;
+    margin-left: 4px;
+    letter-spacing: 0;
+}
+.plan-card__price-sub {
+    margin-top: 6px;
+    font-size: 0.78rem;
+    color: #5f5876;
+    line-height: 1.55;
+}
+.plan-card__price-sub strong {
+    color: #241f33;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+.plan-card__price-hint { color: #8b84a1; font-size: 0.72rem; }
+
+.plan-card__save-badge {
+    margin-top: 10px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(212, 160, 23, 0.16), rgba(240, 184, 66, 0.10));
+    border: 1px solid rgba(184, 134, 11, 0.35);
+    color: #92650a;
+    font-size: 0.74rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.plan-card__save-badge i { font-size: 0.75rem; }
+.plan-card__save-badge strong { font-weight: 900; font-variant-numeric: tabular-nums; }
+
+.plan-card__features { list-style: none; margin: 0; padding: 0; font-size: 0.86rem; color: #2d2742; }
+.plan-card__features li {
+    padding: 8px 0;
+    line-height: 1.55;
+    border-bottom: 1px solid rgba(124, 58, 237, 0.08);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+.plan-card__features li:last-child { border-bottom: 0; }
+.plan-card__features li i { color: #059669; font-size: 0.78rem; margin-top: 3px; flex: 0 0 auto; }
 .plan-card__features li.is-off { color: #8b84a1; }
 .plan-card__features li.is-off i { color: #b9b3c9; }
 
-.plan-contract-actions { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+/* Contract CTAs — Yearly = recommended (gold, prominent), Monthly = secondary. */
+.plan-contract-actions { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
 .plan-contract-btn {
-    display: flex; flex-direction: column; align-items: center; gap: 2px; width: 100%;
-    padding: 12px 16px; border-radius: 12px; border: 0; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 3px; width: 100%;
+    padding: 14px 18px; border-radius: 12px; border: 0; cursor: pointer;
     background: linear-gradient(135deg, #a78bfa, #7c3aed);
-    color: #ffffff; font-weight: 800; font-size: 0.92rem;
+    color: #ffffff; font-weight: 800; font-size: 0.86rem;
     box-shadow: 0 6px 16px rgba(124, 58, 237, 0.30);
+    transition: transform 0.12s ease, box-shadow 0.15s ease;
 }
-.plan-contract-btn span { font-size: 0.72rem; font-weight: 600; opacity: 0.9; }
+.plan-contract-btn:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(124, 58, 237, 0.35); }
+.plan-contract-btn__title { font-size: 0.94rem; font-weight: 800; letter-spacing: 0.02em; }
+.plan-contract-btn__amount { font-size: 1.02rem; font-weight: 900; font-variant-numeric: tabular-nums; letter-spacing: -0.005em; }
+.plan-contract-btn__save {
+    display: inline-block;
+    margin-top: 2px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+
+/* Yearly variant (recommended) — golden, biggest visual weight. */
 .plan-contract-btn--yearly {
     background: linear-gradient(135deg, #e3b94a, #b8860b);
-    box-shadow: 0 6px 16px rgba(184, 134, 11, 0.30);
+    box-shadow: 0 8px 22px rgba(184, 134, 11, 0.36);
+    padding: 16px 18px;
 }
-.plan-contract-note { font-size: 0.7rem; color: #6d6685; margin: 2px 0 0; text-align: center; }
+.plan-contract-btn--yearly:hover { box-shadow: 0 12px 28px rgba(184, 134, 11, 0.42); }
+
+.plan-contract-note { font-size: 0.72rem; color: #6d6685; margin: 4px 0 0; text-align: center; line-height: 1.6; }
 </style>
 @endpush

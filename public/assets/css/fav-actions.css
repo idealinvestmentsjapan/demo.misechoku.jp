@@ -21,24 +21,49 @@
     -webkit-tap-highlight-color: transparent;
     position: relative;
 }
-.fav-circle:hover {
-    background: rgba(168, 85, 247, 0.16);
-    color: #fff;
-    border-color: var(--gold-light, #c4b5fd);
-}
 .fav-circle:active { transform: scale(0.92); }
-.fav-circle:focus-visible {
-    outline: 2px solid var(--gold-light, #c4b5fd);
-    outline-offset: 2px;
-}
 .fav-circle.is-busy { opacity: 0.55; cursor: progress; }
 
-/* KEEP（ブックマーク）アクティブ：ゴールド */
+/* -------------------------------------------------------------
+   KEEP variant — always gold-themed, even in the unpressed state.
+   Other screens (SWIPE / SEARCH keep row) show the KEEP glyph in
+   gold; the profile page used to fall back to the amethyst base
+   which looked violet by default. Now the border + icon are gold
+   at rest, the hover glow is gold, and the pressed state is a
+   solid gold gradient — one consistent color across the app.
+   ------------------------------------------------------------- */
+.fav-circle--keep {
+    border-color: rgba(246, 211, 106, 0.38);
+    color: rgba(246, 211, 106, 0.92);
+}
+.fav-circle--keep:hover {
+    background: rgba(246, 211, 106, 0.14);
+    color: #f6d36a;
+    border-color: rgba(246, 211, 106, 0.75);
+}
+.fav-circle--keep:focus-visible {
+    outline: 2px solid #f6d36a;
+    outline-offset: 2px;
+}
 .fav-circle--keep[aria-pressed="true"] {
     background: linear-gradient(135deg, #f6d36a, #e3b94a);
     color: #1a0f00;
     border-color: rgba(246, 211, 106, 0.9);
     box-shadow: 0 0 12px rgba(246, 211, 106, 0.40);
+}
+.fav-circle--keep[aria-pressed="true"]:hover {
+    background: linear-gradient(135deg, #ffe08a, #eec55b);
+}
+
+/* LIKE (heart) keeps its own mauve-pink hover treatment. */
+.fav-circle--like:hover {
+    background: rgba(255, 143, 191, 0.14);
+    color: #ff8fbf;
+    border-color: rgba(255, 143, 191, 0.75);
+}
+.fav-circle--like:focus-visible {
+    outline: 2px solid #ff8fbf;
+    outline-offset: 2px;
 }
 
 /* LIKE（ハート）アクティブ：mauve pink */

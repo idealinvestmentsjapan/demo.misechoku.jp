@@ -26,9 +26,11 @@ body.theme-light.is-policy-document {
     letter-spacing: 0.03em;
 }
 
-/* 前文：装飾なしのプレーンな導入 */
+/* 前文：装飾なし・カードなし。章との境に細いヘアラインのみ */
 .policy-doc-lead {
     margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--policy-rule);
 }
 .policy-doc-lead-title {
     margin: 0 0 0.75rem;
@@ -109,11 +111,14 @@ body.theme-light.is-policy-document {
 .policy-md strong { font-weight: 700; color: var(--policy-text); }
 
 .policy-md blockquote {
-    margin: 1em 0;
-    padding: 0 0 0 1em;
-    border-left: 2px solid var(--policy-rule);
+    margin: 0.5em 0 0.75em;
+    padding: 0;
+    border: none;
+    font-size: 0.8rem;
+    line-height: 1.75;
     color: var(--policy-text-muted);
 }
+.policy-md blockquote > *:last-child { margin-bottom: 0; }
 
 .policy-md hr {
     border: 0;

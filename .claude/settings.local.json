@@ -208,7 +208,10 @@
       "PowerShell(Set-Content *)",
       "PowerShell(node --check public/assets/js/mypage-availability.js)",
       "Bash(git status *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(composer test:smoke)",
+      "PowerShell(php -l \"app/Http/Controllers/Shops/HelpRecruitmentController.php\" 2>&1; php -l \"app/Http/Controllers/Common/DiscoveryController.php\" 2>&1; php -l \"app/Http/Controllers/Shops/MypageController.php\" 2>&1)",
+      "PowerShell(php artisan view:clear 2>&1 | Select-Object -Last 3)"
     ]
   }
 }

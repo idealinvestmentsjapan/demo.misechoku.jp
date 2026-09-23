@@ -584,8 +584,7 @@ body.theme-light .policy-doc-shell {
     --policy-accent: #7c3aed;
 }
 body.theme-light .policy-doc-lead {
-    background: #ffffff;
-    border-color: rgba(124, 58, 237, 0.22);
+    /* no card chrome — plain flowing text */
 }
 
 /* サポート系ページ：ページコンテナの白文字ハードコードを反転 */

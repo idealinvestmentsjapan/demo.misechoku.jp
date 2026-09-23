@@ -24,7 +24,7 @@
     {{-- 1. ヒーロー：全体ステータス --}}
     <div class="license-hero {{ $overallVerified ? 'is-verified' : ($overallPending ? 'is-pending' : '') }}">
         <span class="license-hero__icon" aria-hidden="true">
-            <i class="fas {{ $overallVerified ? 'fa-circle-check' : ($overallPending ? 'fa-hourglass-half' : 'fa-file-shield') }}"></i>
+            <i class="fas {{ $overallVerified ? 'fa-circle-check' : ($overallPending ? 'fa-hourglass-half' : 'fa-file-signature') }}"></i>
         </span>
         <div class="license-hero__body">
             @if($overallVerified)

@@ -105,7 +105,9 @@
             <h1 class="register-title">{{ $heroTitle }}</h1>
         </section>
 
-        <form method="POST" action="{{ $formAction }}" class="register-form h-adr" enctype="multipart/form-data" data-validation-errors="{{ json_encode($errors->messages(), JSON_UNESCAPED_UNICODE) }}">
+        <form method="POST" action="{{ $formAction }}" class="register-form h-adr" enctype="multipart/form-data"
+              data-validation-errors="{{ json_encode($errors->messages(), JSON_UNESCAPED_UNICODE) }}"
+              data-rw-escape-url="{{ $loginUrl }}">
             @csrf
             <span class="p-country-name" style="display:none;">Japan</span>
 
@@ -1808,6 +1810,6 @@
         }
     </style>
 
-    <script src="{{ asset('assets/js/register-wizard.js') }}?v=20260913-uiux"></script>
+    <script src="{{ asset('assets/js/register-wizard.js') }}?v=20260924-back-escape"></script>
 
 @endsection

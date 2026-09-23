@@ -340,9 +340,15 @@
     <div class="gallery-preview-inner">
         <img id="modal-img" src="" alt="" class="mypage-modal-preview-img">
         <div class="gallery-preview-actions">
-            <button type="button" class="btn-action btn-action-secondary gallery-preview-btn-close" id="gallery-preview-close-btn">閉じる</button>
-            <button type="button" id="gallery-preview-recrop-btn" class="btn-action">再切り抜き</button>
-            <button type="button" id="gallery-preview-delete-btn" class="btn-action gallery-preview-btn-delete">削除</button>
+            <button type="button" class="gpv-btn gpv-btn--ghost" id="gallery-preview-close-btn" aria-label="閉じる">
+                <i class="fas fa-xmark" aria-hidden="true"></i><span>閉じる</span>
+            </button>
+            <button type="button" class="gpv-btn gpv-btn--primary" id="gallery-preview-recrop-btn" aria-label="編集">
+                <i class="fas fa-crop-simple" aria-hidden="true"></i><span>編集</span>
+            </button>
+            <button type="button" class="gpv-btn gpv-btn--danger" id="gallery-preview-delete-btn" aria-label="削除">
+                <i class="fas fa-trash-can" aria-hidden="true"></i><span>削除</span>
+            </button>
         </div>
     </div>
 </div>

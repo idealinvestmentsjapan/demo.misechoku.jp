@@ -49,6 +49,7 @@ use App\Http\Controllers\Shops\SearchController as ShopSearch;
 use App\Http\Controllers\Shops\MypageController as ShopMypage;
 use App\Http\Controllers\Shops\ProfileController as ShopProfile;
 use App\Http\Controllers\Shops\RecruitmentController as ShopRecruit;
+use App\Http\Controllers\Shops\HelpRecruitmentController as ShopHelpRecruit;
 use App\Http\Controllers\Shops\ReviewController as ShopReview;
 use App\Http\Controllers\Shops\InteractionController as ShopInteraction;
 use App\Http\Controllers\Shops\StaffController as ShopStaff;
@@ -598,6 +599,15 @@ Route::prefix('shop')->name('shop.')->middleware('shop.auth')->group(function ()
         Route::delete('/image/{id}', [ShopProfile::class, 'deleteImage'])->name('image.delete');
     });
 
+    // Dated help recruitment: unified page for dates + wage + applicant list.
+    // Owner-only because wage editing affects invoicing.
+    Route::prefix('help-recruitment')->name('help-recruitment.')->middleware('shop.owner')->group(function () {
+        Route::get('/', [ShopHelpRecruit::class, 'index'])->name('index');
+        Route::post('/dates', [ShopHelpRecruit::class, 'declareDates'])->name('dates.declare');
+        Route::delete('/dates', [ShopHelpRecruit::class, 'clearDates'])->name('dates.clear');
+        Route::post('/wage', [ShopHelpRecruit::class, 'updateWage'])->name('wage.update');
+    });
+
     // 笘・豎ゆｺｺ逾ｨ (Recruits)
     // 【権限分離】
     //   - hired-wage 更新／show 閲覧：スタッフも OK（面談後の日常業務）
@@ -620,9 +630,6 @@ Route::prefix('shop')->name('shop.')->middleware('shop.auth')->group(function ()
     Route::prefix('mypage')->name('mypage.')->group(function () {
         Route::get('/', [ShopMypage::class, 'index'])->name('index');
         Route::post('/word', [ShopMypage::class, 'updateWord'])->name('word');
-        // 「本日すぐ入れます」宣言（24時間で自動失効）
-        Route::post('/availability', [ShopMypage::class, 'declareAvailability'])->name('availability.declare');
-        Route::delete('/availability', [ShopMypage::class, 'clearAvailability'])->name('availability.clear');
         Route::post('/search-location', [ShopMypage::class, 'updateSearchLocation'])->name('search-location.update');
         Route::get('/management', [ShopRecruit::class, 'management'])->name('management');
         Route::get('/viewers', [\App\Http\Controllers\Shops\ViewerController::class, 'index'])->name('viewers.index');
