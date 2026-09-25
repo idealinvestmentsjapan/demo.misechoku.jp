@@ -8,7 +8,7 @@
         $metaDescription = trim($__env->yieldContent('meta_description')) ?: 'ミセチョクのデモサイトです。';
         $metaImage = trim($__env->yieldContent('meta_image')) ?: asset('assets/images/pwa/icon-512.png');
         $canonicalUrl = trim($__env->yieldContent('canonical')) ?: url()->current();
-        $assetVersion = '20260926-talkroom-kbd';
+        $assetVersion = '20260926-footer-flat';
         $resolvedTitle = $metaTitle !== ''
             ? $metaTitle
             : ($pageTitle !== '' ? $pageTitle . ' | ' . config('app.name', 'ミセチョク') : config('app.name', 'ミセチョク'));
@@ -523,15 +523,12 @@
             padding-bottom: 0 !important;
             height: var(--footer-height) !important;
             box-sizing: border-box !important;
-            background: linear-gradient(0deg,
-                rgba(24, 20, 34, 0.48) 0%,
-                rgba(18, 15, 26, 0.36) 100%) !important;
-            backdrop-filter: blur(28px) saturate(190%) !important;
-            -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
-            border-top: 1px solid rgba(255, 255, 255, 0.18) !important;
-            box-shadow:
-                inset 0 -1px 0 rgba(255, 255, 255, 0.14),
-                0 -8px 28px rgba(0, 0, 0, 0.28) !important;
+            /* Glassmorphism removed (2026-09-26): flat opaque surface so icons stay legible. */
+            background: rgba(18, 15, 26, 0.90) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.14) !important;
+            box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.28) !important;
         }
         /* Inner flex row inside the nav: HTML 側で `h-[75px]` を明示している
            ので padding-bottom は不要（コンテンツ 75px + 下 safe-area empty で
@@ -539,13 +536,14 @@
         nav[data-bottom-nav] > div {
             box-sizing: border-box !important;
         }
-        /* ナビの文字・アイコン：フラットな紫（影・ネオンなしのシンプル表示） */
+        /* ナビの文字・アイコン：フラットな紫（影・ネオンなしのシンプル表示）
+           2026-09-26: グラスモーフィズム解除に合わせてアイコンの視認性を優先。 */
         nav[data-bottom-nav] .nav-item {
-            color: rgba(139, 92, 246, 0.62) !important;
+            color: rgba(196, 181, 253, 0.92) !important;
             text-shadow: none !important;
         }
         nav[data-bottom-nav] .nav-item.is-active {
-            color: #7c3aed !important;
+            color: #c4b5fd !important;
             text-shadow: none !important;
         }
         /* ライトテーマ：ヘッダーと上下対称の艶ガラス（下端ハイライト + 上方向の浮遊影） */
@@ -564,16 +562,12 @@
 
         body.theme-light nav[data-bottom-nav],
         body.theme-premium-white nav[data-bottom-nav] {
-            background: linear-gradient(0deg,
-                rgba(255, 255, 255, 0.58) 0%,
-                rgba(255, 255, 255, 0.32) 100%) !important;
-            backdrop-filter: blur(30px) saturate(200%) !important;
-            -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
-            border-top: 1px solid rgba(255, 255, 255, 0.80) !important;
-            box-shadow:
-                inset 0 -1px 0 rgba(255, 255, 255, 0.95),
-                inset 0 1px 0 rgba(124, 58, 237, 0.10),
-                0 -10px 30px rgba(30, 20, 60, 0.16) !important;
+            /* Glassmorphism removed (2026-09-26): 90%-opaque dark chrome to keep icons crisp on light pages. */
+            background: rgba(18, 15, 26, 0.90) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.14) !important;
+            box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.24) !important;
         }
 
         /* --- TALK ROOM：他画面と同じ --max-content-width に揃えつつ、内側コンテナはフル幅で背景を敷く --- */

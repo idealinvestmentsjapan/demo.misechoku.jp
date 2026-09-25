@@ -1,7 +1,7 @@
 /* ==========================================================================
    Cast MyPage "Available Today" declaration card
    Related view: resources/views/casts/mypage/index.blade.php (#availability-card)
-   Compact, low-emphasis layout: 1-row bar with a small OK/OFF pill button.
+   Compact bar with a pill button that opens a modal calendar.
    ========================================================================== */
 
 .cast-avail {
@@ -12,8 +12,8 @@
     border: 1px solid rgba(197, 160, 89, 0.22);
 }
 .cast-avail.is-active {
-    background: rgba(74, 222, 128, 0.06);
-    border-color: rgba(74, 222, 128, 0.35);
+    background: rgba(240, 196, 107, 0.06);
+    border-color: rgba(240, 196, 107, 0.40);
 }
 
 .cast-avail__row {
@@ -35,8 +35,8 @@
     font-size: 0.78rem;
 }
 .cast-avail.is-active .cast-avail__icon {
-    background: rgba(74, 222, 128, 0.16);
-    color: #4ade80;
+    background: rgba(240, 196, 107, 0.20);
+    color: var(--gold-light, #f0c46b);
 }
 
 .cast-avail__title-block { flex: 1 1 auto; min-width: 0; }
@@ -74,12 +74,15 @@
 .cast-avail__btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .cast-avail__btn--primary {
-    background: transparent;
+    background: rgba(240, 196, 107, 0.14);
     color: var(--gold-light, #f0c46b);
     border-color: rgba(197, 160, 89, 0.55);
 }
 .cast-avail__btn--primary:hover {
-    background: rgba(197, 160, 89, 0.10);
+    background: rgba(240, 196, 107, 0.22);
+}
+.cast-avail__btn--primary:disabled {
+    background: transparent;
 }
 .cast-avail__btn--danger {
     background: transparent;
@@ -89,31 +92,106 @@
 .cast-avail__btn--danger:hover {
     background: rgba(248, 113, 113, 0.10);
 }
+.cast-avail__btn--ghost {
+    background: transparent;
+    color: var(--color-text-muted, #9ca3af);
+    border-color: rgba(156, 163, 175, 0.35);
+}
+.cast-avail__btn--ghost:hover {
+    background: rgba(156, 163, 175, 0.10);
+}
 
-/* Toggle chevron (open/close the calendar panel) */
-.cast-avail__toggle {
-    flex: 0 0 auto;
-    width: 28px;
-    height: 28px;
+/* Modal popup wrapper: appears above the page via fixed positioning */
+.cast-avail__modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+.cast-avail__modal[hidden] { display: none; }
+.cast-avail__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(2px);
+}
+.cast-avail__dialog {
+    position: relative;
+    width: min(100%, 380px);
+    max-height: calc(100vh - 32px);
+    display: flex;
+    flex-direction: column;
+    background: var(--color-surface, #1e1a30);
+    border: 1px solid rgba(197, 160, 89, 0.35);
+    border-radius: 14px;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+    overflow: hidden;
+    animation: cast-avail-pop 0.16s ease-out;
+}
+@keyframes cast-avail-pop {
+    from { transform: translateY(6px) scale(0.985); opacity: 0; }
+    to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+.cast-avail__dialog-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(197, 160, 89, 0.20);
+}
+.cast-avail__dialog-title {
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--color-text-header, #fff);
+}
+.cast-avail__dialog-title i { color: var(--gold-light, #f0c46b); }
+.cast-avail__dialog-close {
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     border: none;
     background: transparent;
     color: var(--color-text-muted, #9ca3af);
     cursor: pointer;
-    display: inline-flex;
+    font-size: 0.85rem;
+}
+.cast-avail__dialog-close:hover { background: rgba(255, 255, 255, 0.06); }
+.cast-avail__dialog-body {
+    padding: 12px 14px;
+    overflow-y: auto;
+}
+.cast-avail__dialog-hint {
+    margin: 0 0 8px;
+    font-size: 0.7rem;
+    color: var(--color-text-muted, #9ca3af);
+    line-height: 1.4;
+}
+.cast-avail__dialog-foot {
+    display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 0.72rem;
-    transition: transform 0.18s ease;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 10px 14px 12px;
+    border-top: 1px solid rgba(197, 160, 89, 0.20);
 }
-.cast-avail.is-open .cast-avail__toggle { transform: rotate(180deg); }
+.cast-avail__dialog-foot .cast-avail__btn {
+    min-height: 34px;
+    padding: 6px 14px;
+    font-size: 0.76rem;
+}
 
-/* Month-grid calendar (visible while .is-open) */
-.cast-avail__cal {
-    display: none;
-    margin-top: 8px;
-}
-.cast-avail.is-open .cast-avail__cal { display: block; }
+body.has-availability-modal { overflow: hidden; }
+
+/* Legacy inline calendar container (kept for backward compatibility) */
+.cast-avail__cal { display: block; }
 
 .cast-avail__cal-header {
     display: flex;
@@ -180,9 +258,9 @@
     box-shadow: inset 0 0 0 1px var(--gold-light, #f0c46b);
 }
 .cast-avail__cal-day.is-selected {
-    background: rgba(74, 222, 128, 0.18);
-    border-color: rgba(74, 222, 128, 0.60);
-    color: #4ade80;
+    background: rgba(240, 196, 107, 0.22);
+    border-color: var(--gold-light, #f0c46b);
+    color: var(--gold-light, #f0c46b);
 }
 .cast-avail__cal-day.is-disabled {
     border-color: transparent;
@@ -197,19 +275,34 @@ body.theme-light .cast-avail {
     border-color: rgba(124, 58, 237, 0.22);
 }
 body.theme-light .cast-avail.is-active {
-    background: rgba(34, 197, 94, 0.06);
-    border-color: rgba(34, 197, 94, 0.35);
+    background: rgba(124, 58, 237, 0.06);
+    border-color: rgba(124, 58, 237, 0.40);
+}
+body.theme-light .cast-avail.is-active .cast-avail__icon {
+    background: rgba(124, 58, 237, 0.14);
+    color: #7c3aed;
 }
 body.theme-light .cast-avail__title { color: #1e1a30; }
 body.theme-light .cast-avail__lead { color: #6b6482; }
 body.theme-light .cast-avail__btn--primary {
+    background: rgba(124, 58, 237, 0.10);
     color: #7c3aed;
     border-color: rgba(124, 58, 237, 0.45);
 }
 body.theme-light .cast-avail__btn--primary:hover {
-    background: rgba(124, 58, 237, 0.08);
+    background: rgba(124, 58, 237, 0.16);
+}
+body.theme-light .cast-avail__btn--primary:disabled {
+    background: transparent;
 }
 body.theme-light .cast-avail__btn--danger { color: #b91c1c; }
+body.theme-light .cast-avail__btn--ghost {
+    color: #6b6482;
+    border-color: rgba(107, 100, 130, 0.35);
+}
+body.theme-light .cast-avail__btn--ghost:hover {
+    background: rgba(107, 100, 130, 0.10);
+}
 body.theme-light .cast-avail__cal-month { color: #1e1a30; }
 body.theme-light .cast-avail__cal-nav {
     border-color: rgba(124, 58, 237, 0.35);
@@ -231,12 +324,27 @@ body.theme-light .cast-avail__cal-day.is-today {
     box-shadow: inset 0 0 0 1px #7c3aed;
 }
 body.theme-light .cast-avail__cal-day.is-selected {
-    background: rgba(34, 197, 94, 0.12);
-    border-color: rgba(34, 197, 94, 0.60);
-    color: #15803d;
+    background: rgba(124, 58, 237, 0.14);
+    border-color: #7c3aed;
+    color: #7c3aed;
 }
 body.theme-light .cast-avail__cal-day.is-disabled {
     border-color: transparent;
     background: transparent;
     color: rgba(107, 100, 130, 0.35);
 }
+
+/* Modal — light theme */
+body.theme-light .cast-avail__backdrop { background: rgba(30, 26, 48, 0.45); }
+body.theme-light .cast-avail__dialog {
+    background: #ffffff;
+    border-color: rgba(124, 58, 237, 0.30);
+    box-shadow: 0 20px 45px rgba(30, 26, 48, 0.22);
+}
+body.theme-light .cast-avail__dialog-head { border-bottom-color: rgba(124, 58, 237, 0.18); }
+body.theme-light .cast-avail__dialog-foot { border-top-color: rgba(124, 58, 237, 0.18); }
+body.theme-light .cast-avail__dialog-title { color: #1e1a30; }
+body.theme-light .cast-avail__dialog-title i { color: #7c3aed; }
+body.theme-light .cast-avail__dialog-close { color: #6b6482; }
+body.theme-light .cast-avail__dialog-close:hover { background: rgba(30, 26, 48, 0.06); }
+body.theme-light .cast-avail__dialog-hint { color: #6b6482; }

@@ -93,6 +93,28 @@ body.page-search-ai #pane-ai.tab-pane.active {
     overflow: hidden;
 }
 
+/* AIコンシェルジュ：TALK ルーム（body.page-talk-room）と同じく、入力欄・選択欄
+   （.ai-chat__composer）を常に画面下部へ固定する。実現手段は position:fixed ではなく、
+   main を dvh 高さに固定 + 縦フレックス連鎖で .ai-chat__thread のみをスクロールさせ、
+   .ai-chat__composer を .ai-chat の末端に張り付ける方式。 */
+body.page-search-ai main#main-content {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    /* padding-bottom はボトムナビ分の余白（app-v2 の main 既定値）をそのまま残す。
+       composer はその余白の直上に位置する。 */
+}
+body.page-search-ai .search-page-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    /* app-v2 の `padding-bottom: calc(var(--footer-height) + 24px)` を打ち消す。
+       ボトムナビ分の逃げは main#main-content 側の padding-bottom で確保済み。 */
+    padding-bottom: 0 !important;
+}
+
 /* AIコンシェルジュ：TALK 同様の全画面チャット。
    スレッドが伸縮スクロールし、コンポーザー（入力欄）が常に最下部に固定される */
 body.page-search-ai .ai-chat {

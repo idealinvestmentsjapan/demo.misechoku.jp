@@ -1,6 +1,7 @@
 /**
  * MyPage candidate-date availability card behavior (cast and shop share this).
- * Calendar-based month grid: selectable range is today .. today + daysAhead.
+ * Calendar-based month grid inside a modal popup.
+ * Selectable range is today .. today + daysAhead.
  *
  * Dependencies (provided by the view):
  *   #availability-card
@@ -9,9 +10,11 @@
  *     data-availability-max          max selectable dates (5)
  *     data-availability-days-ahead   selectable range in days from today (30)
  *     data-availability-selected     JSON array of saved 'Y-m-d' dates
- *   [data-availability-calendar]     calendar mount point
- *   [data-availability-toggle]       open/close the calendar panel
+ *   [data-availability-calendar]     calendar mount point (inside modal)
+ *   [data-availability-open]         button that opens the modal
+ *   [data-availability-close]        elements that close the modal (backdrop, X, cancel)
  *   [data-availability-save] / [data-availability-clear] buttons
+ *   #availability-modal              modal container (hidden by default)
  *
  *   window.MYPAGE_AVAILABILITY_CONFIG = { csrfToken: '...' }
  *
@@ -34,6 +37,29 @@
         var calendarEl = availCard.querySelector('[data-availability-calendar]');
         var summaryEl = availCard.querySelector('[data-availability-summary]');
         var saveBtn = availCard.querySelector('[data-availability-save]');
+        var modalEl = availCard.querySelector('#availability-modal');
+        var openBtn = availCard.querySelector('[data-availability-open]');
+        var savedSnapshot = null;
+
+        function openModal() {
+            if (!modalEl) return;
+            savedSnapshot = Array.from(selected);
+            modalEl.hidden = false;
+            document.body.classList.add('has-availability-modal');
+            if (openBtn) openBtn.setAttribute('aria-expanded', 'true');
+        }
+
+        function closeModal(revert) {
+            if (!modalEl) return;
+            if (revert && savedSnapshot) {
+                selected = new Set(savedSnapshot);
+                renderCalendar();
+                refreshSummary(availCard.classList.contains('is-active'));
+            }
+            modalEl.hidden = true;
+            document.body.classList.remove('has-availability-modal');
+            if (openBtn) openBtn.setAttribute('aria-expanded', 'false');
+        }
 
         var WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
 
@@ -210,10 +236,15 @@
                 return;
             }
 
-            var toggleBtn = e.target.closest('[data-availability-toggle]');
-            if (toggleBtn) {
-                var open = availCard.classList.toggle('is-open');
-                toggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            var openBtnHit = e.target.closest('[data-availability-open]');
+            if (openBtnHit) {
+                openModal();
+                return;
+            }
+
+            var closeHit = e.target.closest('[data-availability-close]');
+            if (closeHit) {
+                closeModal(true);
                 return;
             }
 
@@ -237,7 +268,9 @@
                     save.disabled = false;
                     if (res.ok && res.body && res.body.success) {
                         availCard.classList.toggle('is-active', dates.length > 0);
+                        savedSnapshot = dates.slice();
                         refreshSummary(true);
+                        closeModal(false);
                         (window.appToast || function () {})(res.body.message || '候補日を保存しました', 'success');
                     } else {
                         var msg = (res.body && res.body.message) || '保存できませんでした。もう一度お試しください';
@@ -267,6 +300,7 @@
                     clearBtn.disabled = false;
                     if (res.ok && res.body && res.body.success) {
                         selected.clear();
+                        savedSnapshot = [];
                         availCard.classList.remove('is-active');
                         renderCalendar();
                         refreshSummary(true);
@@ -282,13 +316,12 @@
             }
         });
 
-        // Open the calendar by default when nothing is declared yet.
-        // Keep the server-rendered summary text untouched on load.
-        if (selected.size === 0) {
-            availCard.classList.add('is-open');
-            var tb = availCard.querySelector('[data-availability-toggle]');
-            if (tb) tb.setAttribute('aria-expanded', 'true');
-        }
+        // Close the modal with Escape while it is open.
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && modalEl && !modalEl.hidden) {
+                closeModal(true);
+            }
+        });
 
         renderCalendar();
     });

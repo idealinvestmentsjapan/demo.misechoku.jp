@@ -19,7 +19,7 @@
 @endphp
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('assets/css/mypage-availability.css') }}?v=20260924-help">
+    <link rel="stylesheet" href="{{ asset('assets/css/mypage-availability.css') }}?v=20260926-availability-modal">
     <link rel="stylesheet" href="{{ asset('assets/css/help-recruitment.css') }}?v=20260924-init">
 @endpush
 
@@ -172,7 +172,7 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('assets/js/mypage-availability.js') }}?v=20260924-help"></script>
+<script src="{{ asset('assets/js/mypage-availability.js') }}?v=20260926-availability-modal"></script>
 <script>
 (function () {
     'use strict';

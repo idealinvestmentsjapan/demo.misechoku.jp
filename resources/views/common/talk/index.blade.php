@@ -4,7 +4,7 @@
 @section('body-class', 'page-talk page-talk-list')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/talk.css') }}?v=20260926-talkroom-kbd">
+<link rel="stylesheet" href="{{ asset('assets/css/talk.css') }}?v=20260926-profile-jump">
 <link rel="stylesheet" href="{{ asset('assets/css/talk-light.css') }}?v=20260802-split">
 <link rel="stylesheet" href="{{ asset('assets/css/sub-header.css') }}">
 @endpush
@@ -19,7 +19,10 @@
         ? ('スカウト受信' . ($requestCount > 0 ? " ($requestCount)" : ''))
         : '過去のやり取り';
     $targetRoute = $isCast ? 'cast.talk.room' : 'shop.talk.room';
-    // Avatar tap → partner's profile page (cast → shop-profile, shop → cast-profile-view).
+    // Partner profile route (used by the request-upper-link fallback branch below;
+    // avatar taps in the ongoing list intentionally do NOT go to profile — the
+    // whole row is a talk-room link. Profile navigation lives inside the talk
+    // room header instead.)
     $profileRoute = $isCast ? 'cast.shopprofile.show' : 'shop.castprofileview.show';
 @endphp
 
@@ -51,11 +54,8 @@
         <div id="pane-ongoing" class="tab-pane active">
             @forelse($ongoingTalks as $index => $talk)
                 <div class="talk-item" data-partner-id="{{ $talk['partner_id'] }}" data-original-index="{{ $index }}">
-                    <a href="{{ route($profileRoute, $talk['partner_id']) }}" class="talk-avatar-link"
-                       aria-label="{{ $talk['name'] }}のプロフィールを開く">
-                        <img loading="lazy" decoding="async" src="{{ $talk['avatar'] }}" class="talk-avatar" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ urlencode($talk['name']) }}&background=4d1a1a&color=fff';">
-                    </a>
                     <a href="{{ route($targetRoute, $talk['partner_id']) }}" class="talk-item-main">
+                        <img loading="lazy" decoding="async" src="{{ $talk['avatar'] }}" class="talk-avatar" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ urlencode($talk['name']) }}&background=4d1a1a&color=fff';">
                         <div class="talk-info">
                             <div class="talk-header">
                                 <span class="talk-name">{{ $talk['name'] }}</span>
@@ -150,11 +150,8 @@
                     </div>
                 @else
                     <div class="talk-item" data-partner-id="{{ $talk['partner_id'] }}">
-                        <a href="{{ route($profileRoute, $talk['partner_id']) }}" class="talk-avatar-link"
-                           aria-label="{{ $talk['name'] }}のプロフィールを開く">
-                            <img loading="lazy" decoding="async" src="{{ $talk['avatar'] }}" class="talk-avatar" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ urlencode($talk['name']) }}&background=4d1a1a&color=fff';">
-                        </a>
                         <a href="{{ route($targetRoute, $talk['partner_id']) }}" class="talk-item-main">
+                            <img loading="lazy" decoding="async" src="{{ $talk['avatar'] }}" class="talk-avatar" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ urlencode($talk['name']) }}&background=4d1a1a&color=fff';">
                             <div class="talk-info">
                                 <div class="talk-header">
                                     <span class="talk-name">{{ $talk['name'] }}</span>

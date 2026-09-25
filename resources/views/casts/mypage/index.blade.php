@@ -99,21 +99,50 @@
                     </p>
                 </div>
                 <div class="cast-avail__actions">
-                    <button type="button" class="cast-avail__btn cast-avail__btn--primary" data-availability-save disabled>
-                        <i class="fas fa-check"></i> 保存
+                    <button type="button" class="cast-avail__btn cast-avail__btn--primary" data-availability-open
+                            aria-haspopup="dialog" aria-controls="availability-modal">
+                        <i class="fas fa-calendar-days"></i>
+                        <span>{{ $availActive ? '変更する' : '候補日を選ぶ' }}</span>
                     </button>
                     @if($availActive)
                         <button type="button" class="cast-avail__btn cast-avail__btn--danger" data-availability-clear>
                             <i class="fas fa-xmark"></i> 取消
                         </button>
                     @endif
-                    <button type="button" class="cast-avail__toggle" data-availability-toggle
-                            aria-expanded="{{ $availActive ? 'false' : 'true' }}" aria-label="カレンダーを開閉">
-                        <i class="fas fa-chevron-down" aria-hidden="true"></i>
-                    </button>
                 </div>
             </div>
-            <div class="cast-avail__cal" data-availability-calendar></div>
+
+            {{-- Modal popup: calendar and save action --}}
+            <div class="cast-avail__modal" id="availability-modal" role="dialog"
+                 aria-modal="true" aria-labelledby="availability-modal-title" hidden>
+                <div class="cast-avail__backdrop" data-availability-close></div>
+                <div class="cast-avail__dialog" role="document">
+                    <header class="cast-avail__dialog-head">
+                        <h2 id="availability-modal-title" class="cast-avail__dialog-title">
+                            <i class="fas fa-calendar-days" aria-hidden="true"></i>
+                            入れる候補日を選ぶ
+                        </h2>
+                        <button type="button" class="cast-avail__dialog-close"
+                                data-availability-close aria-label="閉じる">
+                            <i class="fas fa-xmark" aria-hidden="true"></i>
+                        </button>
+                    </header>
+                    <div class="cast-avail__dialog-body">
+                        <p class="cast-avail__dialog-hint">
+                            最大{{ $availMaxDates }}日まで、{{ $availDaysAhead }}日先まで選べます
+                        </p>
+                        <div class="cast-avail__cal" data-availability-calendar></div>
+                    </div>
+                    <footer class="cast-avail__dialog-foot">
+                        <button type="button" class="cast-avail__btn cast-avail__btn--ghost" data-availability-close>
+                            キャンセル
+                        </button>
+                        <button type="button" class="cast-avail__btn cast-avail__btn--primary" data-availability-save disabled>
+                            <i class="fas fa-check"></i> 設定する
+                        </button>
+                    </footer>
+                </div>
+            </div>
         </section>
 
         {{-- ===== Name + 閲覧数 + 共有（自分のプロフィールを SNS 共有） ===== --}}
@@ -460,7 +489,7 @@
 <script>
 window.MYPAGE_AVAILABILITY_CONFIG = { csrfToken: @json(csrf_token()) };
 </script>
-<script src="{{ asset('assets/js/mypage-availability.js') }}?v=20260924-availability-cal"></script>
+<script src="{{ asset('assets/js/mypage-availability.js') }}?v=20260926-availability-modal"></script>
 
 {{-- ===== ギャラリー機能：元のスクリプト群 ===== --}}
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
@@ -567,5 +596,5 @@ window.MYPAGE_GALLERY_CONFIG = {
 
 </style>
 {{-- 「今すぐ入れる」宣言カードの外部 CSS --}}
-<link rel="stylesheet" href="{{ asset('assets/css/mypage-availability.css') }}?v=20260924-availability-cal">
+<link rel="stylesheet" href="{{ asset('assets/css/mypage-availability.css') }}?v=20260926-availability-modal">
 @endpush

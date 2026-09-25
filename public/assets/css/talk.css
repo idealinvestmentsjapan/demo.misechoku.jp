@@ -88,28 +88,6 @@
     flex-shrink: 0;
     box-shadow: 0 0 0 3px rgba(226, 188, 79, 0.08);
 }
-/* Avatar-only link (2026-09-26): タップで相手のプロフィールへ遷移する。
-   隣の `.talk-item-main` はトークルームへの遷移。 */
-.talk-avatar-link {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    text-decoration: none;
-    color: inherit;
-    -webkit-tap-highlight-color: transparent;
-    border-radius: 50%;
-    transition: transform 0.12s ease, box-shadow 0.15s ease;
-}
-.talk-avatar-link:hover { transform: scale(1.04); }
-.talk-avatar-link:active { transform: scale(0.96); }
-.talk-avatar-link:focus-visible {
-    outline: 2px solid rgba(226, 188, 79, 0.7);
-    outline-offset: 2px;
-}
-/* margin-right は .talk-avatar から <a> ラッパーへ移す（<a> がタップ範囲になるため） */
-.talk-avatar-link .talk-avatar { margin-right: 0; }
-.talk-avatar-link { margin-right: 13px; }
 .talk-info {
     flex: 1;
     min-width: 0; /* テキスト溢れ防止 */

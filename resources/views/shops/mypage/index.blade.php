@@ -672,7 +672,7 @@
 
 </style>
 {{-- Candidate-date availability card styles (shared with cast mypage) --}}
-<link rel="stylesheet" href="{{ asset('assets/css/mypage-availability.css') }}?v=20260924-availability-cal">
+<link rel="stylesheet" href="{{ asset('assets/css/mypage-availability.css') }}?v=20260926-availability-modal">
 @endpush
 
 @push('scripts')
@@ -825,5 +825,5 @@ window.MYPAGE_GALLERY_CONFIG = {
 <script>
 window.MYPAGE_AVAILABILITY_CONFIG = { csrfToken: @json(csrf_token()) };
 </script>
-<script src="{{ asset('assets/js/mypage-availability.js') }}?v=20260924-availability-cal"></script>
+<script src="{{ asset('assets/js/mypage-availability.js') }}?v=20260926-availability-modal"></script>
 @endpush

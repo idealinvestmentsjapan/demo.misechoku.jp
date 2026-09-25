@@ -10,7 +10,7 @@
 @section('body-class', 'page-talk page-talk-room')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/talk.css') }}?v=20260926-talkroom-kbd">
+<link rel="stylesheet" href="{{ asset('assets/css/talk.css') }}?v=20260926-profile-jump">
 <link rel="stylesheet" href="{{ asset('assets/css/talk-light.css') }}?v=20260823-template-popup">
 @if($isCast)
 <link rel="stylesheet" href="{{ asset('assets/css/mypage.css') }}">
@@ -212,6 +212,11 @@
     $actionUrl = $actionUrl ?? ($isCast ? route('cast.talk.action') : route('shop.talk.action'));
     $blockUrl = $blockUrl ?? ($isCast ? route('cast.talk.block') : route('shop.talk.block'));
     $partnerAvatar = $partnerAvatar ?? asset('assets/images/common/no-image.png');
+    // Partner profile route — cast talks with shops (→ shop profile),
+    // shops talk with casts (→ cast profile view).
+    $partnerProfileRoute = $isCast ? 'cast.shopprofile.show' : 'shop.castprofileview.show';
+    $partnerProfileUrl = Route::has($partnerProfileRoute) ? route($partnerProfileRoute, $partnerId) : null;
+    $partnerLabel = $isCast ? 'お店のプロフィール' : 'キャストのプロフィール';
     $talkJobKindLabelMap = ['trial' => '新規入店', 'fulltime' => '本入店', 'help' => 'ヘルプ'];
     $currentTalkJobKindValue = $selectedTalkJobKind ?? $initialTalkJobKind ?? null;
     $currentTalkJobKindLabel = $talkJobKindLabelMap[$currentTalkJobKindValue] ?? '未選択';
@@ -260,6 +265,17 @@
                             <i class="fas fa-lock" aria-hidden="true"></i>
                         @endif
                     </span>
+                @endif
+                @if($partnerProfileUrl)
+                    {{-- プロフィール導線：相手のプロフィール画面へ遷移（2026-09-26 追加） --}}
+                    <a
+                        href="{{ $partnerProfileUrl }}"
+                        class="talk-block-icon-btn talk-block-icon-btn--plain talk-profile-jump-btn"
+                        title="{{ $partnerLabel }}を開く"
+                        aria-label="{{ $partnerLabel }}を開く"
+                    >
+                        <i class="fas fa-user"></i>
+                    </a>
                 @endif
                 @if(empty($blockState['blocked_by_other']))
                     {{-- 通報ボタン（相手を運営に報告） --}}
