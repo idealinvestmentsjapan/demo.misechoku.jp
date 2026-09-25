@@ -10,7 +10,7 @@
 @section('body-class', 'page-talk page-talk-room')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/talk.css') }}?v=20260926-footer-safearea">
+<link rel="stylesheet" href="{{ asset('assets/css/talk.css') }}?v=20260926-talkroom-kbd">
 <link rel="stylesheet" href="{{ asset('assets/css/talk-light.css') }}?v=20260823-template-popup">
 @if($isCast)
 <link rel="stylesheet" href="{{ asset('assets/css/mypage.css') }}">
@@ -201,7 +201,7 @@
     window.talkAllQuickReplies = @json($allQuickReplySuggestions ?? []);
     window.talkNgPayload = @json($ngWordPayload ?? ['patterns' => [], 'words' => []]);
 </script>
-<script src="{{ asset('assets/js/talk-room.js') }}?v=20260922-msg-action-menu"></script>
+<script src="{{ asset('assets/js/talk-room.js') }}?v=20260926-talkroom-kbd"></script>
 @endpush
 
 @section('content')

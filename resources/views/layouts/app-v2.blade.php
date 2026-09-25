@@ -8,7 +8,7 @@
         $metaDescription = trim($__env->yieldContent('meta_description')) ?: 'ミセチョクのデモサイトです。';
         $metaImage = trim($__env->yieldContent('meta_image')) ?: asset('assets/images/pwa/icon-512.png');
         $canonicalUrl = trim($__env->yieldContent('canonical')) ?: url()->current();
-        $assetVersion = '20260926-nav-safearea-centering';
+        $assetVersion = '20260926-talkroom-kbd';
         $resolvedTitle = $metaTitle !== ''
             ? $metaTitle
             : ($pageTitle !== '' ? $pageTitle . ' | ' . config('app.name', 'ミセチョク') : config('app.name', 'ミセチョク'));
@@ -362,8 +362,16 @@
             overflow: hidden !important;
         }
         body.page-talk-room #talk-room-container {
+            /* Height source of truth, in fallback order:
+               1) 100vh — legacy fallback (browsers without dvh)
+               2) 100dvh — modern browsers; excludes URL bar but NOT keyboard
+               3) --talk-room-visible-h — JS-set from visualViewport.height,
+                  which excludes BOTH URL bar AND keyboard. Set by talk-room.js
+                  on visualViewport `resize`/`scroll` so the container shrinks
+                  when the keyboard opens and the input stays above it. */
             height: calc(100vh - var(--header-height, 60px)) !important;
             height: calc(100dvh - var(--header-height, 60px)) !important;
+            height: calc(var(--talk-room-visible-h, 100dvh) - var(--header-height, 60px)) !important;
             min-height: 0 !important;
             position: relative !important;     /* chat-input-area の absolute 基準 */
         }
@@ -525,14 +533,10 @@
                 inset 0 -1px 0 rgba(255, 255, 255, 0.14),
                 0 -8px 28px rgba(0, 0, 0, 0.28) !important;
         }
-        /* Inner flex row inside the nav: give it the safe-area padding-bottom
-           so `align-items: center; justify-content: center` centers the
-           nav-items in the CONTENT area (75px on iPhone), not in the full
-           box (109px). Without this, icons drift into the home-indicator
-           zone. Fix pair with the `padding-bottom: 0 !important` on the
-           parent nav[data-bottom-nav]. */
+        /* Inner flex row inside the nav: HTML 側で `h-[75px]` を明示している
+           ので padding-bottom は不要（コンテンツ 75px + 下 safe-area empty で
+           構造的に安全域を確保する）。box-sizing だけ念のため明示。 */
         nav[data-bottom-nav] > div {
-            padding-bottom: env(safe-area-inset-bottom, 0px) !important;
             box-sizing: border-box !important;
         }
         /* ナビの文字・アイコン：フラットな紫（影・ネオンなしのシンプル表示） */
@@ -898,10 +902,23 @@
         {{-- ============================================================
              新ボトムナビ（behaviors.js が data-bottom-nav を見る）
              active 判定は URL 階層から（旧 footer と同等）。href は実ルート。
+
+             2026-09-26 Plan B fix:
+             - `h-[75px]` と `pb-[env(safe-area-inset-bottom)]` は撤去。総高さは
+               インライン CSS 側の `height: var(--footer-height)` に一本化する
+               （`--footer-height` に safe-area 込み）
+             - 内側 flex は `h-full` ではなく `h-[75px]` に固定。これで
+               「flex コンテナが親の padding-bottom を貫通して 109px に張り、
+                 items-center がアイコンを下方に押し込む」ホームインジケータ
+               食い込み問題を CSS 上書きに依存せず HTML 側で断つ。
+             - `pb-[env(safe-area-inset-bottom)]` はコンテナ外側（<nav>）に付け直し、
+               総高さ = 75 + safe になるよう構造で担保する。
+               インライン CSS の override はフォールバック層として残る。
              ============================================================ --}}
         <nav data-bottom-nav data-nav-style="flat"
-             class="fixed bottom-0 left-0 w-full z-50 h-[75px] pb-[env(safe-area-inset-bottom)] box-border bg-deep-purple/30 backdrop-blur-md border-t border-line-accent/40 shadow-footer">
-            <div class="flex justify-around items-center h-full px-2 max-w-[var(--max-content-width)] mx-auto">
+             class="fixed bottom-0 left-0 w-full z-50 box-border bg-deep-purple/30 backdrop-blur-md border-t border-line-accent/40 shadow-footer"
+             style="height: calc(75px + env(safe-area-inset-bottom, 0px));">
+            <div class="flex justify-around items-center h-[75px] px-2 max-w-[var(--max-content-width)] mx-auto">
                 <a href="{{ route($navPrefix . '.home') }}"
                    class="nav-item flex flex-col items-center justify-center transition-all duration-300 {{ $navIsHome ? 'is-active' : '' }}">
                     <span class="nav-icon-wrap flex items-center justify-center mb-1 transition-all">

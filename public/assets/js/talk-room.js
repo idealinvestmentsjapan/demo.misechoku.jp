@@ -7,6 +7,48 @@ document.addEventListener('DOMContentLoaded', function() {
     const isCastRoom = typeof window.isCastTalkRoom !== 'undefined' ? !!window.isCastTalkRoom : false;
 
     if (!chatMessages) return;
+
+    /* ============================================================
+       Keyboard-aware layout for the talk room (2026-09-26)
+       -------------------------------------------------------------
+       Issue: `#talk-room-container` has CSS `height: calc(100dvh - 60px)`,
+       and the chat input is `position: absolute; bottom: 0` inside it.
+       On iOS Safari, `100dvh` does NOT shrink when the software keyboard
+       opens (dvh only tracks the URL bar, not the keyboard), so the input
+       ends up *behind* the keyboard and the user cannot see what they type.
+       Fix: watch `window.visualViewport` (its `height` = visible area minus
+       the keyboard) and set a CSS variable `--talk-room-visible-h` that the
+       container height calc consumes instead of `100dvh`. Fallback to
+       `100dvh` when visualViewport is unavailable.
+       ============================================================ */
+    (function bindKeyboardAwareLayout() {
+        const root = document.documentElement;
+        const container = document.getElementById('talk-room-container');
+        const chatInputArea = container ? container.querySelector('.chat-input-area') : null;
+        if (!container || !window.visualViewport) return;
+
+        let raf = 0;
+        const apply = () => {
+            const vv = window.visualViewport;
+            // vv.height already excludes the on-screen keyboard on iOS Safari
+            // (and Chrome Android). offsetTop covers iOS split-view.
+            const visible = Math.max(0, Math.round(vv.height));
+            root.style.setProperty('--talk-room-visible-h', visible + 'px');
+            // Keyboard heuristic: window.innerHeight is layout viewport (does
+            // NOT shrink with keyboard on iOS), so a gap of > 100px means
+            // keyboard is likely open.
+            const kbOpen = (window.innerHeight - vv.height) > 100;
+            if (chatInputArea) chatInputArea.classList.toggle('is-kbd-open', kbOpen);
+        };
+        const schedule = () => {
+            if (raf) cancelAnimationFrame(raf);
+            raf = requestAnimationFrame(apply);
+        };
+        window.visualViewport.addEventListener('resize', schedule);
+        window.visualViewport.addEventListener('scroll', schedule);
+        window.addEventListener('orientationchange', schedule);
+        apply();
+    })();
     function showTalkError(message) {
         if (window.appToast) window.appToast(message, 'error');
         else window.alert(message);
