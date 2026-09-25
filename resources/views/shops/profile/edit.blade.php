@@ -23,7 +23,8 @@
         background: var(--spe-bg);
         min-height: 100%;
         margin: 0 calc(-1 * var(--content-padding-x, 16px));
-        padding-bottom: calc(var(--footer-height, 75px) + 88px + env(safe-area-inset-bottom, 0px));
+        /* --footer-height に safe-area 込み。二重加算しない。 */
+        padding-bottom: calc(var(--footer-height, 75px) + 88px);
     }
 
     .shop-profile-edit__shell {

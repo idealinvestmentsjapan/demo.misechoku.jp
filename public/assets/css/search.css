@@ -408,7 +408,7 @@ body.page-search-ai .ai-chat__thread {
     position: fixed;
     /* 50% (viewport center) + min(50vw, app幅/2) で app の右端を取り、そこから 16px + FAB幅(52px) 戻す */
     left: calc(50% + min(50vw, var(--max-content-width) / 2) - 16px - 52px - env(safe-area-inset-right, 0px));
-    bottom: calc(var(--footer-height) + 16px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(var(--footer-height) + 16px);
     width: 52px;
     height: 52px;
     border-radius: 50%;
@@ -2689,7 +2689,7 @@ li.connection-item.tl-row a.tl-row__link {
 .fav-toast {
     position: fixed;
     left: 50%;
-    bottom: calc(var(--footer-height, 75px) + 24px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(var(--footer-height, 75px) + 24px);
     transform: translateX(-50%) translateY(8px);
     background: rgba(20, 20, 20, 0.94);
     color: #f5f5f5;
@@ -2762,6 +2762,204 @@ li.connection-item.tl-row a.tl-row__link {
 }
 .tl-row__like-count { line-height: 1; }
 
+
+/* ============================================================================
+   検索サマリ（件数・並び順・適用中の条件チップ） — 2026-09-24 デザイン刷新
+   旧: `.search-results-summary` の '1234件・～順' + `data-applied-search-summary`
+       のプレーンテキスト羅列 → デザインを崩す "生の文字列" の代表例だった
+   新: 件数はガラスピル、並び順は開閉トリガを兼ねたピル、適用中の条件は横スクロール
+       できるチップ列。すべて色・角丸・アイコンで意味を可視化する
+   ============================================================================ */
+.search-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 12px 8px;
+    margin: 0 4px 4px;
+}
+.search-summary__pills {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* 件数ピル：控えめなガラス面。数値は tabular-nums で大きく. */
+.search-summary__count {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 3px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(168, 85, 247, 0.10);
+    border: 1px solid rgba(168, 85, 247, 0.25);
+    color: #e6dffc;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1.15;
+}
+.search-summary__count-ico {
+    font-size: 0.72rem;
+    color: var(--gold-light, #c4b5fd);
+    margin-right: 4px;
+    align-self: center;
+}
+.search-summary__count-num {
+    font-size: 0.98rem;
+    font-weight: 800;
+    color: #ffffff;
+    font-variant-numeric: tabular-nums;
+}
+.search-summary__count-unit {
+    font-size: 0.7rem;
+    color: rgba(196, 181, 253, 0.85);
+    margin-left: 1px;
+}
+
+/* 並び順ピル：クリックで既存の #search-sort-trigger を発火し、下段のパネルを開く。 */
+.search-summary__sort {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(168, 85, 247, 0.25);
+    background: rgba(20, 14, 22, 0.55);
+    color: #e6dffc;
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+    max-width: 100%;
+    min-width: 0;
+}
+.search-summary__sort > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 180px;
+}
+.search-summary__sort i {
+    color: var(--gold-light, #c4b5fd);
+    font-size: 0.78rem;
+    flex: 0 0 auto;
+}
+.search-summary__sort-caret {
+    font-size: 0.62rem !important;
+    opacity: 0.7;
+    margin-left: 1px;
+}
+.search-summary__sort:hover {
+    background: rgba(168, 85, 247, 0.14);
+    border-color: rgba(168, 85, 247, 0.45);
+}
+.search-summary__sort:active { transform: scale(0.97); }
+.search-summary__sort:focus-visible {
+    outline: 2px solid var(--gold-light, #c4b5fd);
+    outline-offset: 2px;
+}
+
+/* 適用条件チップ列：横スクロールで溢れ対応（モバイル最適）。
+   各チップは詳細フィルターを開くタップターゲットも兼ねる。 */
+.search-summary__chips {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+    margin: 0 -12px 0;
+    padding-left: 12px;
+    padding-right: 12px;
+}
+.search-summary__chips::-webkit-scrollbar { display: none; }
+.search-summary__chip {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(168, 85, 247, 0.28);
+    color: rgba(230, 223, 252, 0.92);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    max-width: 220px;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+}
+.search-summary__chip > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.search-summary__chip i {
+    color: var(--gold-light, #c4b5fd);
+    font-size: 0.68rem;
+    flex: 0 0 auto;
+}
+.search-summary__chip:hover {
+    background: rgba(168, 85, 247, 0.14);
+    border-color: rgba(168, 85, 247, 0.55);
+    color: #ffffff;
+}
+.search-summary__chip:active { transform: scale(0.96); }
+.search-summary__chip:focus-visible {
+    outline: 2px solid var(--gold-light, #c4b5fd);
+    outline-offset: 2px;
+}
+
+/* ライト / プレミアムホワイト対応 */
+body.theme-light .search-summary__count,
+body.theme-premium-white .search-summary__count {
+    background: rgba(124, 58, 237, 0.08);
+    border-color: rgba(124, 58, 237, 0.28);
+    color: #241f33;
+}
+body.theme-light .search-summary__count-num,
+body.theme-premium-white .search-summary__count-num { color: #1e1a30; }
+body.theme-light .search-summary__count-ico,
+body.theme-premium-white .search-summary__count-ico { color: #7c3aed; }
+body.theme-light .search-summary__count-unit,
+body.theme-premium-white .search-summary__count-unit { color: #6d6685; }
+
+body.theme-light .search-summary__sort,
+body.theme-premium-white .search-summary__sort {
+    background: #ffffff;
+    border-color: rgba(124, 58, 237, 0.30);
+    color: #241f33;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+body.theme-light .search-summary__sort i,
+body.theme-premium-white .search-summary__sort i { color: #7c3aed; }
+body.theme-light .search-summary__sort:hover,
+body.theme-premium-white .search-summary__sort:hover {
+    background: rgba(124, 58, 237, 0.08);
+    border-color: rgba(124, 58, 237, 0.50);
+}
+
+body.theme-light .search-summary__chip,
+body.theme-premium-white .search-summary__chip {
+    background: #ffffff;
+    border-color: rgba(124, 58, 237, 0.24);
+    color: #4b465c;
+}
+body.theme-light .search-summary__chip i,
+body.theme-premium-white .search-summary__chip i { color: #7c3aed; }
+body.theme-light .search-summary__chip:hover,
+body.theme-premium-white .search-summary__chip:hover {
+    background: rgba(124, 58, 237, 0.08);
+    border-color: rgba(124, 58, 237, 0.50);
+    color: #241f33;
+}
 
 /*
  * ============================================================================

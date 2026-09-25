@@ -28,6 +28,16 @@
             {{-- タイトル横のカウントは廃止（ヘッダーアイコン上のバッジで十分） --}}
         </div>
         <div class="notif-popup__head-actions">
+            @if($unreadCount > 0)
+                <button type="button"
+                        class="notif-popup__mark-all"
+                        data-notif-mark-all
+                        aria-label="すべて既読にする"
+                        title="すべて既読">
+                    <i class="fas fa-check-double" aria-hidden="true"></i>
+                    <span class="notif-popup__mark-all-label">すべて既読</span>
+                </button>
+            @endif
             @if(Route::has('setting.notification'))
                 <a href="{{ route('setting.notification') }}"
                    class="notif-popup__gear"

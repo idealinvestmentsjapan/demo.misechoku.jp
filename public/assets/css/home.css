@@ -2298,12 +2298,8 @@ body.page-home .rc-signup-bonus-pill__nums {
 
 /* スワイプガイドはフッターの直上にくるよう調整 */
 body.page-home .discovery-swipe-guide {
+    /* --footer-height に safe-area 込み。@supports 分岐は不要になったが構造は保持。 */
     bottom: calc(var(--footer-height, 75px) + 30px);
-}
-@supports (padding: max(0px)) {
-    body.page-home .discovery-swipe-guide {
-        bottom: calc(var(--footer-height, 75px) + 30px + env(safe-area-inset-bottom, 0px));
-    }
 }
 
 /* サイドアクションボタンの右下配置はそのまま、フッターと重ならない位置に */
@@ -3659,7 +3655,7 @@ body.page-home .rc-actions {
     right: 14px !important;
     left: auto !important;
     /* footer の上に出す。これで底辺ナビと絶対に被らない。 */
-    bottom: calc(var(--footer-height, 75px) + 14px + env(safe-area-inset-bottom, 0)) !important;
+    bottom: calc(var(--footer-height, 75px) + 14px) !important;
     top: auto !important;
     transform: none !important;
     /* TikTok 風の縦列。下にプライマリ（message）が来るよう order を上書き。 */
@@ -3728,7 +3724,7 @@ body.page-home .cast-card:not(.cast-card--recruit) .card-bottom-info {
     padding-left: 16px !important;
     /* アイコン列幅 (≈ 60 + 右マージン 14) + 余白 = 80px */
     padding-right: 80px !important;
-    padding-bottom: calc(var(--footer-height, 75px) + 14px + env(safe-area-inset-bottom, 0)) !important;
+    padding-bottom: calc(var(--footer-height, 75px) + 14px) !important;
     background: linear-gradient(
         to top,
         rgba(0, 0, 0, 0.94) 0%,
@@ -3743,7 +3739,7 @@ body.page-home .cast-card--recruit .rc-bottom-bar {
     position: absolute !important;
     left: 0 !important;
     right: 0 !important;
-    bottom: calc(var(--footer-height, 75px) + 14px + env(safe-area-inset-bottom, 0)) !important;
+    bottom: calc(var(--footer-height, 75px) + 14px) !important;
     padding: 0 80px 6px 14px !important;  /* 右側 80px をアイコン列に空ける */
     background: transparent !important;
 }
@@ -3751,7 +3747,7 @@ body.page-home .cast-card--recruit .rc-bottom-bar {
 /* 求人カードの大グラデは ::before (画像下部) で既に作っているので OK だが、
    bottom-bar が上に上がるぶん、グラデを少し上に伸ばして文字の足元を黒くする */
 body.page-home .cast-card--recruit::before {
-    bottom: calc(var(--footer-height, 75px) + env(safe-area-inset-bottom, 0)) !important;
+    bottom: var(--footer-height, 75px) !important;
     top: min(40%, calc(60% - 140px)) !important;
 }
 
@@ -5479,7 +5475,7 @@ body.page-home .cast-card--profile .rc-line--meta {
    フッター高 + safe-area + 10px の gap で「フッター真上」に配置する。
    ============================================================================ */
 body.page-home {
-    --home-cta-bottom: calc(var(--footer-height, 75px) + env(safe-area-inset-bottom, 0px) + 10px);
+    --home-cta-bottom: calc(var(--footer-height, 75px) + 10px);
 }
 
 

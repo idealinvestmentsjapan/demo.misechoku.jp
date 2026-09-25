@@ -4,7 +4,7 @@
 @section('body-class', 'page-talk page-talk-list')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/talk.css') }}?v=20260808-footer-clear">
+<link rel="stylesheet" href="{{ asset('assets/css/talk.css') }}?v=20260926-footer-safearea">
 <link rel="stylesheet" href="{{ asset('assets/css/talk-light.css') }}?v=20260802-split">
 <link rel="stylesheet" href="{{ asset('assets/css/sub-header.css') }}">
 @endpush

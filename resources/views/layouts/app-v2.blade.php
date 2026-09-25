@@ -8,7 +8,7 @@
         $metaDescription = trim($__env->yieldContent('meta_description')) ?: 'ミセチョクのデモサイトです。';
         $metaImage = trim($__env->yieldContent('meta_image')) ?: asset('assets/images/pwa/icon-512.png');
         $canonicalUrl = trim($__env->yieldContent('canonical')) ?: url()->current();
-        $assetVersion = '20260924-plan-ux';
+        $assetVersion = '20260926-footer-height-safearea';
         $resolvedTitle = $metaTitle !== ''
             ? $metaTitle
             : ($pageTitle !== '' ? $pageTitle . ' | ' . config('app.name', 'ミセチョク') : config('app.name', 'ミセチョク'));
@@ -222,7 +222,13 @@
                （固定要素の calc(50vw - w/2) 系は 0 に解決され、自然に全幅へ展開される） */
             --max-content-width: 100%;
             --content-padding-x: 16px;
-            --footer-height: 75px;
+            /* --footer-height: ボトムナビの "総高さ"（ノッチ端末では safe-area を含む）。
+               全ページの `padding-bottom: calc(var(--footer-height) + N)` が
+               自動的に home-indicator を避けるよう、変数側で env() を折り込む。
+               2026-09-26: 前回の nav-height 修正で nav が 75+safe に育ったのに
+               各ページの余白計算が "nav は 75px" の前提のままだったため、
+               iPhone で 34px 分コンテンツが nav に食い込んでいた症状を根本解消する。 */
+            --footer-height: calc(75px + env(safe-area-inset-bottom, 0px));
             --header-height: 60px;
             --sub-header-height: 46px;
 
@@ -496,7 +502,8 @@
               余裕を持てるようにする。main の padding-bottom（75+safe-area）とも一致し、
               コンテンツ末尾とナビ上端の間の無駄な空白も消える。 --- */
         nav[data-bottom-nav] {
-            height: calc(var(--footer-height, 75px) + env(safe-area-inset-bottom, 0px)) !important;
+            /* --footer-height に safe-area が含まれているのでそのまま使う（二重加算しない）。 */
+            height: var(--footer-height) !important;
             box-sizing: border-box !important;
             background: linear-gradient(0deg,
                 rgba(24, 20, 34, 0.48) 0%,
@@ -527,7 +534,8 @@
         body.page-search .tab-page-body,
         body.page-search .search-page-body,
         body.page-talk.page-talk-list .talk-list-container {
-            padding-bottom: calc(var(--footer-height, 75px) + env(safe-area-inset-bottom, 0px) + 24px) !important;
+            /* --footer-height に safe-area 込み。二重加算しない。 */
+            padding-bottom: calc(var(--footer-height) + 24px) !important;
         }
 
         body.theme-light nav[data-bottom-nav],
@@ -740,7 +748,8 @@
             min-height: 100vh;
             min-height: 100dvh;
             padding-top: var(--header-height, 60px);
-            padding-bottom: calc(var(--footer-height, 75px) + env(safe-area-inset-bottom, 0px));
+            /* --footer-height に safe-area が含まれているのでそのまま使う（二重加算しない）。 */
+            padding-bottom: var(--footer-height);
             box-sizing: border-box;
         }
         .content-wrapper {

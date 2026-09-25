@@ -836,9 +836,10 @@ body.theme-premium-white:not(.mode-dark) .pslate .pslate__amount { filter: drop-
     opacity: 0.65;
     cursor: default;
 }
-/* 固定バーの高さぶん、本文下部に余白を確保 */
+/* 固定バーの高さぶん、本文下部に余白を確保
+   （--footer-height は safe-area 込みなので二重加算しない） */
 body:has(.profile-talk-bar) main#main-content {
-    padding-bottom: calc(var(--footer-height, 75px) + 84px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: calc(var(--footer-height, 75px) + 84px) !important;
 }
 
 

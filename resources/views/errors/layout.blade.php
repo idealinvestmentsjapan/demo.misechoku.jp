@@ -39,7 +39,9 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        min-height: calc(100vh - var(--header-height, 60px) - var(--footer-height, 75px) - env(safe-area-inset-bottom, 0px));
+        /* --footer-height に safe-area 込み。二重減算しない。dvh フォールバック付き。 */
+        min-height: calc(100vh - var(--header-height, 60px) - var(--footer-height, 75px));
+        min-height: calc(100dvh - var(--header-height, 60px) - var(--footer-height, 75px));
         padding: 20px;
         text-align: center;
     }

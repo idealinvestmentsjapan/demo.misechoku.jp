@@ -4,7 +4,7 @@
 @section('body-class', 'no-scroll page-home')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/home.css') }}?v=20260809-profile-split">
+<link rel="stylesheet" href="{{ asset('assets/css/home.css') }}?v=20260926-footer-safearea">
 {{-- Perf / tier-chip / cssMode overrides live in a separate file; load AFTER home.css. --}}
 <link rel="stylesheet" href="{{ asset('assets/css/home-perf.css') }}?v=20260809-perf-bundle">
 @endpush

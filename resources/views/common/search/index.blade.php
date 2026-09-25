@@ -4,8 +4,8 @@
 @section('body-class', request()->is('cast/*') && ($activeTab ?? null) === 'pane-ai' ? 'page-search page-search-ai' : 'page-search')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/search.css') }}?v=20260924-concierge-ui">
-<link rel="stylesheet" href="{{ asset('assets/css/search-location-bar.css') }}?v=20260808-footer-clear">
+<link rel="stylesheet" href="{{ asset('assets/css/search.css') }}?v=20260926-footer-safearea">
+<link rel="stylesheet" href="{{ asset('assets/css/search-location-bar.css') }}?v=20260926-footer-safearea">
 <link rel="stylesheet" href="{{ asset('assets/css/sub-header.css') }}">
 <style>
     /* SEARCH のタブ（検索 / 保存済み）：ラベル前のアイコン。文字と同じ色に追従させ、
@@ -103,9 +103,26 @@
             </div>
         </div>
 
-        <div class="search-results-summary text-sm text-text-sub px-4 py-3" role="status">
-            <p><strong>{{ number_format($resultCount ?? count($items)) }}件</strong>・{{ $sortOptions[$sort] ?? 'ひとこと更新が新しい順' }}</p>
-            <p data-applied-search-summary></p>
+        {{-- 検索サマリ：件数・並び順・適用中の条件をピル/チップで表示（2026-09-24 デザイン刷新）
+             従来は「1234件・ひとこと更新が新しい順」+ プレーンテキストの条件羅列で
+             デザイン性を損なっていたため、視覚的なピル+チップに置換。並び順はタップで
+             既存の sort パネル（#search-sort-trigger）を開くショートカットとして機能する。 --}}
+        <div class="search-summary" role="status" aria-live="polite">
+            <div class="search-summary__pills">
+                <span class="search-summary__count" aria-label="検索結果 {{ number_format($resultCount ?? count($items)) }}件">
+                    <i class="fas fa-list-check search-summary__count-ico" aria-hidden="true"></i>
+                    <span class="search-summary__count-num">{{ number_format($resultCount ?? count($items)) }}</span>
+                    <span class="search-summary__count-unit">件</span>
+                </span>
+                <button type="button" class="search-summary__sort"
+                        onclick="const t=document.getElementById('search-sort-trigger'); if(t){t.click();}"
+                        aria-label="並び替えを変更">
+                    <i class="fas fa-sort-amount-down" aria-hidden="true"></i>
+                    <span>{{ $sortOptions[$sort] ?? 'ひとこと更新が新しい順' }}</span>
+                    <i class="fas fa-chevron-down search-summary__sort-caret" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="search-summary__chips" data-applied-search-chips hidden></div>
         </div>
         <ul class="connection-list connection-list--search">
             @forelse($items as $item)
@@ -193,7 +210,7 @@
 
 @push('scripts')
 <script src="{{ asset('assets/js/sub-header.js') }}"></script>
-<script src="{{ asset('assets/js/search-detail.js') }}?v=20260913-uiux"></script>
+<script src="{{ asset('assets/js/search-detail.js') }}?v=20260924-summary-pills"></script>
 <script src="{{ asset('assets/js/favorite-quick.js') }}?v=20260924-coalesce"></script>
 <script>
 {{-- 上部検索バーの開閉：デフォルトは閉じ（HTML初期状態）→ タップで開閉するだけ。

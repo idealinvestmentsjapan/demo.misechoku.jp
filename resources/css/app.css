@@ -295,7 +295,8 @@
   .app-toast {
     position: fixed;
     left: 50%;
-    bottom: calc(var(--footer-height, 75px) + 24px + env(safe-area-inset-bottom, 0px));
+    /* --footer-height に safe-area 込み（app-v2 の :root 参照）。二重加算しない。 */
+    bottom: calc(var(--footer-height, 75px) + 24px);
     transform: translateX(-50%) translateY(8px);
     padding: 11px 18px;
     border-radius: 999px;

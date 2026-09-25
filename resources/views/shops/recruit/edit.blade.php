@@ -15,7 +15,8 @@
         --je-gold: #a78bfa;
         background: var(--je-bg);
         margin: 0 calc(-1 * var(--content-padding-x, 16px));
-        padding-bottom: calc(var(--footer-height, 75px) + 96px + env(safe-area-inset-bottom, 0px));
+        /* --footer-height に safe-area 込み。二重加算しない。 */
+        padding-bottom: calc(var(--footer-height, 75px) + 96px);
     }
     /* サブヘッダーは共通 sub-header.css と同じ「fixed + viewport 基準」方式。
        sticky は祖先 .content-wrapper の overflow-x: hidden がスクロールコンテキストを

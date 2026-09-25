@@ -21,9 +21,9 @@
     box-sizing: border-box;
 }
 .talk-list-container.tab-page-body {
-    /* 最後のトーク行がグローバルフッター（＋safe-area）に被らないよう、
-       フッター高 + safe-area + 24px の空きを取る。 */
-    padding: 0 0 calc(var(--footer-height, 75px) + env(safe-area-inset-bottom, 0px) + 24px);
+    /* 最後のトーク行がグローバルフッター（--footer-height に safe-area 込み）に
+       被らないよう、フッター高 + 24px の空きを取る。 */
+    padding: 0 0 calc(var(--footer-height, 75px) + 24px);
     padding-left: 0;
     padding-right: 0;
 }

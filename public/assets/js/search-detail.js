@@ -516,19 +516,71 @@
     }
 
     // 一覧側には実際に適用した条件だけを表示する（モーダル編集中は変更しない）。
-    var appliedSummary = document.querySelector('[data-applied-search-summary]');
-    if (appliedSummary && form) {
-        var appliedLines = getSummaryLines();
-        if (keywordInput && keywordInput.value.trim()) appliedLines.unshift('キーワード：' + keywordInput.value.trim());
+    // 旧: プレーンテキスト（'A / B / C' の羅列）→ 新: 各条件を独立したチップとして描画
+    //     チップは絞込モーダルを開くための CTA を兼ねる（クリックで #open-detail-search を起動）。
+    var appliedChipsRoot = document.querySelector('[data-applied-search-chips]');
+    if (appliedChipsRoot && form) {
+        var chipItems = [];
+        if (keywordInput && keywordInput.value.trim()) {
+            chipItems.push({ icon: 'fa-magnifying-glass', label: keywordInput.value.trim() });
+        }
+        getSummaryLines().forEach(function (line) {
+            // getSummaryLines() 返す文字列は「エリア：港区・新宿区」「業種：ラウンジ」等の
+            // "ラベル：値" 形式なので、そのままチップ 1 個に対応させる（icon はグループで振り分け）。
+            var iconByPrefix = {
+                'エリア':   'fa-location-dot',
+                '業種':     'fa-tags',
+                '時給':     'fa-yen-sign',
+                'ボーナス': 'fa-yen-sign',
+                '年齢':     'fa-user',
+                '出勤':     'fa-clock',
+                'キープ':   'fa-bookmark',
+                '歓迎':     'fa-heart',
+            };
+            var icon = 'fa-filter';
+            Object.keys(iconByPrefix).forEach(function (k) {
+                if (line.indexOf(k) === 0) icon = iconByPrefix[k];
+            });
+            chipItems.push({ icon: icon, label: line });
+        });
         var locationMode = form.querySelector('[name="location_mode"]:checked') || form.querySelector('[name="location_mode"][type="hidden"]');
         if (locationMode && locationMode.value !== 'none') {
             var mode = locationMode.value;
             var lat = form.querySelector('[name="' + (mode === 'passport' ? 'passport_lat' : 'current_lat') + '"]');
             var km = form.querySelector('[name="distance_km"]');
-            if (mode === 'profile' || (lat && lat.value !== '')) appliedLines.push((mode === 'profile' ? '店舗住所' : mode === 'passport' ? '指定地' : '現在地') + 'から' + (km ? km.value : '') + 'km以内（距離不明の相手を含む）');
-            else appliedLines.push('位置情報未取得のため距離では絞り込んでいません');
+            var locLabel;
+            if (mode === 'profile' || (lat && lat.value !== '')) {
+                locLabel = (mode === 'profile' ? '店舗住所' : mode === 'passport' ? '指定地' : '現在地') + 'から' + (km ? km.value : '') + 'km以内';
+            } else {
+                locLabel = '位置情報未取得';
+            }
+            chipItems.push({ icon: 'fa-location-crosshairs', label: locLabel });
         }
-        appliedSummary.textContent = appliedLines.length ? appliedLines.join(' / ') : '条件の指定なし';
+
+        while (appliedChipsRoot.firstChild) appliedChipsRoot.removeChild(appliedChipsRoot.firstChild);
+        if (chipItems.length) {
+            chipItems.forEach(function (item) {
+                var chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = 'search-summary__chip';
+                chip.setAttribute('aria-label', item.label + '（詳細フィルターを開く）');
+                chip.addEventListener('click', function () {
+                    var t = document.getElementById('open-detail-search');
+                    if (t) t.click();
+                });
+                var i = document.createElement('i');
+                i.className = 'fas ' + item.icon;
+                i.setAttribute('aria-hidden', 'true');
+                var span = document.createElement('span');
+                span.textContent = item.label;
+                chip.appendChild(i);
+                chip.appendChild(span);
+                appliedChipsRoot.appendChild(chip);
+            });
+            appliedChipsRoot.hidden = false;
+        } else {
+            appliedChipsRoot.hidden = true;
+        }
     }
 
     function doSearch(params) {
