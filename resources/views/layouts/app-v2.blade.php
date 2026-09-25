@@ -8,7 +8,7 @@
         $metaDescription = trim($__env->yieldContent('meta_description')) ?: 'ミセチョクのデモサイトです。';
         $metaImage = trim($__env->yieldContent('meta_image')) ?: asset('assets/images/pwa/icon-512.png');
         $canonicalUrl = trim($__env->yieldContent('canonical')) ?: url()->current();
-        $assetVersion = '20260926-footer-height-safearea';
+        $assetVersion = '20260926-nav-safearea-centering';
         $resolvedTitle = $metaTitle !== ''
             ? $metaTitle
             : ($pageTitle !== '' ? $pageTitle . ' | ' . config('app.name', 'ミセチョク') : config('app.name', 'ミセチョク'));
@@ -502,7 +502,17 @@
               余裕を持てるようにする。main の padding-bottom（75+safe-area）とも一致し、
               コンテンツ末尾とナビ上端の間の無駄な空白も消える。 --- */
         nav[data-bottom-nav] {
-            /* --footer-height に safe-area が含まれているのでそのまま使う（二重加算しない）。 */
+            /* --footer-height に safe-area が含まれているのでそのまま使う（二重加算しない）。
+               Tailwind の `pb-[env(safe-area-inset-bottom)]` は nav ボックス自体の
+               padding-bottom を設定するが、内側の `<div class="flex h-full">` は
+               `height: 100%` で親の border-box.height（=109px on iPhone）に張られ、
+               親の padding-bottom を "越えて" 塗り拡がる。結果、内側 flex の中央
+               (align/justify) にあるアイコン列が nav の下側 34px（safe-area zone）
+               まで下がり、iPhone のホームインジケータ帯に食い込んで見えなくなる。
+               fix: 親の padding-bottom はゼロにして、safe-area は内側 flex 側で
+               持たせる。これで内側 flex の "コンテンツ領域" が 75px に確定し、
+               アイコンは safe-area の上に正しく載る。 */
+            padding-bottom: 0 !important;
             height: var(--footer-height) !important;
             box-sizing: border-box !important;
             background: linear-gradient(0deg,
@@ -514,6 +524,16 @@
             box-shadow:
                 inset 0 -1px 0 rgba(255, 255, 255, 0.14),
                 0 -8px 28px rgba(0, 0, 0, 0.28) !important;
+        }
+        /* Inner flex row inside the nav: give it the safe-area padding-bottom
+           so `align-items: center; justify-content: center` centers the
+           nav-items in the CONTENT area (75px on iPhone), not in the full
+           box (109px). Without this, icons drift into the home-indicator
+           zone. Fix pair with the `padding-bottom: 0 !important` on the
+           parent nav[data-bottom-nav]. */
+        nav[data-bottom-nav] > div {
+            padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+            box-sizing: border-box !important;
         }
         /* ナビの文字・アイコン：フラットな紫（影・ネオンなしのシンプル表示） */
         nav[data-bottom-nav] .nav-item {
