@@ -10,53 +10,6 @@
     $facilityTags = $options['facility'] ?? collect();
     $atmosphereTags = $options['atmosphere'] ?? collect();
 
-    // 位置情報設定（MyPage 保存済みの値を初期表示に使う。クエリパラメータが優先）
-    $searchLocationSettings = $searchLocationSettings ?? [];
-    $loc = is_array($searchLocationSettings) ? $searchLocationSettings : [];
-    $reqLocationMode = (string) request('location_mode', '');
-    $allowedLocationModes = ['', 'none', 'profile', 'passport', 'current'];
-    if (!in_array($reqLocationMode, $allowedLocationModes, true)) {
-        $reqLocationMode = '';
-    }
-    $detailLocationMode = $reqLocationMode !== '' ? $reqLocationMode : (string) ($loc['mode'] ?? '');
-    if (!in_array($detailLocationMode, $allowedLocationModes, true)) {
-        $detailLocationMode = '';
-    }
-    // 登録住所（profile）モードは廃止 → 現在地扱いにフォールバック
-    if ($detailLocationMode === 'profile') {
-        $detailLocationMode = 'current';
-    }
-    $detailPassportAddress = (string) (request('passport_address', $loc['passport_address'] ?? ''));
-    $detailPassportLat = request('passport_lat', $loc['passport_latitude'] ?? '');
-    $detailPassportLng = request('passport_lng', $loc['passport_longitude'] ?? '');
-    $detailPassportLabel = (string) ($loc['passport_label'] ?? '');
-    $detailCurrentLat = (string) request('current_lat', '');
-    $detailCurrentLng = (string) request('current_lng', '');
-    $hasProfileAddress = !empty($loc['has_address']);
-    $hasProfileLocation = !empty($loc['profile_location']);
-    $profileAddressText = (string) ($loc['profile_address'] ?? '');
-
-    // 4段階スライダー（5km以内 / 20km / 30km / 40km以上=100）
-    $detailLocSliderMarks = [
-        ['value' => 5,   'label' => '5km以内'],
-        ['value' => 20,  'label' => '20km'],
-        ['value' => 30,  'label' => '30km'],
-        ['value' => 100, 'label' => '40km以上'],
-    ];
-    $reqDistanceKm = (int) request('distance_km', 0);
-    $persistedMaxKm = (int) ($loc['max_distance_km'] ?? 0);
-    $detailMaxKm = $reqDistanceKm > 0 ? $reqDistanceKm : ($persistedMaxKm > 0 ? $persistedMaxKm : 20);
-    // クエリは旧仕様（5/10/15/...）or 新仕様（5/20/30/100）どちらでも近い目盛りにスナップ
-    $detailSliderIndex = 1;
-    $minDelta = PHP_INT_MAX;
-    foreach ($detailLocSliderMarks as $i => $m) {
-        $d = abs($m['value'] - $detailMaxKm);
-        if ($d < $minDelta) { $minDelta = $d; $detailSliderIndex = $i; }
-    }
-    if ($detailMaxKm >= 40) {
-        $detailSliderIndex = 3;
-    }
-
     // 保存済み検索条件（cast_search_preferences）。フォーム未送信時は保存値をデフォルトに使う。
     $savedPrefs = request()->boolean('filters_applied') ? [] : ($savedPreferences ?? []);
     $savedIndustryIds = array_map('intval', $savedPrefs['industry_ids'] ?? []);
@@ -70,7 +23,7 @@
     $reqIndustryIds = array_map('intval', (array) request('industry_ids', []));
     $selectedIndustryIds = $reqIndustryIds !== [] ? $reqIndustryIds : $savedIndustryIds;
     $selectedIndustries = array_values((array) request('industry', []));
-    $selectedAreas = array_values((array) request('area', []));
+    $selectedAreas = array_values(array_filter((array) request('area', []), 'is_string'));
     $selectedWorkStyleTags = array_map('intval', (array) request('work_style_tag_ids', []));
     $selectedWelcomeTags = array_map('intval', (array) request('welcome_tag_ids', []));
     $selectedBenefitTags = array_map('intval', (array) request('benefit_tag_ids', []));
@@ -90,6 +43,13 @@
     $selectedWorkPeriods = $reqWorkPeriods !== [] ? $reqWorkPeriods : $savedWorkPeriods;
 
     $workPeriodLabels = ['morning' => '朝', 'day' => '昼', 'night' => '夜'];
+
+    // Areas expressed as flat list of "都道府県 市区町村" strings for the suggest input.
+    $areaNames = $areas
+        ->map(fn ($a) => (string) ($a->name ?? ''))
+        ->filter(fn ($n) => $n !== '')
+        ->values()
+        ->all();
 @endphp
 
 <div id="detail-search-modal"
@@ -108,12 +68,13 @@
 
         <div class="detail-search-modal__body detail-search-modal__body--search">
             <form id="detail-search-form" class="detail-search-form detail-search-form--search">
-                <div class="detail-search-accordion detail-search-accordion--panel" data-accordion data-summary-group="業種" data-open="true">
-                    <button type="button" class="detail-search-accordion__head" data-accordion-trigger aria-expanded="true">
+                {{-- 希望業種 --}}
+                <div class="detail-search-accordion detail-search-accordion--panel" data-accordion data-summary-group="業種" data-open="false">
+                    <button type="button" class="detail-search-accordion__head" data-accordion-trigger aria-expanded="false">
                         <span><i class="fas fa-briefcase" aria-hidden="true"></i>希望業種</span>
-                        <span class="detail-search-accordion__icon">−</span>
+                        <span class="detail-search-accordion__icon">+</span>
                     </button>
-                    <div class="detail-search-accordion__body">
+                    <div class="detail-search-accordion__body" hidden>
                         <div class="detail-search-chips detail-search-chips--search">
                             @foreach($industries as $industry)
                                 @php
@@ -130,7 +91,8 @@
                     </div>
                 </div>
 
-                <div class="detail-search-accordion detail-search-accordion--panel" data-accordion data-summary-group="出勤頻度・時間帯">
+                {{-- 希望の出勤頻度・時間帯 --}}
+                <div class="detail-search-accordion detail-search-accordion--panel" data-accordion data-summary-group="出勤頻度・時間帯" data-open="false">
                     <button type="button" class="detail-search-accordion__head" data-accordion-trigger aria-expanded="false">
                         <span><i class="fas fa-clock" aria-hidden="true"></i>希望の出勤頻度・時間帯</span>
                         <span class="detail-search-accordion__icon">+</span>
@@ -165,12 +127,12 @@
                     $availableOnMin = \Carbon\Carbon::today()->toDateString();
                     $availableOnMax = \Carbon\Carbon::today()->addDays(\App\Services\AvailabilityService::MAX_DAYS_AHEAD)->toDateString();
                 @endphp
-                <div class="detail-search-accordion detail-search-accordion--panel" data-accordion data-summary-group="すぐに入れる日" data-open="true">
-                    <button type="button" class="detail-search-accordion__head" data-accordion-trigger aria-expanded="true">
+                <div class="detail-search-accordion detail-search-accordion--panel" data-accordion data-summary-group="すぐに入れる日" data-open="false">
+                    <button type="button" class="detail-search-accordion__head" data-accordion-trigger aria-expanded="false">
                         <span><i class="fas fa-calendar-days" aria-hidden="true"></i>すぐに入れる日</span>
-                        <span class="detail-search-accordion__icon">−</span>
+                        <span class="detail-search-accordion__icon">+</span>
                     </button>
-                    <div class="detail-search-accordion__body">
+                    <div class="detail-search-accordion__body" hidden>
                         <div class="detail-search-subsection">
                             <span class="detail-search-subsection__label">この日にヘルプ募集している店舗を探す</span>
                             <input type="date" name="available_on" class="detail-search-select"
@@ -180,132 +142,39 @@
                     </div>
                 </div>
 
-                <div class="detail-search-section detail-search-section--panel detail-search-section--area" data-summary-group="エリア">
-                    <div class="detail-search-section__head">
-                        <span class="detail-search-section__title"><i class="fas fa-location-dot" aria-hidden="true"></i>エリア</span>
-                        <span class="detail-search-selection-badge" data-selection-count data-empty-label="" {{ count($selectedAreas) > 0 ? '' : 'hidden' }}>
-                            {{ count($selectedAreas) }}件選択中
-                        </span>
-                    </div>
-                    <div class="detail-search-chips detail-search-chips--search">
-                        @foreach($areas as $area)
-                            <label class="detail-search-chip detail-search-chip--search">
-                                <input type="checkbox" name="area[]" value="{{ $area->name }}" {{ in_array($area->name, $selectedAreas, true) ? 'checked' : '' }}>
-                                <span>{{ $area->name }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
-
-                <div class="detail-search-section detail-search-section--panel">
-                    <div class="detail-search-section__head">
-                        <span class="detail-search-section__title"><i class="fas fa-location-crosshairs" aria-hidden="true"></i>位置情報から探す</span>
-                    </div>
-
-                    <fieldset class="detail-search-location-modes">
-                        <legend class="sr-only">基準となる拠点</legend>
-                        <label class="detail-search-location-card" data-mode-card="none">
-                            <input type="radio" name="location_mode" value="none" @checked($detailLocationMode === 'none')>
-                            <span class="detail-search-location-card__row">距離で絞り込まない</span>
-                        </label>
-
-                        {{-- 登録住所（プロフィール住所）は廃止：拠点はマイページの「探索拠点の設定」で管理 --}}
-                        {{-- 指定地 --}}
-                        <label class="detail-search-location-card {{ $detailLocationMode === 'passport' ? 'is-selected' : '' }}" data-mode-card="passport">
-                            <input type="radio" name="location_mode" value="passport" @checked($detailLocationMode === 'passport')>
-                            <span class="detail-search-location-card__row">
-                                <i class="fas fa-map detail-search-location-card__icon"></i>
-                                <span class="detail-search-location-card__main">
-                                    <span class="detail-search-location-card__title">
-                                        指定地
-                                        <span class="detail-search-location-card__badge">PASSPORT</span>
+                {{-- エリア（サジェスト入力） --}}
+                <div class="detail-search-accordion detail-search-accordion--panel" data-accordion data-summary-group="エリア" data-open="false">
+                    <button type="button" class="detail-search-accordion__head" data-accordion-trigger aria-expanded="false">
+                        <span><i class="fas fa-location-dot" aria-hidden="true"></i>エリア</span>
+                        <span class="detail-search-accordion__icon">+</span>
+                    </button>
+                    <div class="detail-search-accordion__body" hidden>
+                        <div class="detail-search-area-suggest"
+                             data-area-suggest
+                             data-area-source='@json($areaNames)'>
+                            <div class="detail-search-area-suggest__input-wrap">
+                                <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+                                <input type="text"
+                                       class="detail-search-area-suggest__input"
+                                       data-area-suggest-input
+                                       placeholder="エリア名を入力（例: 新宿, 港区）"
+                                       autocomplete="off"
+                                       role="combobox"
+                                       aria-autocomplete="list"
+                                       aria-expanded="false">
+                                <ul class="detail-search-area-suggest__list" data-area-suggest-list role="listbox" hidden></ul>
+                            </div>
+                            <div class="detail-search-area-suggest__selected" data-area-suggest-selected>
+                                @foreach($selectedAreas as $areaName)
+                                    <span class="detail-search-area-chip" data-area-chip>
+                                        <span class="detail-search-area-chip__label">{{ $areaName }}</span>
+                                        <button type="button" class="detail-search-area-chip__remove" data-area-chip-remove aria-label="{{ $areaName }} を外す">&times;</button>
+                                        <input type="hidden" name="area[]" value="{{ $areaName }}">
                                     </span>
-                                    <span class="detail-search-location-card__sub">住所や駅名で任意の場所を指定できます</span>
-                                </span>
-                            </span>
-                            <span class="detail-search-location-card__expand" data-mode-section="passport">
-                                <span class="detail-search-location-passport-row">
-                                    <span class="detail-search-location-input-wrap detail-search-location-suggest-wrap" id="detail-search-location-suggest-wrap">
-                                        <i class="fas fa-search"></i>
-                                        <input id="detail-search-location-passport-address"
-                                               type="text"
-                                               name="passport_address"
-                                               class="detail-search-location-input"
-                                               maxlength="255"
-                                               placeholder="例: 渋谷駅, 新宿区..."
-                                               value="{{ $detailPassportAddress }}"
-                                               autocomplete="off"
-                                               role="combobox"
-                                               aria-autocomplete="list"
-                                               aria-controls="detail-search-location-suggest-list"
-                                               aria-expanded="false">
-                                        <ul class="detail-search-location-suggest-list" id="detail-search-location-suggest-list" role="listbox" hidden></ul>
-                                    </span>
-                                    <button type="button" class="detail-search-location-lookup-btn" id="detail-search-location-lookup-btn">
-                                        <i class="fas fa-magnifying-glass-location" data-lookup-icon></i>
-                                        <span data-lookup-label>検索</span>
-                                    </button>
-                                </span>
-                                <input type="hidden" name="passport_lat" id="detail-search-location-passport-lat" value="{{ $detailPassportLat }}">
-                                <input type="hidden" name="passport_lng" id="detail-search-location-passport-lng" value="{{ $detailPassportLng }}">
-                                <p class="detail-search-location-passport-status" id="detail-search-location-passport-status"
-                                   data-default-message="住所・駅名を入れて『検索』を押してください"
-                                   data-state="{{ ($detailLocationMode === 'passport' && is_numeric($detailPassportLat) && is_numeric($detailPassportLng)) ? 'resolved' : 'idle' }}">
-                                    @if($detailLocationMode === 'passport' && is_numeric($detailPassportLat) && is_numeric($detailPassportLng))
-                                        <i class="fas fa-circle-check"></i>
-                                        <span>解決済み: <strong>{{ $detailPassportLabel !== '' ? $detailPassportLabel : $detailPassportAddress }}</strong>（{{ number_format((float) $detailPassportLat, 4) }}, {{ number_format((float) $detailPassportLng, 4) }}）</span>
-                                    @else
-                                        <i class="fas fa-info-circle"></i>
-                                        <span>住所・駅名を入れて『検索』を押してください</span>
-                                    @endif
-                                </p>
-                            </span>
-                        </label>
-
-                        {{-- 現在地 --}}
-                        <label class="detail-search-location-card {{ $detailLocationMode === 'current' ? 'is-selected' : '' }}" data-mode-card="current">
-                            <input type="radio" name="location_mode" value="current" @checked($detailLocationMode === 'current')>
-                            <span class="detail-search-location-card__row">
-                                <i class="fas fa-location-crosshairs detail-search-location-card__icon"></i>
-                                <span class="detail-search-location-card__main">
-                                    <span class="detail-search-location-card__title">現在地</span>
-                                    <span class="detail-search-location-card__sub">端末の位置情報を使用します</span>
-                                </span>
-                                <i class="fas fa-circle-check detail-search-location-card__check" data-current-check {{ ($detailCurrentLat !== '' && $detailCurrentLng !== '') ? '' : 'hidden' }}></i>
-                            </span>
-                            <span class="detail-search-location-card__expand" data-mode-section="current">
-                                <button type="button" class="detail-search-location-current-btn" id="detail-search-location-current-btn">
-                                    <i class="fas fa-location-crosshairs" aria-hidden="true"></i>
-                                    <span data-current-btn-label>最新の現在地を取得する</span>
-                                </button>
-                                <p class="detail-search-location-hint" id="detail-search-location-current-label" {{ ($detailCurrentLat !== '' && $detailCurrentLng !== '') ? '' : 'hidden' }}>
-                                    <i class="fas fa-info-circle"></i>
-                                    <span>最新の位置情報が反映されています</span>
-                                </p>
-                                <input type="hidden" name="current_lat" id="detail-search-location-current-lat" value="{{ $detailCurrentLat }}">
-                                <input type="hidden" name="current_lng" id="detail-search-location-current-lng" value="{{ $detailCurrentLng }}">
-                            </span>
-                        </label>
-                    </fieldset>
-
-                    {{-- 半径スライダー（5km以内 / 20km / 30km / 40km以上=100） --}}
-                    <div class="detail-search-location-radius">
-                        <div class="detail-search-location-slider">
-                            <div class="detail-search-location-slider__marks" id="detail-search-location-slider-marks">
-                                @foreach($detailLocSliderMarks as $i => $m)
-                                    <span class="detail-search-location-slider__mark {{ $i === $detailSliderIndex ? 'is-active' : '' }}" data-slider-mark="{{ $i }}">{{ $m['label'] }}</span>
                                 @endforeach
                             </div>
-                            <input type="range"
-                                   id="detail-search-location-slider"
-                                   class="detail-search-location-range"
-                                   min="0" max="{{ count($detailLocSliderMarks) - 1 }}" step="1"
-                                   value="{{ $detailSliderIndex }}"
-                                   aria-label="距離">
-                            <div class="detail-search-location-slider__value" id="detail-search-location-slider-value">{{ $detailLocSliderMarks[$detailSliderIndex]['label'] }}</div>
+                            <p class="detail-search-area-suggest__hint">入力欄に文字を入れると候補が出ます。選ぶとタグとして追加されます。</p>
                         </div>
-                        {{-- 実際に submit される km 値（スライダー操作で更新） --}}
-                        <input type="hidden" name="distance_km" id="detail-search-location-distance-km" value="{{ $detailLocSliderMarks[$detailSliderIndex]['value'] }}">
                     </div>
                 </div>
 
@@ -402,12 +271,12 @@
                     </div>
                 </div>
 
-                <div class="detail-search-accordion detail-search-accordion--panel" data-accordion data-summary-group="店舗の雰囲気・設備" data-open="true">
-                    <button type="button" class="detail-search-accordion__head" data-accordion-trigger aria-expanded="true">
+                <div class="detail-search-accordion detail-search-accordion--panel" data-accordion data-summary-group="店舗の雰囲気・設備" data-open="false">
+                    <button type="button" class="detail-search-accordion__head" data-accordion-trigger aria-expanded="false">
                         <span><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>店舗の雰囲気・設備</span>
-                        <span class="detail-search-accordion__icon">−</span>
+                        <span class="detail-search-accordion__icon">+</span>
                     </button>
-                    <div class="detail-search-accordion__body">
+                    <div class="detail-search-accordion__body" hidden>
                         <div class="detail-search-chips detail-search-chips--search">
                             @foreach($atmosphereTags as $tag)
                                 <label class="detail-search-chip detail-search-chip--search">
@@ -439,238 +308,129 @@
 @push('scripts')
 <script>
 (function () {
-    // ===== 位置情報セクション（cast 詳細検索） =====
     var form = document.getElementById('detail-search-form');
     if (!form) return;
 
-    var sliderMarks = @json($detailLocSliderMarks);
-    var range = document.getElementById('detail-search-location-slider');
-    var rangeMarks = document.querySelectorAll('#detail-search-location-slider-marks .detail-search-location-slider__mark');
-    var rangeValueLabel = document.getElementById('detail-search-location-slider-value');
-    var distanceKmInput = document.getElementById('detail-search-location-distance-km');
-    var modeCards = form.querySelectorAll('[data-mode-card]');
-    var modeInputs = form.querySelectorAll('input[name="location_mode"]');
-    var passportInput = document.getElementById('detail-search-location-passport-address');
-    var passportLatEl = document.getElementById('detail-search-location-passport-lat');
-    var passportLngEl = document.getElementById('detail-search-location-passport-lng');
-    var lookupBtn = document.getElementById('detail-search-location-lookup-btn');
-    var lookupLabelEl = lookupBtn ? lookupBtn.querySelector('[data-lookup-label]') : null;
-    var passportStatus = document.getElementById('detail-search-location-passport-status');
-    var lookupUrl = @json(route('api.geocoding.lookup'));
-    var suggestUrl = @json(route('api.geocoding.suggest'));
-    var currentBtn = document.getElementById('detail-search-location-current-btn');
-    var currentBtnLabel = currentBtn ? currentBtn.querySelector('[data-current-btn-label]') : null;
-    var currentLatEl = document.getElementById('detail-search-location-current-lat');
-    var currentLngEl = document.getElementById('detail-search-location-current-lng');
-    var currentLabelEl = document.getElementById('detail-search-location-current-label');
-    var currentCheck = form.querySelector('[data-current-check]');
+    // ===== Area suggest input =====
+    var areaBlocks = form.querySelectorAll('[data-area-suggest]');
+    areaBlocks.forEach(function (block) {
+        var input = block.querySelector('[data-area-suggest-input]');
+        var list = block.querySelector('[data-area-suggest-list]');
+        var selected = block.querySelector('[data-area-suggest-selected]');
+        var source = [];
+        try { source = JSON.parse(block.getAttribute('data-area-source') || '[]'); }
+        catch (e) { source = []; }
+        if (!input || !list || !selected) return;
 
-    function syncMode() {
-        var checked = form.querySelector('input[name="location_mode"]:checked');
-        var current = checked ? checked.value : '';
-        modeCards.forEach(function (card) {
-            card.classList.toggle('is-selected', card.getAttribute('data-mode-card') === current);
-        });
-    }
-    modeInputs.forEach(function (i) { i.addEventListener('change', syncMode); });
-    syncMode();
-
-    function syncSlider() {
-        var idx = parseInt(range && range.value, 10);
-        if (isNaN(idx) || idx < 0 || idx >= sliderMarks.length) idx = 0;
-        var mark = sliderMarks[idx];
-        if (rangeValueLabel) rangeValueLabel.textContent = mark.label;
-        if (distanceKmInput) distanceKmInput.value = String(mark.value);
-        rangeMarks.forEach(function (el) {
-            el.classList.toggle('is-active', parseInt(el.getAttribute('data-slider-mark'), 10) === idx);
-        });
-    }
-    if (range) {
-        range.addEventListener('input', syncSlider);
-        range.addEventListener('change', syncSlider);
-    }
-    rangeMarks.forEach(function (el) {
-        el.addEventListener('click', function () {
-            var i = parseInt(el.getAttribute('data-slider-mark'), 10);
-            if (!isNaN(i) && range) { range.value = String(i); syncSlider(); }
-        });
-    });
-    syncSlider();
-
-    // 指定地ジオコーディング
-    function escapeHtml(s) {
-        return String(s).replace(/[<>&"]/g, function (c) {
-            return ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' })[c];
-        });
-    }
-    function setPassportStatus(state, html) {
-        if (!passportStatus) return;
-        passportStatus.setAttribute('data-state', state);
-        passportStatus.innerHTML = html;
-    }
-    function clearPassportCoords() {
-        if (passportLatEl) passportLatEl.value = '';
-        if (passportLngEl) passportLngEl.value = '';
-    }
-    function setLookupLoading(isLoading) {
-        if (!lookupBtn) return;
-        lookupBtn.disabled = !!isLoading;
-        lookupBtn.classList.toggle('is-loading', !!isLoading);
-        if (lookupLabelEl) lookupLabelEl.textContent = isLoading ? '検索中...' : '検索';
-    }
-    function performLookup() {
-        if (!passportInput) return;
-        var q = (passportInput.value || '').trim();
-        if (q === '') {
-            setPassportStatus('error', '<i class="fas fa-circle-exclamation"></i><span>住所または駅名を入力してください</span>');
-            return;
+        function currentSelectedNames() {
+            return Array.from(selected.querySelectorAll('input[name="area[]"]'))
+                .map(function (i) { return i.value; });
         }
-        setLookupLoading(true);
-        setPassportStatus('loading', '<i class="fas fa-spinner"></i><span>位置情報を検索中...</span>');
-        var url = lookupUrl + (lookupUrl.indexOf('?') >= 0 ? '&' : '?') + 'q=' + encodeURIComponent(q);
-        fetch(url, { method: 'GET', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
-            .then(function (res) {
-                setLookupLoading(false);
-                if (res.ok && res.body && res.body.success) {
-                    if (passportLatEl) passportLatEl.value = String(res.body.latitude);
-                    if (passportLngEl) passportLngEl.value = String(res.body.longitude);
-                    var label = res.body.label || q;
-                    var lat = parseFloat(res.body.latitude).toFixed(4);
-                    var lng = parseFloat(res.body.longitude).toFixed(4);
-                    setPassportStatus('resolved',
-                        '<i class="fas fa-circle-check"></i><span>解決済み: <strong>' +
-                        escapeHtml(label) + '</strong>（' + lat + ', ' + lng + '）</span>'
-                    );
-                } else {
-                    clearPassportCoords();
-                    var msg = (res.body && res.body.message) ? res.body.message : '位置情報を取得できませんでした。';
-                    setPassportStatus('error', '<i class="fas fa-circle-xmark"></i><span>' + escapeHtml(msg) + '</span>');
-                }
-            })
-            .catch(function () {
-                setLookupLoading(false);
-                clearPassportCoords();
-                setPassportStatus('error', '<i class="fas fa-circle-xmark"></i><span>通信に失敗しました</span>');
-            });
-    }
-    if (lookupBtn) lookupBtn.addEventListener('click', performLookup);
-    if (passportInput) {
-        passportInput.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); performLookup(); }
+
+        function closeList() {
+            list.hidden = true;
+            list.innerHTML = '';
+            input.setAttribute('aria-expanded', 'false');
+        }
+
+        function addArea(name) {
+            if (!name) return;
+            if (currentSelectedNames().indexOf(name) !== -1) return;
+            var wrap = document.createElement('span');
+            wrap.className = 'detail-search-area-chip';
+            wrap.setAttribute('data-area-chip', '');
+            var labelEl = document.createElement('span');
+            labelEl.className = 'detail-search-area-chip__label';
+            labelEl.textContent = name;
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'detail-search-area-chip__remove';
+            btn.setAttribute('data-area-chip-remove', '');
+            btn.setAttribute('aria-label', name + ' を外す');
+            btn.innerHTML = '&times;';
+            var hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'area[]';
+            hidden.value = name;
+            wrap.appendChild(labelEl);
+            wrap.appendChild(btn);
+            wrap.appendChild(hidden);
+            selected.appendChild(wrap);
+            form.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        function renderList(q) {
+            list.innerHTML = '';
+            var already = currentSelectedNames();
+            var candidates = source
+                .filter(function (n) { return already.indexOf(n) === -1; })
+                .filter(function (n) { return q === '' || n.indexOf(q) !== -1; })
+                .slice(0, 20);
+            if (candidates.length === 0) {
+                var empty = document.createElement('li');
+                empty.className = 'detail-search-area-suggest__empty';
+                empty.textContent = '候補が見つかりません';
+                list.appendChild(empty);
+            } else {
+                candidates.forEach(function (name) {
+                    var li = document.createElement('li');
+                    li.className = 'detail-search-area-suggest__item';
+                    li.setAttribute('role', 'option');
+                    li.setAttribute('data-area-value', name);
+                    li.innerHTML = '<i class="fas fa-map-marker-alt" aria-hidden="true"></i><span></span>';
+                    li.querySelector('span').textContent = name;
+                    list.appendChild(li);
+                });
+            }
+            list.hidden = false;
+            input.setAttribute('aria-expanded', 'true');
+        }
+
+        input.addEventListener('input', function () {
+            var q = (input.value || '').trim();
+            if (q === '') { closeList(); return; }
+            renderList(q);
         });
-        passportInput.addEventListener('input', function () {
-            if (passportStatus && passportStatus.getAttribute('data-state') === 'resolved') {
-                clearPassportCoords();
-                var defaultMsg = passportStatus.getAttribute('data-default-message') || '住所・駅名を入れて『検索』を押してください';
-                setPassportStatus('idle', '<i class="fas fa-info-circle"></i><span>' + defaultMsg + '</span>');
+        input.addEventListener('focus', function () {
+            var q = (input.value || '').trim();
+            if (q !== '') renderList(q);
+        });
+        input.addEventListener('blur', function () { setTimeout(closeList, 150); });
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) {
+                e.preventDefault();
+                var q = (input.value || '').trim();
+                if (q !== '' && source.indexOf(q) !== -1) {
+                    addArea(q);
+                    input.value = '';
+                    closeList();
+                }
+            } else if (e.key === 'Escape') {
+                closeList();
             }
         });
-    }
 
-    // サジェスト
-    var suggestListEl = document.getElementById('detail-search-location-suggest-list');
-    var suggestSeq = 0;
-    var suggestDebounceTimer = null;
-    function closeSuggest() {
-        if (!suggestListEl) return;
-        suggestListEl.hidden = true;
-        suggestListEl.innerHTML = '';
-        if (passportInput) passportInput.setAttribute('aria-expanded', 'false');
-    }
-    function renderSuggest(candidates) {
-        if (!suggestListEl) return;
-        suggestListEl.innerHTML = '';
-        if (!candidates || candidates.length === 0) {
-            var empty = document.createElement('li');
-            empty.className = 'detail-search-location-suggest-empty';
-            empty.textContent = '候補が見つかりません';
-            suggestListEl.appendChild(empty);
-        } else {
-            candidates.forEach(function (c) {
-                var li = document.createElement('li');
-                li.className = 'detail-search-location-suggest-item';
-                li.setAttribute('role', 'option');
-                li.setAttribute('data-lat', String(c.latitude));
-                li.setAttribute('data-lng', String(c.longitude));
-                li.setAttribute('data-label', c.label);
-                li.innerHTML = '<i class="fas fa-map-marker-alt"></i><span>' + escapeHtml(c.label) + '</span>';
-                suggestListEl.appendChild(li);
-            });
-        }
-        suggestListEl.hidden = false;
-        if (passportInput) passportInput.setAttribute('aria-expanded', 'true');
-    }
-    function fetchSuggest(q) {
-        if (!suggestUrl) return;
-        var seq = ++suggestSeq;
-        var url = suggestUrl + (suggestUrl.indexOf('?') >= 0 ? '&' : '?') + 'q=' + encodeURIComponent(q);
-        fetch(url, { method: 'GET', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(function (r) { return r.ok ? r.json() : null; })
-            .then(function (json) {
-                if (seq !== suggestSeq) return;
-                if (!json) { closeSuggest(); return; }
-                renderSuggest(json.candidates || []);
-            })
-            .catch(function () { closeSuggest(); });
-    }
-    if (passportInput && suggestListEl) {
-        passportInput.addEventListener('input', function () {
-            var q = (passportInput.value || '').trim();
-            clearTimeout(suggestDebounceTimer);
-            if (q.length < 2) { closeSuggest(); return; }
-            suggestDebounceTimer = setTimeout(function () { fetchSuggest(q); }, 220);
-        });
-        passportInput.addEventListener('focus', function () {
-            var q = (passportInput.value || '').trim();
-            if (q.length >= 2) fetchSuggest(q);
-        });
-        passportInput.addEventListener('blur', function () { setTimeout(closeSuggest, 150); });
-        suggestListEl.addEventListener('mousedown', function (e) {
-            var li = e.target.closest && e.target.closest('.detail-search-location-suggest-item');
+        list.addEventListener('mousedown', function (e) {
+            var li = e.target.closest && e.target.closest('.detail-search-area-suggest__item');
             if (!li) return;
             e.preventDefault();
-            var label = li.getAttribute('data-label') || '';
-            var lat = li.getAttribute('data-lat') || '';
-            var lng = li.getAttribute('data-lng') || '';
-            passportInput.value = label;
-            if (passportLatEl) passportLatEl.value = lat;
-            if (passportLngEl) passportLngEl.value = lng;
-            setPassportStatus('resolved',
-                '<i class="fas fa-circle-check"></i><span>解決済み: <strong>' + escapeHtml(label) +
-                '</strong>（' + parseFloat(lat).toFixed(4) + ', ' + parseFloat(lng).toFixed(4) + '）</span>'
-            );
-            closeSuggest();
+            var name = li.getAttribute('data-area-value') || '';
+            addArea(name);
+            input.value = '';
+            closeList();
+            input.focus();
         });
-    }
 
-    // 現在地取得
-    function setCurrentLoading(isLoading) {
-        if (!currentBtn) return;
-        currentBtn.disabled = !!isLoading;
-        currentBtn.classList.toggle('is-loading', !!isLoading);
-        if (currentBtnLabel) currentBtnLabel.textContent = isLoading ? '取得中...' : '最新の現在地を取得する';
-    }
-    if (currentBtn) {
-        currentBtn.addEventListener('click', function () {
-            if (!navigator.geolocation) {
-                setPassportStatus('error', '<i class="fas fa-circle-xmark"></i><span>この端末では位置情報を取得できません。</span>');
-                return;
-            }
-            setCurrentLoading(true);
-            navigator.geolocation.getCurrentPosition(function (pos) {
-                setCurrentLoading(false);
-                if (currentLatEl) currentLatEl.value = pos.coords.latitude.toFixed(7);
-                if (currentLngEl) currentLngEl.value = pos.coords.longitude.toFixed(7);
-                if (currentLabelEl) currentLabelEl.hidden = false;
-                if (currentCheck) currentCheck.hidden = false;
-            }, function () {
-                setCurrentLoading(false);
-            }, { enableHighAccuracy: true, maximumAge: 60000, timeout: 8000 });
+        selected.addEventListener('click', function (e) {
+            var btn = e.target.closest && e.target.closest('[data-area-chip-remove]');
+            if (!btn) return;
+            var chip = btn.closest('[data-area-chip]');
+            if (chip) chip.remove();
+            form.dispatchEvent(new Event('change', { bubbles: true }));
         });
-    }
+    });
 
-    // ===== 検索実行時に条件を自動保存（保存ボタンは廃止） =====
+    // ===== Auto-save conditions on submit =====
     var saveBtn = form.closest('.detail-search-modal__window')?.querySelector('[data-detail-search-submit]');
     if (!saveBtn || !saveBtn.dataset.saveUrl) return;
 
@@ -685,7 +445,6 @@
     }
 
     saveBtn.addEventListener('click', function () {
-        // 検索遷移と並行して条件を保存（keepalive でナビゲーション後も送信継続）
         var payload = new FormData();
         payload.append('_token', (document.querySelector('meta[name="csrf-token"]') || {}).content || '');
         readCheckedValues('industry_ids[]').forEach(function (v) { payload.append('industry_ids[]', v); });
@@ -703,7 +462,7 @@
                 credentials: 'same-origin',
                 keepalive: true
             });
-        } catch (e) { /* 保存失敗は検索を妨げない */ }
+        } catch (e) { /* save failure must not block search */ }
     });
 })();
 </script>
@@ -722,91 +481,17 @@
     gap: 8px;
     flex-wrap: wrap;
 }
-.detail-search-modal__btn--save {
-    flex: 1 1 auto;
-    background: rgba(168, 85, 247, 0.10);
-    border: 1px solid var(--color-border-strong);
-    color: var(--gold-light);
-    padding: 10px 14px;
-    border-radius: 10px;
-    font-weight: 700;
-    font-size: 0.84rem;
-    cursor: pointer;
-    transition: background 0.15s ease;
-}
-.detail-search-modal__btn--save:hover { background: rgba(168, 85, 247, 0.18); }
-.detail-search-modal__save-feedback {
-    padding: 8px 16px 0;
-    margin: 0;
-    font-size: 0.76rem;
-    text-align: center;
-}
-.detail-search-modal__save-feedback.is-success { color: var(--color-success); }
-.detail-search-modal__save-feedback.is-error { color: var(--color-danger); }
 
-/* ===== 位置情報設定（cast 詳細検索：インライン UI） ===== */
-.detail-search-location-modes { border: 0; padding: 0; margin: 0 0 14px; display: flex; flex-direction: column; gap: 8px; }
-.detail-search-location-card {
-    position: relative;
-    display: block;
-    padding: 12px 14px;
-    border-radius: 14px;
-    border: 1px solid var(--color-border, #4a2f3e);
-    background: rgba(255, 255, 255, 0.03);
-    cursor: pointer;
-    transition: border-color 0.18s ease, background 0.18s ease, opacity 0.18s ease;
-}
-.detail-search-location-card:hover { border-color: rgba(232, 195, 114, 0.5); }
-.detail-search-location-card.is-selected {
-    border-color: #E8C372;
-    background: rgba(232, 195, 114, 0.10);
-}
-.detail-search-location-card.is-disabled-soft:not(.is-selected) { opacity: 0.7; }
-.detail-search-location-card input[type="radio"] {
-    position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;
-}
-.detail-search-location-card__row { display: flex; align-items: flex-start; gap: 12px; }
-.detail-search-location-card__icon {
-    color: rgba(255, 255, 255, 0.45);
-    font-size: 1.05rem;
-    margin-top: 2px;
-    transition: color 0.18s ease;
-}
-.detail-search-location-card.is-selected .detail-search-location-card__icon { color: #E8C372; }
-.detail-search-location-card__main { flex: 1; min-width: 0; }
-.detail-search-location-card__title {
-    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-    font-size: 0.92rem; font-weight: 700;
-    color: rgba(255, 255, 255, 0.85);
-}
-.detail-search-location-card.is-selected .detail-search-location-card__title { color: #fff; }
-.detail-search-location-card__badge {
-    font-size: 0.60rem; letter-spacing: 0.14em; font-weight: 800;
-    padding: 2px 8px; border-radius: 4px;
-    background: linear-gradient(135deg, #E8C372, #a78bfa);
-    color: #1a1015;
-}
-.detail-search-location-card__sub {
-    display: block;
-    margin-top: 4px;
-    font-size: 0.72rem; line-height: 1.5;
-    color: rgba(255, 255, 255, 0.55);
-}
-.detail-search-location-card__sub.is-warn { color: #fca5a5; }
-.detail-search-location-card__check { color: #34d399; font-size: 1.05rem; margin-top: 2px; }
-
-.detail-search-location-card__expand { display: none; margin: 12px 0 0 28px; }
-.detail-search-location-card.is-selected .detail-search-location-card__expand { display: block; }
-
-.detail-search-location-passport-row { display: flex; gap: 8px; align-items: stretch; }
-.detail-search-location-passport-row .detail-search-location-input-wrap { flex: 1; min-width: 0; }
-.detail-search-location-input-wrap { position: relative; display: block; }
-.detail-search-location-input-wrap > i {
+/* ===== Area suggest input ===== */
+.detail-search-area-suggest { display: flex; flex-direction: column; gap: 10px; }
+.detail-search-area-suggest__input-wrap { position: relative; }
+.detail-search-area-suggest__input-wrap > i {
     position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
     color: rgba(255, 255, 255, 0.45);
     font-size: 0.85rem;
+    pointer-events: none;
 }
-.detail-search-location-input {
+.detail-search-area-suggest__input {
     width: 100%; box-sizing: border-box;
     padding: 10px 14px 10px 36px;
     border-radius: 10px;
@@ -815,43 +500,9 @@
     color: #fff;
     font-size: 0.86rem;
 }
-.detail-search-location-input::placeholder { color: rgba(255, 255, 255, 0.35); }
-.detail-search-location-input:focus { outline: none; border-color: #E8C372; box-shadow: 0 0 0 3px rgba(232, 195, 114, 0.15); }
-
-.detail-search-location-lookup-btn {
-    flex-shrink: 0;
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 0 14px;
-    border: 0;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #E8C372, #a78bfa);
-    color: #1a1015;
-    font-size: 0.80rem; font-weight: 800;
-    cursor: pointer;
-    transition: filter 0.15s ease;
-}
-.detail-search-location-lookup-btn:hover { filter: brightness(1.05); }
-.detail-search-location-lookup-btn:disabled { opacity: 0.6; cursor: wait; }
-.detail-search-location-lookup-btn.is-loading [data-lookup-icon] { animation: detail-search-location-spin 0.9s linear infinite; }
-
-.detail-search-location-passport-status {
-    display: flex; align-items: flex-start; gap: 6px;
-    margin: 10px 0 0;
-    font-size: 0.72rem; line-height: 1.55;
-    color: rgba(255, 255, 255, 0.6);
-}
-.detail-search-location-passport-status i { color: rgba(232, 195, 114, 0.6); margin-top: 2px; }
-.detail-search-location-passport-status[data-state="resolved"] { color: rgba(110, 231, 183, 0.95); }
-.detail-search-location-passport-status[data-state="resolved"] i { color: #34d399; }
-.detail-search-location-passport-status[data-state="resolved"] strong { color: #fff; font-weight: 800; }
-.detail-search-location-passport-status[data-state="error"] { color: #fca5a5; }
-.detail-search-location-passport-status[data-state="error"] i { color: #fca5a5; }
-.detail-search-location-passport-status[data-state="loading"] { color: rgba(232, 195, 114, 0.85); }
-.detail-search-location-passport-status[data-state="loading"] i { color: #E8C372; animation: detail-search-location-spin 0.9s linear infinite; }
-@keyframes detail-search-location-spin { to { transform: rotate(360deg); } }
-
-.detail-search-location-suggest-wrap { position: relative; }
-.detail-search-location-suggest-list {
+.detail-search-area-suggest__input::placeholder { color: rgba(255, 255, 255, 0.35); }
+.detail-search-area-suggest__input:focus { outline: none; border-color: #E8C372; box-shadow: 0 0 0 3px rgba(232, 195, 114, 0.15); }
+.detail-search-area-suggest__list {
     position: absolute;
     top: calc(100% + 4px);
     left: 0; right: 0;
@@ -859,115 +510,67 @@
     margin: 0;
     padding: 4px;
     list-style: none;
-    max-height: 220px;
+    max-height: 240px;
     overflow-y: auto;
     background: var(--color-card-strong, #1a1a1a);
     border: 1px solid var(--color-border-strong, rgba(168, 85, 247, 0.4));
     border-radius: 10px;
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55);
 }
-.detail-search-location-suggest-list[hidden] { display: none; }
-.detail-search-location-suggest-item {
+.detail-search-area-suggest__list[hidden] { display: none; }
+.detail-search-area-suggest__item {
     display: flex; align-items: center; gap: 8px;
     padding: 8px 10px;
     border-radius: 8px;
-    font-size: 0.80rem;
+    font-size: 0.82rem;
     color: var(--color-text, #d8c9a8);
     cursor: pointer;
     transition: background 0.12s ease, color 0.12s ease;
 }
-.detail-search-location-suggest-item:hover,
-.detail-search-location-suggest-item.is-active {
+.detail-search-area-suggest__item:hover,
+.detail-search-area-suggest__item.is-active {
     background: rgba(168, 85, 247, 0.12);
     color: var(--color-text-header, #c4b5fd);
 }
-.detail-search-location-suggest-item i { color: var(--gold, #a78bfa); font-size: 0.78rem; }
-.detail-search-location-suggest-empty {
+.detail-search-area-suggest__item i { color: var(--gold, #a78bfa); font-size: 0.78rem; }
+.detail-search-area-suggest__empty {
     padding: 10px;
     font-size: 0.76rem;
     color: var(--color-text-muted, rgba(216,201,168,0.65));
     text-align: center;
 }
-
-.detail-search-location-current-btn {
-    width: 100%;
-    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    padding: 10px 14px;
-    border-radius: 10px;
-    border: 0;
-    background: rgba(255, 255, 255, 0.06);
+.detail-search-area-suggest__hint {
+    margin: 0;
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+.detail-search-area-suggest__selected {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    min-height: 4px;
+}
+.detail-search-area-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 6px 4px 10px;
+    border-radius: 999px;
+    background: rgba(232, 195, 114, 0.14);
+    border: 1px solid rgba(232, 195, 114, 0.4);
     color: #fff;
-    font-size: 0.84rem; font-weight: 600;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+.detail-search-area-chip__label { line-height: 1.2; }
+.detail-search-area-chip__remove {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px;
+    border: 0;
+    background: rgba(0, 0, 0, 0.35);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 0.9rem;
+    line-height: 1;
     cursor: pointer;
     transition: background 0.15s ease;
 }
-.detail-search-location-current-btn:hover { background: rgba(255, 255, 255, 0.12); }
-.detail-search-location-current-btn:disabled { opacity: 0.6; cursor: wait; }
-.detail-search-location-current-btn i { color: #E8C372; }
-.detail-search-location-current-btn.is-loading i { animation: detail-search-location-spin 0.9s linear infinite; }
-.detail-search-location-hint {
-    display: flex; align-items: center; gap: 6px;
-    margin: 10px 0 0;
-    font-size: 0.70rem;
-    color: rgba(255, 255, 255, 0.5);
-}
-.detail-search-location-hint i { color: rgba(232, 195, 114, 0.6); }
-
-.detail-search-location-radius { margin-top: 8px; padding-top: 12px; border-top: 1px solid rgba(74, 47, 62, 0.6); }
-.detail-search-location-slider { padding: 6px 4px 0; }
-.detail-search-location-slider__marks {
-    display: flex; justify-content: space-between;
-    font-size: 0.68rem;
-    color: rgba(255, 255, 255, 0.4);
-    padding: 0 2px;
-    margin-bottom: 10px;
-}
-.detail-search-location-slider__mark { transition: color 0.15s ease; cursor: pointer; }
-.detail-search-location-slider__mark.is-active { color: #E8C372; font-weight: 700; }
-.detail-search-location-range {
-    -webkit-appearance: none; appearance: none;
-    width: 100%; background: transparent;
-    margin: 6px 0;
-    cursor: pointer;
-}
-.detail-search-location-range:focus { outline: none; }
-.detail-search-location-range:focus-visible { outline: 2px solid var(--accent, #d670a2); outline-offset: 4px; border-radius: 4px; }
-.detail-search-location-range::-webkit-slider-runnable-track {
-    width: 100%; height: 16px;
-    background: rgba(0, 0, 0, 0.35);
-    border-radius: 999px;
-    border: 1px solid #6b4c5a;
-}
-.detail-search-location-range::-webkit-slider-thumb {
-    -webkit-appearance: none; appearance: none;
-    height: 22px; width: 22px;
-    border-radius: 50%;
-    background: #E8C372;
-    border: 2px solid #1a1015;
-    box-shadow: 0 0 14px rgba(232, 195, 114, 0.5);
-    margin-top: -4px;
-    cursor: pointer;
-}
-.detail-search-location-range::-moz-range-track {
-    width: 100%; height: 16px;
-    background: rgba(0, 0, 0, 0.35);
-    border-radius: 999px;
-    border: 1px solid #6b4c5a;
-}
-.detail-search-location-range::-moz-range-thumb {
-    height: 22px; width: 22px;
-    border-radius: 50%;
-    background: #E8C372;
-    border: 2px solid #1a1015;
-    box-shadow: 0 0 14px rgba(232, 195, 114, 0.5);
-    cursor: pointer;
-}
-.detail-search-location-slider__value {
-    text-align: center;
-    margin-top: 10px;
-    font-size: 1.0rem; font-weight: 800;
-    color: #E8C372;
-    letter-spacing: 0.04em;
-}
+.detail-search-area-chip__remove:hover { background: rgba(220, 38, 38, 0.7); }
 </style>
 @endpush
