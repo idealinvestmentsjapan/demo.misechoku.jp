@@ -1000,7 +1000,6 @@ class MemberRepository implements MemberRepositoryInterface
                 $ind_id_str  .= $val->ind_id . ",";
                 $ind_id_arr[] = $val->ind_id;
             }
-            //    list($latitude,$longitude) = \ShopInfoUtil::latLng($member->pref,$member->addr1,$member->addr2);
         }
 
         $ind_id_str = rtrim($ind_id_str, ",");

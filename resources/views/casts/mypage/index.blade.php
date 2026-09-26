@@ -16,7 +16,6 @@
     $addressText = $addressText !== '' ? $addressText : '--';
     $zipText     = !empty($cast['zip']) ? ('〒' . $cast['zip']) : '';
     $iconImage   = ($cast['img'] ?? null) ?: ($subImages[0]['url'] ?? asset('assets/images/common/no-image.png'));
-    $bonusTotal  = number_format((int) ($cast['bonus_total'] ?? 0));
     $photoCount  = count($subImages);
     $word        = trim((string) ($cast['word'] ?? ''));
     $wordPlaceholder = '今、何してる？（タイムラインに公開されます）';
@@ -88,13 +87,13 @@
                 </span>
                 <div class="cast-avail__title-block">
                     <p id="availability-card-title" class="cast-avail__title">
-                        入れる候補日
+                        入れる日を宣言
                     </p>
                     <p class="cast-avail__lead" data-availability-summary>
                         @if($availActive)
-                            {{ collect($availSelected)->map(fn ($d) => \App\Services\AvailabilityService::shortLabel($d))->implode('・') }} を宣言中
+                            {{ collect($availSelected)->map(fn ($d) => \App\Services\AvailabilityService::shortLabel($d))->implode('・') }} <span class="cast-avail__lead-tag">宣言中</span>
                         @else
-                            入れる日を選ぶと（最大{{ $availMaxDates }}日）、店舗の検索・SWIPE で優先表示されます
+                            選ぶだけで店舗の検索・SWIPE で優先表示
                         @endif
                     </p>
                 </div>
@@ -102,11 +101,12 @@
                     <button type="button" class="cast-avail__btn cast-avail__btn--primary" data-availability-open
                             aria-haspopup="dialog" aria-controls="availability-modal">
                         <i class="fas fa-calendar-days"></i>
-                        <span>{{ $availActive ? '変更する' : '候補日を選ぶ' }}</span>
+                        <span>{{ $availActive ? '変更' : '日を選ぶ' }}</span>
                     </button>
                     @if($availActive)
-                        <button type="button" class="cast-avail__btn cast-avail__btn--danger" data-availability-clear>
-                            <i class="fas fa-xmark"></i> 取消
+                        <button type="button" class="cast-avail__btn cast-avail__btn--danger cast-avail__btn--icon-only" data-availability-clear
+                                aria-label="宣言を取消">
+                            <i class="fas fa-xmark" aria-hidden="true"></i>
                         </button>
                     @endif
                 </div>
@@ -120,7 +120,7 @@
                     <header class="cast-avail__dialog-head">
                         <h2 id="availability-modal-title" class="cast-avail__dialog-title">
                             <i class="fas fa-calendar-days" aria-hidden="true"></i>
-                            入れる候補日を選ぶ
+                            入れる日を選ぶ
                         </h2>
                         <button type="button" class="cast-avail__dialog-close"
                                 data-availability-close aria-label="閉じる">
@@ -129,16 +129,16 @@
                     </header>
                     <div class="cast-avail__dialog-body">
                         <p class="cast-avail__dialog-hint">
-                            最大{{ $availMaxDates }}日まで、{{ $availDaysAhead }}日先まで選べます
+                            最大{{ $availMaxDates }}日・{{ $availDaysAhead }}日先まで
                         </p>
                         <div class="cast-avail__cal" data-availability-calendar></div>
                     </div>
                     <footer class="cast-avail__dialog-foot">
                         <button type="button" class="cast-avail__btn cast-avail__btn--ghost" data-availability-close>
-                            キャンセル
+                            戻る
                         </button>
                         <button type="button" class="cast-avail__btn cast-avail__btn--primary" data-availability-save disabled>
-                            <i class="fas fa-check"></i> 設定する
+                            <i class="fas fa-check"></i> 決定
                         </button>
                     </footer>
                 </div>
@@ -159,11 +159,6 @@
                     ])
                 </div>
             </div>
-        </div>
-
-        <div class="mb-4 flex items-center justify-between rounded-2xl border border-line-accent/40 bg-gradient-to-br from-surface-from to-base px-4 py-3 shadow-card-3d">
-            <span class="text-[12px] font-bold text-text-sub">受取済みボーナス総額</span>
-            <strong class="text-[18px] text-accent-text">¥{{ $bonusTotal }}</strong>
         </div>
 
         {{-- ===== 管理メニュー =====
@@ -489,7 +484,7 @@
 <script>
 window.MYPAGE_AVAILABILITY_CONFIG = { csrfToken: @json(csrf_token()) };
 </script>
-<script src="{{ asset('assets/js/mypage-availability.js') }}?v=20260926-availability-modal"></script>
+<script src="{{ asset('assets/js/mypage-availability.js') }}?v=20260926-availability-card2"></script>
 
 {{-- ===== ギャラリー機能：元のスクリプト群 ===== --}}
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
@@ -596,5 +591,5 @@ window.MYPAGE_GALLERY_CONFIG = {
 
 </style>
 {{-- 「今すぐ入れる」宣言カードの外部 CSS --}}
-<link rel="stylesheet" href="{{ asset('assets/css/mypage-availability.css') }}?v=20260926-availability-modal">
+<link rel="stylesheet" href="{{ asset('assets/css/mypage-availability.css') }}?v=20260926-availability-card2">
 @endpush

@@ -28,11 +28,6 @@ class RepositoryServiceProvider extends ServiceProvider
     {
         //
         $this->app->bind(
-            \App\Repositories\Shop\ShopRepositoryInterface::class,
-            \App\Repositories\Shop\ShopRepository::class,
-        );
-
-        $this->app->bind(
             \App\Repositories\Shop\JobRepositoryInterface::class,
             \App\Repositories\Shop\JobRepository::class,
         );

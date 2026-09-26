@@ -41,6 +41,19 @@
         var openBtn = availCard.querySelector('[data-availability-open]');
         var savedSnapshot = null;
 
+        // Sync the visual state of the trigger button and inline icon with is-active.
+        function syncActiveVisual(isActive) {
+            if (openBtn) {
+                var labelEl = openBtn.querySelector('span');
+                if (labelEl) labelEl.textContent = isActive ? '変更' : '日を選ぶ';
+            }
+            var iconWrap = availCard.querySelector('.cast-avail__icon i');
+            if (iconWrap) {
+                iconWrap.classList.remove('fa-bolt', 'fa-calendar-days');
+                iconWrap.classList.add(isActive ? 'fa-bolt' : 'fa-calendar-days');
+            }
+        }
+
         function openModal() {
             if (!modalEl) return;
             savedSnapshot = Array.from(selected);
@@ -109,9 +122,14 @@
             var dates = Array.from(selected).sort();
             if (summaryEl) {
                 if (dates.length === 0) {
-                    summaryEl.textContent = 'カレンダーから入れる日を選んでください（最大' + maxDates + '日）';
+                    summaryEl.textContent = '選ぶだけで店舗の検索・SWIPE で優先表示';
                 } else {
-                    summaryEl.textContent = dates.map(shortLabel).join('・') + (saved ? ' を宣言中' : ' を選択中（未保存）');
+                    var tagLabel = saved ? '宣言中' : '未保存';
+                    summaryEl.innerHTML = dates.map(shortLabel).map(function (label) {
+                        return label.replace(/[&<>"']/g, function (c) {
+                            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+                        });
+                    }).join('・') + ' <span class="cast-avail__lead-tag">' + tagLabel + '</span>';
                 }
             }
             if (saveBtn) saveBtn.disabled = false;
@@ -267,7 +285,9 @@
                 .then(function (res) {
                     save.disabled = false;
                     if (res.ok && res.body && res.body.success) {
-                        availCard.classList.toggle('is-active', dates.length > 0);
+                        var nowActive = dates.length > 0;
+                        availCard.classList.toggle('is-active', nowActive);
+                        syncActiveVisual(nowActive);
                         savedSnapshot = dates.slice();
                         refreshSummary(true);
                         closeModal(false);
@@ -302,6 +322,8 @@
                         selected.clear();
                         savedSnapshot = [];
                         availCard.classList.remove('is-active');
+                        syncActiveVisual(false);
+                        if (clearBtn.parentNode) clearBtn.parentNode.removeChild(clearBtn);
                         renderCalendar();
                         refreshSummary(true);
                         (window.appToast || function () {})('候補日の設定を取り消しました', 'success');

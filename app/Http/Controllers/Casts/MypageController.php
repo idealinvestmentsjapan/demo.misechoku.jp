@@ -880,15 +880,6 @@ class MypageController extends Controller
                 ->count();
         }
 
-        $bonusTotal = 0;
-        if (Schema::hasTable('application_deposits') && Schema::hasTable('shop_job_applications')) {
-            $bonusTotal = (int) DB::table('application_deposits')
-                ->join('shop_job_applications', 'application_deposits.shop_job_application_id', '=', 'shop_job_applications.id')
-                ->where('shop_job_applications.cast_id', $castId)
-                ->whereNotNull('application_deposits.bonus_amount')
-                ->sum('application_deposits.bonus_amount');
-        }
-
         // 画像: cast_images を id + url で取得（is_main を先に）
         $images = [];
         $castImages = DB::table('cast_images')
@@ -958,7 +949,6 @@ class MypageController extends Controller
             'is_kept'          => true,
             'view_cnt'         => $viewCount,
             'match_cnt'        => $matchCount,
-            'bonus_total'      => $bonusTotal,
             'zip'              => $castRow->zip ?? '',
             'pref'             => $castRow->pref ?? '',
             'city'             => $castRow->city ?? '',
@@ -1029,7 +1019,6 @@ class MypageController extends Controller
             'is_kept'          => false,
             'view_cnt'         => 0,
             'match_cnt'        => 0,
-            'bonus_total'      => 0,
             'zip'              => '',
             'pref'             => '',
             'city'             => '',

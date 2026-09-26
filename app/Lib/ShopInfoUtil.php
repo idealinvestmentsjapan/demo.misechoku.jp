@@ -644,46 +644,6 @@ class ShopInfoUtil extends Facade {
     }
 
 
-    public static function latLng($pref, $city = '', $addr2 = '', $addr3 = '', $shop = null)
-    {
-        // Pref bắt buộc, nếu không có thì return luôn
-        if (empty($pref)) {
-            return [null, null];
-        }
-
-        // Build full address
-        $fullAddress = $pref;
-        if (!empty($city))  $fullAddress .= $city;
-        if (!empty($addr2)) $fullAddress .= $addr2;
-        if (!empty($addr3)) $fullAddress .= $addr3;
-
-        $apiKey = config("services.google-map.apikey");
-        $apiUrl = "https://maps.googleapis.com/maps/api/geocode/json?key={$apiKey}&region=jp&address=";
-
-        $lat = null;
-        $lng = null;
-
-        $res = @file_get_contents($apiUrl . urlencode($fullAddress . ', Japan'));
-
-        if ($res !== false) {
-            $data = json_decode($res, true);
-
-            if (!empty($data['results'][0]['geometry']['location'])) {
-                $lat = (float)$data['results'][0]['geometry']['location']['lat'];
-                $lng = (float)$data['results'][0]['geometry']['location']['lng'];
-
-                // Nếu có object shop thì lưu luôn
-                if ($shop) {
-                    $shop->latitude = $lat;
-                    $shop->longitude = $lng;
-                    $shop->save();
-                }
-            }
-        }
-
-        return [$lat, $lng];
-    }
-
     public static function calDistance ($request) {
 
         $latitude  = $request->get('latitude');

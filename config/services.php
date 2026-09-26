@@ -58,12 +58,6 @@ return [
 
     ],
 
-    'google-map' => [
-        'apikey' => env('GOOGLE_MAP_API'),
-        'apikey_ip' => env('GOOGLE_MAP_API_IP'),
-
-     ],
-
     /*
     |--------------------------------------------------------------------------
     | Web Push (PWA 通知)
