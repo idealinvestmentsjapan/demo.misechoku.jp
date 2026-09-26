@@ -59,13 +59,10 @@
             </span>
         </div>
 
-        {{-- 4軸アイコンの帯（イラスト行） --}}
+        {{-- 4軸のコード：紫色で装飾した英字4文字をシンプルに並べる（丸チップ不使用） --}}
         <div class="ptype-axis-strip">
             @foreach($ptInfo['axes'] as $axis)
-                <span class="ptype-axis-chip bg-gradient-to-br {{ $ptToneChip[$axis['tone']] ?? 'from-accent-grad-from/80 to-accent-grad-to/80' }}">
-                    <i class="fas {{ $axis['icon'] }}"></i>
-                    <span class="ptype-axis-chip__code app-title">{{ $axis['code'] }}</span>
-                </span>
+                <span class="ptype-axis-letter app-title">{{ $axis['code'] }}</span>
             @endforeach
         </div>
     </button>

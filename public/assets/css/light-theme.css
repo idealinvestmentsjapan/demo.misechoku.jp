@@ -1399,17 +1399,17 @@ body:not(.theme-light) .page-lead { color: #b8b8b8; }
    （チップ / ツールバー / 位置情報カード / スライダー / サジェスト）
    ============================================================ */
 body.theme-light .detail-search-chip--search {
-    background: #ffffff;
-    border-color: rgba(124, 58, 237, 0.12);
+    background: rgba(124, 58, 237, 0.06);
+    border-color: transparent;
     color: #574d6f;
 }
 body.theme-light .detail-search-chip--search:hover {
-    background: rgba(124, 58, 237, 0.05);
-    border-color: rgba(124, 58, 237, 0.28);
+    background: rgba(124, 58, 237, 0.12);
+    border-color: transparent;
 }
 body.theme-light .detail-search-chip--search:has(input:checked) {
     background: #6d28d9;
-    border-color: #6d28d9;
+    border-color: transparent;
     color: #ffffff;
     box-shadow: none;
 }
@@ -1740,19 +1740,20 @@ body.theme-light .detail-search-modal__btn--submit {
         inset 0 1px 0 rgba(255, 255, 255, 0.30);
 }
 
-/* タグ（スリム型）：プロフィールのタグと同じ薄紫ウォッシュ + 濃色文字 */
+/* タグ（スリム型）：プロフィールのタグと同じ薄紫ウォッシュ + 濃色文字
+   枠線はチップ背景と二重に見えるため透明化 */
 body.theme-light .detail-search-chip--search {
     background: rgba(168, 85, 247, 0.08);
-    border-color: rgba(168, 85, 247, 0.30);
+    border-color: transparent;
     color: #4b465c;
 }
 body.theme-light .detail-search-chip--search:hover {
-    background: rgba(168, 85, 247, 0.12);
-    border-color: rgba(124, 58, 237, 0.45);
+    background: rgba(168, 85, 247, 0.14);
+    border-color: transparent;
 }
 body.theme-light .detail-search-chip--search:has(input:checked) {
     background: #6d28d9;
-    border-color: #6d28d9;
+    border-color: transparent;
     color: #ffffff;
     box-shadow: none;
 }
@@ -1923,18 +1924,20 @@ body.theme-light .talk-scout-quota.is-empty {
 }
 
 
-/* §28 詳細検索 タグ再リファイン + エリア検索 + レンジ（ライト配色） */
+/* §28 詳細検索 タグ再リファイン + エリア検索 + レンジ（ライト配色）
+   枠線はチップ背景と二重に見えるため透明化（背景色のみでタグ矩形を表現） */
 body.theme-light .detail-search-chip.detail-search-chip--search {
-    background: #ffffff !important;
-    border-color: rgba(124, 58, 237, 0.35) !important;
+    background: rgba(124, 58, 237, 0.08) !important;
+    border-color: transparent !important;
     color: #4b465c;
 }
 body.theme-light .detail-search-chip.detail-search-chip--search:hover {
-    border-color: rgba(124, 58, 237, 0.60) !important;
+    background: rgba(124, 58, 237, 0.16) !important;
+    border-color: transparent !important;
 }
 body.theme-light .detail-search-chip.detail-search-chip--search:has(input:checked) {
     background: #6d28d9 !important;
-    border-color: #6d28d9 !important;
+    border-color: transparent !important;
     color: #ffffff !important;
 }
 body.theme-light .detail-search-area-filter {

@@ -145,37 +145,26 @@
     letter-spacing: 0.08em;
 }
 
-/* Axis strip below the main row: 4 illustrated chips */
+/* Axis code row: 4 violet letters lined up simply (no round chips per letter) */
 .ptype-axis-strip {
     position: relative;
     z-index: 1;
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 6px;
-    padding: 0 12px 12px;
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 14px;
+    padding: 2px 14px 12px;
 }
 
-.ptype-axis-chip {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    min-width: 0;
-    min-height: 30px;
-    padding: 3px 6px;
-    border-radius: 999px;
-    color: #fff;
-    font-size: 0.72rem;
-    line-height: 1;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.28),
-                inset 0 1px 0 rgba(255, 255, 255, 0.25);
-    overflow: hidden;
-}
-.ptype-axis-chip i { font-size: 0.78rem; flex-shrink: 0; }
-.ptype-axis-chip__code {
-    font-size: 0.68rem;
+.ptype-axis-letter {
+    font-size: 1.35rem;
     font-weight: 900;
-    letter-spacing: 0.05em;
+    line-height: 1;
+    letter-spacing: 0.06em;
+    color: var(--accent-text, #c4b5fd);
+    text-shadow:
+        0 0 12px rgba(var(--accent-rgb, 214, 112, 162), 0.35),
+        0 1px 0 rgba(0, 0, 0, 0.25);
 }
 
 /* --------------------------------------------------------------------------
@@ -186,7 +175,9 @@
 .ptype-modal {
     position: fixed;
     inset: 0;
-    z-index: 1100;
+    /* Global header uses z-index: 1500 (layout-header.css) and side drawer 2500.
+       Sit above both so the panel is not clipped by the header at the top. */
+    z-index: 2600;
     display: none;
     align-items: center;
     justify-content: center;

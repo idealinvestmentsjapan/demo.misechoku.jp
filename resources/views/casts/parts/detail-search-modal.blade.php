@@ -552,25 +552,25 @@
     display: inline-flex; align-items: center; gap: 6px;
     padding: 4px 6px 4px 10px;
     border-radius: 999px;
-    background: rgba(232, 195, 114, 0.14);
-    border: 1px solid rgba(232, 195, 114, 0.4);
-    color: #fff;
+    background: #E8C372;
+    border: 0;
+    color: #1a1015;
     font-size: 0.78rem;
-    font-weight: 600;
+    font-weight: 700;
 }
 .detail-search-area-chip__label { line-height: 1.2; }
 .detail-search-area-chip__remove {
     display: inline-flex; align-items: center; justify-content: center;
     width: 22px; height: 22px;
     border: 0;
-    background: rgba(0, 0, 0, 0.35);
-    color: #fff;
+    background: rgba(26, 16, 21, 0.18);
+    color: #1a1015;
     border-radius: 50%;
     font-size: 0.9rem;
     line-height: 1;
     cursor: pointer;
     transition: background 0.15s ease;
 }
-.detail-search-area-chip__remove:hover { background: rgba(220, 38, 38, 0.7); }
+.detail-search-area-chip__remove:hover { background: rgba(220, 38, 38, 0.85); color: #fff; }
 </style>
 @endpush

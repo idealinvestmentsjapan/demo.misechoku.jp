@@ -511,7 +511,7 @@ window.MYPAGE_GALLERY_CONFIG = {
 <link rel="stylesheet" href="{{ asset('assets/css/cast_profile.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/css/mypage.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/css/mypage-tiles.css') }}">
-<link rel="stylesheet" href="{{ asset('assets/css/personality-type.css') }}?v=20260926-ptype-rebuild">
+<link rel="stylesheet" href="{{ asset('assets/css/personality-type.css') }}?v=20260926-ptype-letters">
 {{-- ギャラリーグリッドへの上書き（#gallery-list 配下のみ。色は触らずレイアウトだけ） --}}
 <style>
     #gallery-list {

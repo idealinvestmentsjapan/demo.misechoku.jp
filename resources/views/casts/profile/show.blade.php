@@ -8,7 +8,7 @@
 
 @push('head-styles')
 <link rel="stylesheet" href="{{ asset('assets/css/fav-actions.css') }}">
-<link rel="stylesheet" href="{{ asset('assets/css/personality-type.css') }}?v=20260926-ptype-rebuild">
+<link rel="stylesheet" href="{{ asset('assets/css/personality-type.css') }}?v=20260926-ptype-letters">
 <style>
     /* ===== プロフィールギャラリー：Instagram 風 3 列（cast/mypage と同パターン） ===== */
     #profile-gallery-list {

@@ -5902,3 +5902,59 @@ body.page-home .cast-card--recruit .photo-swiper .swiper-slide img {
     background-color: var(--color-main);
 }
 
+/* ============================================================================
+   2026-09-26: 評価チップ (.rc-rating-chip) を .rc-premium-row 内で優良店バッヂと
+   同じ高さ・同じピル形状で並べる。旧 .rc-rating-inline はメタ行の末尾で 0.82rem に
+   縮小されて他情報に埋もれていたため、視認性が低かった。
+   デザインは "gold-badge との対比" を意識してダークガラス + 金色★の組み合わせ。
+   ============================================================================ */
+.rc-rating-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    /* .premium-badge と同じ縦パディング (3px) + 同じ font-size (11px) + line-height 1.2
+       → 高さが完全に揃う。左右パディングは ★ アイコン分だけ 8px でバランス。 */
+    padding: 3px 9px 3px 8px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(246, 211, 106, 0.42);
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+    white-space: nowrap;
+    vertical-align: middle;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 2px 6px rgba(0, 0, 0, 0.25);
+}
+.rc-rating-chip__star {
+    color: #f6d36a;
+    font-size: 0.95em;
+    line-height: 1;
+    filter: drop-shadow(0 0 3px rgba(246, 211, 106, 0.45));
+}
+.rc-rating-chip__value {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+}
+.rc-rating-chip__count {
+    color: rgba(255, 255, 255, 0.66);
+    font-weight: 600;
+    font-size: 0.86em;
+    letter-spacing: 0;
+    margin-left: 1px;
+}
+
+/* Light-mode: keep contrast against light card surfaces (unused on SWIPE today but
+   safe defaults for other placements that might reuse the chip). */
+body.theme-light:not(.mode-dark) .rc-rating-chip,
+body.theme-premium-white:not(.mode-dark) .rc-rating-chip {
+    background: rgba(30, 24, 46, 0.86);
+    color: #ffffff;
+    border-color: rgba(246, 211, 106, 0.55);
+}
+

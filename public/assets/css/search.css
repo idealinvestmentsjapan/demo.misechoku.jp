@@ -1588,13 +1588,14 @@ body.page-search .connection-list--search {
 }
 
 /* MyPage / プロフィールのタグ（px-2 py-1 rounded bg-accent/10 border-line-accent/30 text-[11px]）
-   と同じサイズ・デザインのスリムなタグ型に統一 */
+   と同じサイズ・デザインのスリムなタグ型に統一。
+   枠線はチップ背景と二重に見えるため透明化（背景色でチップの矩形を表現）。 */
 .detail-search-chip--search {
     min-height: 0;
     padding: 4px 8px;
     border-radius: 4px;
     background: rgba(168, 85, 247, 0.10);
-    border-color: rgba(168, 85, 247, 0.30);
+    border-color: transparent;
     color: var(--color-text, #f5f5f5);
     font-size: 11px;
     font-weight: 600;
@@ -1602,13 +1603,14 @@ body.page-search .connection-list--search {
 }
 
 .detail-search-chip--search:hover {
-    border-color: rgba(168, 85, 247, 0.50);
+    background: rgba(168, 85, 247, 0.18);
+    border-color: transparent;
 }
 
 /* 選択状態：色反転（バイオレットのベタ塗り + 白文字。チェックマークなし） */
 .detail-search-chip--search:has(input:checked) {
     background: #7c3aed;
-    border-color: #7c3aed;
+    border-color: transparent;
     color: #ffffff;
 }
 

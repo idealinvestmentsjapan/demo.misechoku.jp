@@ -4,7 +4,7 @@
 @section('body-class', 'no-scroll page-home')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/home.css') }}?v=20260926-recruit-photo-parity">
+<link rel="stylesheet" href="{{ asset('assets/css/home.css') }}?v=20260926-rating-chip">
 {{-- Perf / tier-chip / cssMode overrides live in a separate file; load AFTER home.css. --}}
 <link rel="stylesheet" href="{{ asset('assets/css/home-perf.css') }}?v=20260809-perf-bundle">
 @endpush
@@ -80,12 +80,19 @@
                         @php
                             $helpDateLabels = array_values(array_filter((array) ($item['help_date_labels'] ?? [])));
                         @endphp
-                        @if($isRecruit && (!empty($item['is_premium']) || $helpDateLabels !== []))
+                        @if($isRecruit && (!empty($item['is_premium']) || $helpDateLabels !== [] || $hasRating))
                             <div class="rc-premium-row" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
                                 @if(!empty($item['is_premium']))
                                     <button type="button" class="premium-badge-btn stop-propagation" data-open-premium-info aria-haspopup="dialog" aria-controls="modal-premium-info" aria-label="優良店バッヂの達成条件">
                                         <x-ui.premium-badge />
                                     </button>
+                                @endif
+                                @if($hasRating)
+                                    {{-- 評価チップ：優良店バッヂと同じ高さで並べて視認性を上げる。
+                                         2026-09-26: 従来はメタ行末尾で他情報に埋もれていた。 --}}
+                                    <span class="rc-rating-chip" aria-label="評価 {{ number_format((float)$item['rating'], 1) }}@if((int)($item['review_count'] ?? 0) > 0)（{{ (int)$item['review_count'] }}件のレビュー）@endif">
+                                        <span class="rc-rating-chip__star" aria-hidden="true">★</span><span class="rc-rating-chip__value">{{ number_format((float)$item['rating'], 1) }}</span>@if((int)($item['review_count'] ?? 0) > 0)<span class="rc-rating-chip__count">({{ (int)$item['review_count'] }})</span>@endif
+                                    </span>
                                 @endif
                                 @if($helpDateLabels !== [])
                                     <span class="shop-avail-tag" aria-label="日付指定のヘルプ募集">
@@ -122,11 +129,8 @@
                                 @if(!empty($item['distance_label']))
                                     <span class="rc-dist"><i class="fas fa-route" aria-hidden="true"></i>自分から {{ $item['distance_label'] }}</span>
                                 @endif
-                                @if($hasRating)
-                                    <span class="rc-rating-inline">
-                                        <span class="rc-star" aria-hidden="true">★</span>{{ number_format((float)$item['rating'], 1) }}@if((int)($item['review_count'] ?? 0) > 0)<span class="rc-review-cnt">({{ (int)$item['review_count'] }}件)</span>@endif
-                                    </span>
-                                @endif
+                                {{-- 評価は上部の rc-premium-row に .rc-rating-chip として移設済み (2026-09-26)。
+                                     メタ行末尾では小さくて埋もれていたのを、優良店バッヂと同じ高さで対比表示。 --}}
                             @else
                                 @if(!empty($item['industry_name']))
                                     <span class="rc-genre">{{ $item['industry_name'] }}</span>
