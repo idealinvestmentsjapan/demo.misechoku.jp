@@ -1087,19 +1087,21 @@ body.no-scroll main#main-content .content-wrapper {
     background-color: var(--color-main);
 }
 
-/* 画像下端〜黒へのグラデーション（画像エリア内） */
+/* 画像下端〜黒へのグラデーション（画像エリア内）。
+   body.page-home では ::before/::after が既に下部スクリムを担っているため、
+   ここではその上乗せを最小限に留める（旧: 70%×0.72黒 → 新: 35%×0.35黒）。 */
 .rc-img-gradient {
     position: absolute;
     left: 0;
     right: 0;
     bottom: 0;
-    height: 70%;
+    height: 35%;
     background: linear-gradient(
         to bottom,
         rgba(5, 5, 5, 0) 0%,
-        rgba(5, 5, 5, 0.2) 18%,
-        rgba(5, 5, 5, 0.72) 52%,
-        #050505 100%
+        rgba(5, 5, 5, 0.08) 30%,
+        rgba(5, 5, 5, 0.35) 70%,
+        rgba(5, 5, 5, 0.65) 100%
     );
     pointer-events: none;
     z-index: 6;
@@ -1842,16 +1844,22 @@ body.page-home .main-layout-container {
     background: var(--discovery-base);
 }
 
-/* 画像全体への薄い暗幕（上→下、左→右、いずれでもなく中央に薄め）と、下端の強グラデ */
+/* 画像上の暗幕（2026-09-26 大幅減量）:
+   従来は ::before で上半分に 50% 黒 (opacity 0.95)、::after で下 75% を強い黒で埋めており、
+   店舗の雰囲気（内装・照明・スタッフ）がほぼ見えなくなっていた。
+   テキスト可読性は下端の情報帯直上に集中させ、写真の中央部はほぼクリアに見せる。 */
 body.page-home .home-photo-wrap::before,
 body.page-home .rc-img-wrap::before {
     content: '';
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background:
-        linear-gradient(180deg, rgba(0,0,0,0.50) 0%, rgba(0,0,0,0) 35%, var(--discovery-base) 100%);
-    opacity: 0.95;
+    /* ヘッダー直下の視認性のためだけの薄い上部スクリム。中央は完全に透過。 */
+    background: linear-gradient(180deg,
+        rgba(0, 0, 0, 0.28) 0%,
+        rgba(0, 0, 0, 0.08) 18%,
+        transparent 35%);
+    opacity: 1;
     z-index: 2;
 }
 body.page-home .home-photo-wrap::after,
@@ -1859,13 +1867,13 @@ body.page-home .rc-img-wrap::after {
     content: '';
     position: absolute;
     left: 0; right: 0; bottom: 0;
-    height: 75%;
+    /* 下部情報帯（トークCTA・時給スレート・店名）直上のみ黒く保つ。以前は 75% 高さで写真の大半を潰していた。 */
+    height: 46%;
     pointer-events: none;
     background: linear-gradient(0deg,
-        var(--discovery-base) 0%,
-        rgba(5,5,5,0.92) 18%,
-        rgba(5,5,5,0.80) 35%,
-        rgba(5,5,5,0.40) 60%,
+        rgba(5, 5, 5, 0.88) 0%,
+        rgba(5, 5, 5, 0.58) 32%,
+        rgba(5, 5, 5, 0.22) 62%,
         transparent 100%);
     z-index: 3;
 }
@@ -2205,15 +2213,30 @@ body.page-home .photo-swiper .swiper-slide {
     border-radius: 0 !important;
 }
 
+/* 2026-09-26: 4:5 で登録された写真を横方向にトリミングせず全部見せる。
+   従来 cover では、縦長スマホ(9:19+) では左右がそれぞれ 130-140px 単位で切り落ちていた。
+   contain で中央に配置し、上下の余白は body.page-home の card 背景（--discovery-base）が担う。
+   object-position: center は、上下均等に余白を分けて写真を垂直センターに置く。 */
 body.page-home .home-photo,
 body.page-home .photo-swiper .swiper-slide img {
     width: 100% !important;
     height: 100% !important;
     max-width: none !important;
     max-height: none !important;
-    object-fit: cover !important;
-    object-position: center center !important;
+    object-fit: contain !important;
+    /* Top-align the photo so it sits just under the fixed 60px header. The remaining
+       vertical space below the photo becomes the dark backdrop area where the info bar
+       naturally overlays with high contrast. */
+    object-position: center top !important;
     border-radius: 0 !important;
+}
+/* 写真の背後には同じ写真をぼかしで敷き、上下の余白を「そのお店の色調で埋める」。
+   contain のレターボックス感（単色黒帯）を無くし、雰囲気を維持しつつ写真本体をフルに見せる。
+   inline style で --card-photo-url を渡す想定（未指定時は無地の暗色背景にフォールバック）。 */
+body.page-home .home-photo-wrap,
+body.page-home .cast-card--recruit .rc-img-wrap {
+    background:
+        radial-gradient(ellipse at center, #1a0f22 0%, #050307 90%);
 }
 
 /* オーバーレイ要素（情報帯・アクション・ガイド）は絶対配置で画像上に重ねる */
@@ -3739,7 +3762,10 @@ body.page-home .cast-card--recruit .rc-bottom-bar {
     position: absolute !important;
     left: 0 !important;
     right: 0 !important;
-    bottom: calc(var(--footer-height, 75px) + 14px) !important;
+    /* Include env(safe-area-inset-bottom) so iOS home-indicator doesn't clip the talk CTA.
+       The footer itself extends its padding into that safe area, so the CTA must sit
+       above 75px footer height + safe-area + a small breathing gap. */
+    bottom: calc(var(--footer-height, 75px) + env(safe-area-inset-bottom, 0px) + 14px) !important;
     padding: 0 80px 6px 14px !important;  /* 右側 80px をアイコン列に空ける */
     background: transparent !important;
 }
@@ -5725,7 +5751,10 @@ body.page-home {
    ===================================================================== */
 .home-location-fab {
     position: absolute;
-    top: calc(24px + 12px); /* #home-screen top padding is 24px; nest the pill 12px inside the card image */
+    /* SWIPE (body.page-home) makes #home-screen full-bleed under the fixed 60px header,
+       so the pill must clear the header. Non-SWIPE contexts (unused today) also benefit
+       from this since header height is the correct reference in either case. */
+    top: calc(var(--header-height, 60px) + 12px);
     left: calc(var(--content-padding-x, 15px) + 10px);
     z-index: 30;
     display: inline-flex;
@@ -5792,16 +5821,29 @@ body.page-home {
    also sits at the top of #home-screen. Push the pill below the band when
    present so they don't collide. */
 #home-screen:has(.home-help-band--cast) .home-location-fab {
-    top: calc(24px + 8px + 110px);
+    top: calc(var(--header-height, 60px) + 8px + 110px);
 }
 #home-screen:has(.home-help-band--shop) .home-location-fab {
-    top: calc(24px + 8px + 62px);
+    top: calc(var(--header-height, 60px) + 8px + 62px);
+}
+
+/* If any visible card carries a manager "catch-copy" message (centered at the top
+   of the image), push the left-anchored pill down so they don't visually collide
+   on narrow viewports. Manager msg is min-height 44px + 12px top offset. */
+#home-screen:has(.cast-card--recruit .rc-manager-msg) .home-location-fab {
+    top: calc(var(--header-height, 60px) + 12px + 52px);
+}
+
+/* SWIPE (body.page-home) full-bleed places #home-screen behind the fixed 60px header.
+   Push the help-band down so its title doesn't disappear behind the header. */
+body.page-home .home-help-band {
+    top: calc(var(--header-height, 60px) + 8px);
 }
 
 /* Small viewports: tighten the pill so long ward names still show fully. */
 @media (max-width: 380px) {
     .home-location-fab {
-        top: calc(24px + 10px);
+        top: calc(var(--header-height, 60px) + 10px);
         left: calc(var(--content-padding-x, 15px) + 8px);
         padding: 6px 9px;
         font-size: 0.78rem;

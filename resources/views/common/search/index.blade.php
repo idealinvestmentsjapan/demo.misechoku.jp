@@ -4,7 +4,7 @@
 @section('body-class', request()->is('cast/*') && ($activeTab ?? null) === 'pane-ai' ? 'page-search page-search-ai' : 'page-search')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/search.css') }}?v=20260926-summary-two-row">
+<link rel="stylesheet" href="{{ asset('assets/css/search.css') }}?v=20260926-ai-composer-fix">
 <link rel="stylesheet" href="{{ asset('assets/css/search-location-bar.css') }}?v=20260926-decouple-sidebar">
 <link rel="stylesheet" href="{{ asset('assets/css/sub-header.css') }}">
 <style>
@@ -104,28 +104,25 @@
             </div>
         </div>
 
-        {{-- 検索サマリ（2026-09-26 再整理）:
-             ・並び替えトリガは検索フィルター上部から撤去（機能重複回避）
-             ・件数は左端にプレーンテキスト、並び替えは右端にピル状ドロップダウン
-             ・適用中の条件チップは 2 行目に配置し、はみ出す場合のみ横スクロール --}}
+        {{-- 検索サマリ（2026-09-26 単行化）:
+             件数（固定）／適用中の条件チップ（横スクロール）／並び替えピル（固定）
+             をひとつの行にまとめて、縦占有を約 32-36px に圧縮する。 --}}
         <div class="search-summary" role="status" aria-live="polite">
-            <div class="search-summary__row">
-                <span class="search-summary__count" aria-label="検索結果 {{ number_format($resultCount ?? count($items)) }}件">
-                    <strong class="search-summary__count-num">{{ number_format($resultCount ?? count($items)) }}</strong><span class="search-summary__count-unit">件</span>
-                </span>
-                <div class="search-summary__sort-wrap">
-                    <button type="button" id="search-sort-trigger"
-                            class="search-summary__sort"
-                            aria-label="並び替えを変更"
-                            aria-haspopup="true" aria-expanded="false" aria-controls="search-sort-panel">
-                        <span class="search-summary__sort-label">並び替え</span>
-                        <span class="search-summary__sort-value">{{ $sortOptions[$sort] ?? 'ひとこと更新が新しい順' }}</span>
-                        <i class="fas fa-chevron-down search-summary__sort-caret" aria-hidden="true"></i>
-                    </button>
-                    @include('common.search.sort-panel')
-                </div>
-            </div>
+            <span class="search-summary__count" aria-label="検索結果 {{ number_format($resultCount ?? count($items)) }}件">
+                <strong class="search-summary__count-num">{{ number_format($resultCount ?? count($items)) }}</strong><span class="search-summary__count-unit">件</span>
+            </span>
             <div class="search-summary__chips" data-applied-search-chips hidden></div>
+            <div class="search-summary__sort-wrap">
+                <button type="button" id="search-sort-trigger"
+                        class="search-summary__sort"
+                        aria-label="並び替えを変更"
+                        aria-haspopup="true" aria-expanded="false" aria-controls="search-sort-panel">
+                    <i class="fas fa-sort-amount-down search-summary__sort-icon" aria-hidden="true"></i>
+                    <span class="search-summary__sort-value">{{ $sortOptions[$sort] ?? 'ひとこと更新が新しい順' }}</span>
+                    <i class="fas fa-chevron-down search-summary__sort-caret" aria-hidden="true"></i>
+                </button>
+                @include('common.search.sort-panel')
+            </div>
         </div>
         <ul class="connection-list connection-list--search">
             @forelse($items as $item)

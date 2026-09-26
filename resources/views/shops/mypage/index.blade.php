@@ -54,88 +54,6 @@
             </div>
         </div>
 
-        {{-- ===== 「ヘルプ募集日を設定」（キャスト MyPage の「働きたい日を設定」と対称） =====
-             MyPage 上はラベル + ボタンのみ。機能説明とカレンダーはモーダル内に集約する。
-             時給設定・応募者一覧は /shop/help-recruitment に集約。
-             宣言ルートは shop.owner ミドルウェア配下のため、オーナーのみ表示。 --}}
-        @shopowner
-        @php
-            $availSelected   = $availabilityDates ?? [];
-            $availActive     = count($availSelected) > 0;
-            $availDeclareUrl = route('help-recruitment.dates.declare');
-            $availClearUrl   = route('help-recruitment.dates.clear');
-            $availMaxDates   = \App\Services\AvailabilityService::MAX_DATES;
-            $availDaysAhead  = \App\Services\AvailabilityService::MAX_DAYS_AHEAD;
-        @endphp
-        <section id="availability-card"
-                 class="cast-avail cast-avail--compact {{ $availActive ? 'is-active' : '' }}"
-                 data-availability-declare-url="{{ $availDeclareUrl }}"
-                 data-availability-clear-url="{{ $availClearUrl }}"
-                 data-availability-max="{{ $availMaxDates }}"
-                 data-availability-days-ahead="{{ $availDaysAhead }}"
-                 data-availability-selected="{{ json_encode(array_values($availSelected)) }}"
-                 aria-labelledby="availability-card-title">
-            <div class="cast-avail__row">
-                <span class="cast-avail__icon" aria-hidden="true">
-                    <i class="fas {{ $availActive ? 'fa-bolt' : 'fa-calendar-days' }}"></i>
-                </span>
-                <p id="availability-card-title" class="cast-avail__title">
-                    ヘルプ募集日を設定
-                    <span class="cast-avail__status-tag" data-availability-status-tag
-                          {{ $availActive ? '' : 'hidden' }}>設定中</span>
-                </p>
-                <div class="cast-avail__actions">
-                    <button type="button" class="cast-avail__btn cast-avail__btn--primary" data-availability-open
-                            aria-haspopup="dialog" aria-controls="availability-modal">
-                        <span data-availability-open-label>{{ $availActive ? '変更' : '設定' }}</span>
-                    </button>
-                </div>
-            </div>
-
-            {{-- Modal popup: description + calendar + save/clear actions --}}
-            <div class="cast-avail__modal" id="availability-modal" role="dialog"
-                 aria-modal="true" aria-labelledby="availability-modal-title" hidden>
-                <div class="cast-avail__backdrop" data-availability-close></div>
-                <div class="cast-avail__dialog" role="document">
-                    <header class="cast-avail__dialog-head">
-                        <h2 id="availability-modal-title" class="cast-avail__dialog-title">
-                            <i class="fas fa-calendar-days" aria-hidden="true"></i>
-                            ヘルプ募集日を設定
-                        </h2>
-                        <button type="button" class="cast-avail__dialog-close"
-                                data-availability-close aria-label="閉じる">
-                            <i class="fas fa-xmark" aria-hidden="true"></i>
-                        </button>
-                    </header>
-                    <div class="cast-avail__dialog-body">
-                        <p class="cast-avail__dialog-desc">
-                            ヘルプで人手が欲しい日を選ぶと、その日に働けるキャストの
-                            <strong>検索・SWIPE で優先表示</strong>されます。
-                        </p>
-                        <p class="cast-avail__dialog-hint">
-                            最大{{ $availMaxDates }}日・{{ $availDaysAhead }}日先まで
-                        </p>
-                        <div class="cast-avail__cal" data-availability-calendar></div>
-                    </div>
-                    <footer class="cast-avail__dialog-foot">
-                        <button type="button" class="cast-avail__btn cast-avail__btn--danger cast-avail__btn--text"
-                                data-availability-clear
-                                {{ $availActive ? '' : 'hidden' }}>
-                            <i class="fas fa-xmark" aria-hidden="true"></i> 取消
-                        </button>
-                        <span class="cast-avail__dialog-foot-spacer"></span>
-                        <button type="button" class="cast-avail__btn cast-avail__btn--ghost" data-availability-close>
-                            戻る
-                        </button>
-                        <button type="button" class="cast-avail__btn cast-avail__btn--primary" data-availability-save disabled>
-                            <i class="fas fa-check"></i> 決定
-                        </button>
-                    </footer>
-                </div>
-            </div>
-        </section>
-        @endshopowner
-
         {{-- ===== 店舗名 + 控えめバッヂ行 =====
              旧: 優良店/レビューの大型2カラムカード → 目立ちすぎのため
              店舗名の下の小型チップに格下げ（情報は維持、占有面積を1/4に）。
@@ -224,6 +142,87 @@
                 @endif
             </a>
         </div>
+
+        {{-- ===== 「ヘルプ募集日を設定」（キャスト MyPage の「働きたい日を設定」と対称） =====
+             採用・入金管理タイルの下に控えめに配置。時給設定・応募者一覧は
+             /shop/help-recruitment に集約。宣言ルートは shop.owner 配下。 --}}
+        @shopowner
+        @php
+            $availSelected   = $availabilityDates ?? [];
+            $availActive     = count($availSelected) > 0;
+            $availDeclareUrl = route('help-recruitment.dates.declare');
+            $availClearUrl   = route('help-recruitment.dates.clear');
+            $availMaxDates   = \App\Services\AvailabilityService::MAX_DATES;
+            $availDaysAhead  = \App\Services\AvailabilityService::MAX_DAYS_AHEAD;
+        @endphp
+        <section id="availability-card"
+                 class="cast-avail cast-avail--compact cast-avail--subtle {{ $availActive ? 'is-active' : '' }}"
+                 data-availability-declare-url="{{ $availDeclareUrl }}"
+                 data-availability-clear-url="{{ $availClearUrl }}"
+                 data-availability-max="{{ $availMaxDates }}"
+                 data-availability-days-ahead="{{ $availDaysAhead }}"
+                 data-availability-selected="{{ json_encode(array_values($availSelected)) }}"
+                 aria-labelledby="availability-card-title">
+            <div class="cast-avail__row">
+                <span class="cast-avail__icon" aria-hidden="true">
+                    <i class="fas {{ $availActive ? 'fa-bolt' : 'fa-calendar-days' }}"></i>
+                </span>
+                <p id="availability-card-title" class="cast-avail__title">
+                    ヘルプ募集日を設定
+                    <span class="cast-avail__status-tag" data-availability-status-tag
+                          {{ $availActive ? '' : 'hidden' }}>設定中</span>
+                </p>
+                <div class="cast-avail__actions">
+                    <button type="button" class="cast-avail__btn cast-avail__btn--ghost" data-availability-open
+                            aria-haspopup="dialog" aria-controls="availability-modal">
+                        <span data-availability-open-label>{{ $availActive ? '変更' : '設定' }}</span>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Modal popup: description + calendar + save/clear actions --}}
+            <div class="cast-avail__modal" id="availability-modal" role="dialog"
+                 aria-modal="true" aria-labelledby="availability-modal-title" hidden>
+                <div class="cast-avail__backdrop" data-availability-close></div>
+                <div class="cast-avail__dialog" role="document">
+                    <header class="cast-avail__dialog-head">
+                        <h2 id="availability-modal-title" class="cast-avail__dialog-title">
+                            <i class="fas fa-calendar-days" aria-hidden="true"></i>
+                            ヘルプ募集日を設定
+                        </h2>
+                        <button type="button" class="cast-avail__dialog-close"
+                                data-availability-close aria-label="閉じる">
+                            <i class="fas fa-xmark" aria-hidden="true"></i>
+                        </button>
+                    </header>
+                    <div class="cast-avail__dialog-body">
+                        <p class="cast-avail__dialog-desc">
+                            ヘルプで人手が欲しい日を選ぶと、その日に働けるキャストの
+                            <strong>検索・SWIPE で優先表示</strong>されます。
+                        </p>
+                        <p class="cast-avail__dialog-hint">
+                            最大{{ $availMaxDates }}日・{{ $availDaysAhead }}日先まで
+                        </p>
+                        <div class="cast-avail__cal" data-availability-calendar></div>
+                    </div>
+                    <footer class="cast-avail__dialog-foot">
+                        <button type="button" class="cast-avail__btn cast-avail__btn--danger cast-avail__btn--text"
+                                data-availability-clear
+                                {{ $availActive ? '' : 'hidden' }}>
+                            <i class="fas fa-xmark" aria-hidden="true"></i> 取消
+                        </button>
+                        <span class="cast-avail__dialog-foot-spacer"></span>
+                        <button type="button" class="cast-avail__btn cast-avail__btn--ghost" data-availability-close>
+                            戻る
+                        </button>
+                        <button type="button" class="cast-avail__btn cast-avail__btn--primary" data-availability-save disabled>
+                            <i class="fas fa-check"></i> 決定
+                        </button>
+                    </footer>
+                </div>
+            </div>
+        </section>
+        @endshopowner
 
     </div>
 
@@ -760,7 +759,7 @@
 
 </style>
 {{-- Candidate-date availability card styles (shared with cast mypage) --}}
-<link rel="stylesheet" href="{{ asset('assets/css/mypage-availability.css') }}?v=20260926-availability-compact">
+<link rel="stylesheet" href="{{ asset('assets/css/mypage-availability.css') }}?v=20260926-availability-subtle">
 @endpush
 
 @push('scripts')
@@ -913,5 +912,5 @@ window.MYPAGE_GALLERY_CONFIG = {
 <script>
 window.MYPAGE_AVAILABILITY_CONFIG = { csrfToken: @json(csrf_token()) };
 </script>
-<script src="{{ asset('assets/js/mypage-availability.js') }}?v=20260926-availability-compact"></script>
+<script src="{{ asset('assets/js/mypage-availability.js') }}?v=20260926-availability-subtle"></script>
 @endpush

@@ -167,13 +167,14 @@ body.theme-light .search-filter-icon-btn--gold {
 body.theme-light .search-filter-summary {
     color: var(--color-text-sub);
 }
-/* サマリ：白カードで検索フィルターと視覚的に連結。件数はテキスト、並び替えは淡いピル */
+/* サマリ：白カードで検索フィルターと視覚的に連結。件数はテキスト、並び替えは淡いピル
+   単行化に伴いパディングをコンパクトに */
 body.theme-light .search-summary {
     background: #ffffff;
     border-bottom: 1px solid var(--color-line);
     box-shadow: 0 4px 10px -6px rgba(76, 29, 149, 0.14);
     margin: 0 0 8px;
-    padding: 8px 14px 10px;
+    padding: 8px 14px;
 }
 body.theme-light .search-summary__count { color: #241f33; }
 body.theme-light .search-summary__count-num { color: #1e1a30; }
@@ -184,7 +185,7 @@ body.theme-light .search-summary__sort {
     color: #241f33;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
-body.theme-light .search-summary__sort-label { color: #857ca0; }
+body.theme-light .search-summary__sort-icon { color: #7c3aed; }
 body.theme-light .search-summary__sort-value { color: #4c1d95; }
 body.theme-light .search-summary__sort:hover {
     background: rgba(124, 58, 237, 0.08);

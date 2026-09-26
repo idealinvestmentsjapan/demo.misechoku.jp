@@ -229,10 +229,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    /* Respect iOS safe areas so the modal's top/bottom aren't cut by notch / home indicator */
+    padding:
+        max(16px, env(safe-area-inset-top, 0px))
+        16px
+        max(16px, env(safe-area-inset-bottom, 0px));
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.18s ease;
+    overscroll-behavior: contain;
 }
 .location-modal-overlay[aria-hidden="false"] {
     opacity: 1;
@@ -241,14 +246,28 @@
 .location-modal {
     position: relative;
     width: min(420px, 100%);
-    max-height: calc(100vh - 40px);
+    /* Fit within the visible viewport minus safe-area insets (iOS notch / home indicator).
+       Uses dvh so mobile browser chrome collapse/expand doesn't push the modal off-screen. */
+    max-height: calc(100vh - 32px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    max-height: calc(100dvh - 32px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
     overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
     background: linear-gradient(180deg, var(--color-sub), var(--dark-bg));
     border: 1px solid var(--color-border-strong);
     border-radius: 18px;
     padding: 22px 22px 18px;
     color: var(--color-text-header);
     box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
+}
+/* Short viewports (landscape phones, small tablets in split view): tighten paddings so
+   the primary sections stay reachable without excessive scrolling. */
+@media (max-height: 640px) {
+    .location-modal { padding: 16px 18px 14px; }
+    .location-modal__title { margin-bottom: 6px; }
+    .location-modal__current { margin-bottom: 10px; padding: 8px 10px; }
+    .location-modal__section { margin-bottom: 10px; }
+    .location-modal__divider { margin: 8px 0; }
 }
 .location-modal__close {
     position: absolute;

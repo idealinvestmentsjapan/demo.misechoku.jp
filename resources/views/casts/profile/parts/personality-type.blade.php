@@ -27,10 +27,7 @@
     {{-- ============ 目立たせたタイプカード（タップで解説） ============ --}}
     <button type="button" id="open-personality-type-modal"
             aria-haspopup="dialog" aria-controls="personality-type-modal"
-            class="ptype-card group w-full relative overflow-hidden text-left
-                   rounded-2xl border border-line-accent/40
-                   bg-gradient-to-br from-accent/15 via-surface-from to-base
-                   shadow-card-3d hover:border-accent/70 active:scale-[0.99] transition-all">
+            class="ptype-card group">
         {{-- 背景装飾：星屑イラスト（純装飾なので aria-hidden） --}}
         <span aria-hidden="true" class="ptype-card__deco">
             <i class="fas fa-star ptype-card__deco-star ptype-card__deco-star--1"></i>
@@ -38,32 +35,27 @@
             <i class="fas fa-star ptype-card__deco-star ptype-card__deco-star--3"></i>
         </span>
 
-        <div class="relative flex items-center gap-3 px-4 pt-3.5 pb-3">
+        <div class="ptype-card__row">
             {{-- 左：メインオーブ（グラデ + キラキラ + 中央のワンドアイコン） --}}
-            <span class="shrink-0 relative w-14 h-14 rounded-full flex items-center justify-center
-                         bg-gradient-to-br from-accent-grad-from to-accent-grad-to text-on-accent-strong
-                         shadow-[inset_0_2px_3px_rgba(255,255,255,0.35),0_6px_14px_rgba(0,0,0,0.35)]">
-                <i class="fas fa-wand-magic-sparkles text-[20px]"></i>
-                {{-- オーブ周りのキラキラ --}}
-                <i aria-hidden="true" class="fas fa-star absolute -top-1 -right-1 text-[9px] text-on-accent-strong/90 drop-shadow"></i>
-                <i aria-hidden="true" class="fas fa-star absolute -bottom-0.5 -left-1 text-[7px] text-on-accent-strong/70"></i>
+            <span class="ptype-card__orb">
+                <i class="fas fa-wand-magic-sparkles"></i>
+                <i aria-hidden="true" class="fas fa-star ptype-card__orb-spark ptype-card__orb-spark--a"></i>
+                <i aria-hidden="true" class="fas fa-star ptype-card__orb-spark ptype-card__orb-spark--b"></i>
             </span>
 
             {{-- 中央：ラベル + タイトル --}}
-            <span class="flex-1 min-w-0 flex flex-col gap-0.5">
-                <span class="inline-flex items-center gap-1.5 text-[10px] font-extrabold tracking-[0.18em] text-accent-text uppercase">
-                    接客タイプ
+            <span class="ptype-card__body">
+                <span class="ptype-card__eyebrow">
+                    <span class="ptype-card__eyebrow-label">接客タイプ</span>
                     <span class="ptype-card__code app-title">{{ $ptInfo['code'] }}</span>
                 </span>
-                <span class="text-[15px] font-extrabold text-text-main leading-snug truncate">
-                    {{ $ptInfo['title'] }}
-                </span>
+                <span class="ptype-card__title">{{ $ptInfo['title'] }}</span>
             </span>
 
             {{-- 右：「解説を見る」インジケータ --}}
-            <span class="shrink-0 inline-flex flex-col items-center gap-0.5 text-text-sub group-hover:text-accent-text transition-colors">
-                <i class="fas fa-circle-info text-[16px]"></i>
-                <span class="text-[9px] font-bold tracking-wider">解説</span>
+            <span class="ptype-card__cue">
+                <i class="fas fa-circle-info"></i>
+                <span>解説</span>
             </span>
         </div>
 
@@ -80,12 +72,11 @@
 
     {{-- ============ 詳細解説モーダル ============ --}}
     <div id="personality-type-modal" role="dialog" aria-modal="true" aria-label="接客タイプの解説"
-         class="fixed inset-0 z-[1100] hidden items-center justify-center bg-black/60 backdrop-blur-sm p-5">
-        <div class="w-full max-w-[560px] max-h-[86vh] overflow-hidden flex flex-col rounded-2xl
-                    border border-line-accent/40 bg-gradient-to-br from-surface-from to-base shadow-card-3d">
+         class="ptype-modal">
+        <div class="ptype-modal__panel">
 
             {{-- ヒーローヘッダー：装飾たっぷり --}}
-            <div class="ptype-hero relative overflow-hidden">
+            <div class="ptype-hero">
                 <span aria-hidden="true" class="ptype-hero__deco">
                     <i class="fas fa-star ptype-hero__deco-star ptype-hero__deco-star--a"></i>
                     <i class="fas fa-sparkles ptype-hero__deco-star ptype-hero__deco-star--b"></i>
@@ -95,12 +86,11 @@
                 </span>
 
                 <button type="button" id="close-personality-type-modal" aria-label="閉じる"
-                        class="absolute top-3 right-3 z-10 w-9 h-9 rounded-full flex items-center justify-center
-                               bg-black/25 text-white/95 hover:bg-black/40 transition-colors">
+                        class="ptype-modal__close">
                     <i class="fas fa-times"></i>
                 </button>
 
-                <div class="relative px-5 pt-6 pb-5 flex flex-col items-center text-center gap-2">
+                <div class="ptype-hero__inner">
                     {{-- 大型オーブ --}}
                     <span class="ptype-hero__orb">
                         <i class="fas fa-wand-magic-sparkles"></i>
@@ -121,7 +111,7 @@
             </div>
 
             {{-- スクロール領域 --}}
-            <div class="overflow-y-auto px-5 py-4 flex flex-col gap-4">
+            <div class="ptype-modal__scroll">
                 {{-- 強み（キラキラアイコン付き見出し） --}}
                 <div class="ptype-block ptype-block--strength">
                     <p class="ptype-block__label">
@@ -192,8 +182,14 @@
         var modal = document.getElementById('personality-type-modal');
         var closeBtn = document.getElementById('close-personality-type-modal');
         if (!openBtn || !modal) return;
-        function show() { modal.classList.remove('hidden'); modal.classList.add('flex'); }
-        function hide() { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+        function show() {
+            modal.classList.add('is-open');
+            document.body.classList.add('has-ptype-modal');
+        }
+        function hide() {
+            modal.classList.remove('is-open');
+            document.body.classList.remove('has-ptype-modal');
+        }
         openBtn.addEventListener('click', show);
         if (closeBtn) closeBtn.addEventListener('click', hide);
         modal.addEventListener('click', function (e) { if (e.target === modal) hide(); });
