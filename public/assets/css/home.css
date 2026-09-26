@@ -2229,6 +2229,14 @@ body.page-home .photo-swiper .swiper-slide img {
        naturally overlays with high contrast. */
     object-position: center top !important;
     border-radius: 0 !important;
+    /* 2026-09-26: 写真エッジとレターボックス（暗色余白）の境目をぼかす。
+       object-fit: contain だと 4:5 写真の下端が硬い直線になり、余白との境界が目立って
+       "貼り付け感" が出ていた。中央にほぼ揃った楕円マスクで上端以外を柔らかく溶かす。
+       radial-gradient 単発なので webkit / mask-composite の相性問題を回避できる。 */
+    mask-image: radial-gradient(ellipse 96% 108% at 50% 42%,
+        #000 76%, rgba(0, 0, 0, 0.6) 92%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 96% 108% at 50% 42%,
+        #000 76%, rgba(0, 0, 0, 0.6) 92%, transparent 100%);
 }
 /* 写真の背後には同じ写真をぼかしで敷き、上下の余白を「そのお店の色調で埋める」。
    contain のレターボックス感（単色黒帯）を無くし、雰囲気を維持しつつ写真本体をフルに見せる。
@@ -5137,13 +5145,16 @@ body.page-home .photo-swiper .swiper-slide img {
 body.page-home .main-swiper { perspective: none !important; }
 body.page-home .main-swiper .swiper-wrapper { transform-style: flat !important; }
 body.page-home .main-swiper .swiper-slide .cast-card {
-    transition: opacity 0.3s ease, box-shadow 0.3s ease !important;
-    will-change: opacity !important;
+    /* 2026-09-26: メインスワイパーは Swiper の creative effect（translate + fade + scale）で
+       スライド単位に「ふわっ」と切替える方式に変更。カードの opacity/filter を強制すると
+       effect の フェードがマスクされるため、非アクティブ側の視覚減衰はスライド側の opacity に任せる。 */
+    transition: box-shadow 0.3s ease !important;
+    will-change: transform, opacity !important;
 }
 body.page-home .main-swiper .swiper-slide:not(.swiper-slide-active) .cast-card {
     transform: none !important;
-    opacity: 0.45 !important;
-    filter: brightness(0.72) !important;
+    opacity: 1 !important;
+    filter: none !important;
 }
 body.page-home .main-swiper .swiper-slide-active .cast-card {
     transform: none !important;

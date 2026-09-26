@@ -4,7 +4,7 @@
 @section('body-class', 'no-scroll page-home')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/home.css') }}?v=20260926-noband-cta-lift">
+<link rel="stylesheet" href="{{ asset('assets/css/home.css') }}?v=20260926-fade-transition">
 {{-- Perf / tier-chip / cssMode overrides live in a separate file; load AFTER home.css. --}}
 <link rel="stylesheet" href="{{ asset('assets/css/home-perf.css') }}?v=20260809-perf-bundle">
 @endpush
@@ -306,7 +306,7 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('assets/js/home.js') }}?v=20260811-relayout-on-return"></script>
+<script src="{{ asset('assets/js/home.js') }}?v=20260926-creative-fade">
 {{-- LIKE / KEEP の共通トグル（全画面この1本に統一） --}}
 <script src="{{ asset('assets/js/favorite-quick.js') }}?v=20260926-keep-rename"></script>
 @endpush

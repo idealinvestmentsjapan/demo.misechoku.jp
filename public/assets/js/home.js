@@ -65,11 +65,26 @@ document.addEventListener('DOMContentLoaded', function() {
         rewind: false,
         loopAdditionalSlides: 1,
 
-        // なめらか設定：遷移速度と抵抗を控えめに、スワイプは軽く反応
-        // 2026-08-09 rev: 体感 sluggish 対策
-        //   speed 320→220     : 1 カード遷移を Tinder 相当（~220ms）に
-        //   touchAngle 55→40  : 縦許容角を狭め、22°〜55° の photo/main デッドゾーンを縮小
-        speed: 220,
+        // 2026-09-26: カード切替を「ふわっ」と感じさせるため、標準の slide から
+        // creative エフェクトに変更。前後カードは 12% だけ縦にオフセット + フェード
+        // で重ねる。実距離を短くすることで指の動きに追従しつつ、離した後の遷移が
+        // クロスフェード気味に減衰していく (Tinder より Instagram Story 寄りの体感)。
+        effect: 'creative',
+        creativeEffect: {
+            limitProgress: 2,
+            prev: {
+                translate: [0, '-12%', -1],
+                opacity: 0,
+                scale: 0.98,
+            },
+            next: {
+                translate: [0, '12%', -1],
+                opacity: 0,
+                scale: 0.98,
+            },
+        },
+        // フェードを見せる分、遷移時間は少し長めに。220ms は fade が視認できずカクつく。
+        speed: 380,
         threshold: 6,
         touchAngle: 40,
         touchRatio: 1,
