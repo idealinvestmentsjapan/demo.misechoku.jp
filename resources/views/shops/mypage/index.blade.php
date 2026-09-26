@@ -59,31 +59,33 @@
 
         {{-- ===== 店舗名 + 控えめバッヂ行 =====
              旧: 優良店/レビューの大型2カラムカード → 目立ちすぎのため
-             店舗名の下の小型チップに格下げ（情報は維持、占有面積を1/4に） --}}
+             店舗名の下の小型チップに格下げ（情報は維持、占有面積を1/4に）。
+             閲覧数はレビュー・優良店バッヂと同じ「小さな指標チップ」列に集約し、
+             見出し行は「店舗名 + 共有ボタン」だけにしてアクションを目立たせる。 --}}
         <div class="mb-4">
             <div class="flex items-center justify-between gap-3 mb-1.5">
                 <h1 class="app-title text-[24px] text-text-main leading-tight truncate min-w-0">{{ $displayName }}</h1>
-                <div class="shrink-0 flex items-center gap-2">
-                    <x-ui.view-count :count="(int) ($shopData['view_cnt'] ?? 0)" class="text-[14px] text-text-main" />
-                    @php $myShopShareId = (int) (auth()->guard('shop')->user()->shop_id ?? 0); @endphp
-                    @if($myShopShareId > 0)
-                        <div class="profile-inline-actions">
-                            @include('partials.share-menu', [
-                                'shareUrl' => route('share.recruit.show', ['id' => $myShopShareId]),
-                                'shareTitle' => $displayName . 'の求人情報',
-                                'shareText' => $word !== '' ? $word : ($displayName . 'の求人情報です。'),
-                                'menuId' => 'my-shop-share-menu',
-                            ])
-                        </div>
-                    @endif
-                </div>
+                @php $myShopShareId = (int) (auth()->guard('shop')->user()->shop_id ?? 0); @endphp
+                @if($myShopShareId > 0)
+                    <div class="shrink-0 profile-inline-actions">
+                        @include('partials.share-menu', [
+                            'shareUrl' => route('share.recruit.show', ['id' => $myShopShareId]),
+                            'shareTitle' => $displayName . 'の求人情報',
+                            'shareText' => $word !== '' ? $word : ($displayName . 'の求人情報です。'),
+                            'menuId' => 'my-shop-share-menu',
+                        ])
+                    </div>
+                @endif
             </div>
-            <div class="flex flex-wrap items-center gap-2">
+            <div class="flex flex-wrap items-center gap-3">
+                {{-- レビュー：枠なし・少し大きめ・末尾に chevron でタップ可を明示。
+                     優良店バッヂ・閲覧数と同じ行で align-items:center により縦位置が揃う。 --}}
                 <a href="{{ route('shop.mypage.review.index') }}"
-                   class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border border-line text-[11px] font-bold text-text-main hover:border-line-accent/60 transition-colors">
-                    <i class="fas fa-star text-[10px] text-amber-400/80"></i>
-                    {{ $reviewAvg }}
-                    <span class="font-normal text-text-sub">({{ $reviewCount }})</span>
+                   class="inline-flex items-center gap-1 py-1 text-[13.5px] font-bold text-text-main hover:text-accent-text transition-colors">
+                    <i class="fas fa-star text-[13px] text-amber-400"></i>
+                    <span>{{ $reviewAvg }}</span>
+                    <span class="font-normal text-text-sub text-[11px]">({{ $reviewCount }})</span>
+                    <i class="fas fa-chevron-right text-[10px] text-accent-text/80 ml-0.5" aria-hidden="true"></i>
                 </a>
                 <button type="button" id="open-good-payer-badge-modal"
                         aria-haspopup="dialog" aria-controls="modal-good-payer-badge"
@@ -92,6 +94,8 @@
                     <x-ui.premium-badge :off="!$hasGoodPayerBadge"
                                         :label="'優良店' . ($hasGoodPayerBadge ? '' : '（未取得）')" />
                 </button>
+                <x-ui.view-count :count="(int) ($shopData['view_cnt'] ?? 0)"
+                                 class="text-[13px] text-text-main ml-auto" />
             </div>
         </div>
 
@@ -364,15 +368,19 @@
         {{-- ========== SHOP panel：店舗情報 + 許可証 ========== --}}
         <div data-tab-panel="shop">
             <div class="p-4 flex flex-col gap-4">
-                {{-- プロファイルを編集（オーナー専用。スタッフには非表示） --}}
+                {{-- プロファイルを編集（オーナー専用。スタッフには非表示）
+                     サイト共通のグラデCTAで「情報カードではなく、押せるボタン」であることを明示。 --}}
                 @shopowner
                 <a href="{{ route('shop.profile.edit') }}"
-                   class="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-line-accent/40 bg-gradient-to-br from-surface-from to-base shadow-card-3d hover:border-accent/60 active:scale-[0.99] transition-all">
+                   class="flex items-center justify-between gap-3 px-5 py-3 rounded-full
+                          bg-gradient-to-r from-accent-grad-from to-accent-grad-to
+                          text-on-accent-strong shadow-btn-3d
+                          active:translate-y-px transition-all">
                     <span class="flex items-center gap-2.5 min-w-0">
-                        <i class="fas fa-store text-accent-text text-[14px]"></i>
-                        <span class="text-[13px] font-bold text-text-main">プロファイルを編集する</span>
+                        <i class="fas fa-store text-[15px]"></i>
+                        <span class="text-[14px] font-bold tracking-wide">プロファイルを編集する</span>
                     </span>
-                    <i class="fas fa-chevron-right text-text-sub text-[11px] shrink-0"></i>
+                    <i class="fas fa-chevron-right text-[12px] opacity-80 shrink-0"></i>
                 </a>
                 @endshopowner
 

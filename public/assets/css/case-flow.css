@@ -5,7 +5,11 @@
    - 停滞警告チップ
    ===================================================================== */
 
-/* ---------- アクターバッジ（カード右上） ---------- */
+/* ---------- アクターバッジ（カード右上） ----------
+   デザイン方針（2026-09-26 リファイン）:
+   ・背景は極力薄く（塗りは 4% までに抑える）。囲いは細めのボーダーで担保。
+   ・文字は各ロールの「深い方」の色 + font-weight 900 で最大限に目立たせる。
+   ・「あなたの番（--you）」だけは境界にパルスを効かせて緊急度を残す。 */
 .case-card { position: relative; }
 .case-actor {
     position: absolute;
@@ -14,58 +18,66 @@
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    padding: 4px 11px;
+    padding: 3px 10px;
     border-radius: 999px;
-    font-size: 0.74rem;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    line-height: 1.2;
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    line-height: 1.25;
+    background: transparent;
     border: 1px solid transparent;
     white-space: nowrap;
     z-index: 2;
 }
-.case-actor i { font-size: 0.62rem; }
+.case-actor i { font-size: 0.66rem; }
 
-/* あなたの番：アクセント + パルス（最重要） */
+/* あなたの番：文字は深いアクセント + 境界に淡いパルス（最重要） */
 .case-actor--you {
-    background: linear-gradient(135deg, var(--accent, #d670a2), #b3487e);
-    color: #fff;
-    border-color: rgba(255, 255, 255, 0.25);
-    box-shadow: 0 4px 12px rgba(214, 112, 162, 0.45);
+    background: rgba(214, 112, 162, 0.05);
+    color: #9c2f66;
+    border-color: rgba(214, 112, 162, 0.55);
     animation: case-actor-pulse 2s ease-in-out infinite;
 }
+.case-actor--you i { color: #b3487e; }
 @keyframes case-actor-pulse {
-    0%, 100% { box-shadow: 0 4px 12px rgba(214, 112, 162, 0.45); }
-    50%      { box-shadow: 0 4px 18px rgba(214, 112, 162, 0.75), 0 0 0 4px rgba(214, 112, 162, 0.12); }
+    0%, 100% { box-shadow: 0 0 0 0 rgba(214, 112, 162, 0.00); }
+    50%      { box-shadow: 0 0 0 4px rgba(214, 112, 162, 0.16); }
 }
 @media (prefers-reduced-motion: reduce) {
     .case-actor--you { animation: none; }
 }
 
-/* 店舗の対応待ち（掲載ページは常にライトテーマ想定の配色） */
+/* 店舗の対応待ち */
 .case-actor--shop {
-    background: rgba(124, 58, 237, 0.08);
-    color: #6d28d9;
-    border-color: rgba(124, 58, 237, 0.30);
+    background: rgba(124, 58, 237, 0.04);
+    color: #5b21b6;
+    border-color: rgba(124, 58, 237, 0.42);
 }
+.case-actor--shop i { color: #6d28d9; }
+
 /* 運営の対応待ち */
 .case-actor--admin {
-    background: rgba(3, 105, 161, 0.08);
-    color: #0369a1;
-    border-color: rgba(3, 105, 161, 0.30);
+    background: rgba(3, 105, 161, 0.04);
+    color: #075985;
+    border-color: rgba(3, 105, 161, 0.42);
 }
+.case-actor--admin i { color: #0369a1; }
+
 /* キャストの対応待ち（店舗視点） */
 .case-actor--cast {
-    background: rgba(190, 24, 93, 0.08);
-    color: #be185d;
-    border-color: rgba(190, 24, 93, 0.30);
+    background: rgba(190, 24, 93, 0.04);
+    color: #9d174d;
+    border-color: rgba(190, 24, 93, 0.42);
 }
+.case-actor--cast i { color: #be185d; }
+
 /* 完了 */
 .case-actor--done {
-    background: var(--color-success-bg, rgba(110, 231, 183, 0.14));
-    color: var(--color-success, #6ee7b7);
-    border-color: var(--color-success-line, rgba(110, 231, 183, 0.40));
+    background: rgba(5, 150, 105, 0.05);
+    color: #047857;
+    border-color: rgba(5, 150, 105, 0.42);
 }
+.case-actor--done i { color: #059669; }
 
 /* バッジぶんの余白（店名がバッジに食い込まないように） */
 .case-card__head { padding-right: 108px; }

@@ -74,15 +74,9 @@
             <div class="menu-label-header">SETTING</div>
             <ul class="sidebar-sub-menu">
                 <li><a href="{{ url('/setting/notification') }}"><i class="fas fa-bell"></i> 通知設定</a></li>
-                @if($isCast)
-                    <li>
-                        {{-- 探索拠点：検索・スワイプ共通の距離基準（キャストのみ。店舗は店舗住所固定） --}}
-                        <button type="button" class="sidebar-theme-toggle" id="sidebar-location-setting"
-                                onclick="document.getElementById('side-menu').classList.remove('open'); document.getElementById('menu-overlay').classList.remove('show'); document.body.style.overflow=''; var t=document.getElementById('location-pill-trigger'); if (t) t.click();">
-                            <i class="fas fa-location-dot"></i> <span>探索拠点の設定</span>
-                        </button>
-                    </li>
-                @endif
+                {{-- 探索拠点の設定は SWIPE ヘッダー右のアイコン（layouts/parts/header.blade.php）と
+                     検索画面上部のピル（common/search/index.blade.php）に移設済み（2026-09-26）。
+                     サイドメニュー経由の起動は廃止。 --}}
                 @if(!$isCast)
                     {{-- Premium プラン選択はお金の操作 → オーナー専用リンク --}}
                     @shopowner
@@ -133,15 +127,6 @@
         </button>
     </div>
 </aside>
-
-{{-- 探索拠点モーダル（全画面共通）：#side-menu の transform の影響を受けないよう aside の外に配置。
-     ピル表示は不要なので隠し、サイドメニューの「探索拠点の設定」から #location-pill-trigger を発火して開く --}}
-@if($isCast)
-<div class="sidebar-location-include" style="display: contents;">
-    @include('layouts.parts.location-pill')
-</div>
-@endif
-<style>.sidebar-location-include .location-pill-wrap { display: none; }</style>
 
 <style>
 .sidebar-header { 
@@ -225,25 +210,6 @@
 }
 
 .sidebar-footer { padding: 20px; padding-bottom: max(20px, env(safe-area-inset-bottom, 0px)); border-top: 1px solid rgba(168, 85, 247, 0.16); }
-/* テーマ切替（サイドメニュー内）：メニューリンクと同じトーンのボタン */
-.sidebar-theme-toggle {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    padding: 10px 12px;
-    border: 0;
-    border-radius: 10px;
-    background: transparent;
-    color: inherit;
-    font: inherit;
-    font-size: 0.92rem;
-    text-align: left;
-    cursor: pointer;
-    transition: background 0.15s ease;
-}
-.sidebar-theme-toggle:hover { background: rgba(168, 85, 247, 0.14); }
-.sidebar-theme-toggle i { width: 1.2em; text-align: center; color: #f6d36a; }
 .btn-logout {
     width: 100%; padding: 12px; background: rgba(32, 7, 10, 0.9);
     border: 1px solid rgba(248, 113, 113, 0.7); color: #fecaca;

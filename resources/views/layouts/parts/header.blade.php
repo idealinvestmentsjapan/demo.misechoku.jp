@@ -164,13 +164,20 @@
         @endif
     </div>
 
-    {{-- 右側：タスク / 通知 / ハンバーガーメニュー（テーマ切替はサイドメニュー内） --}}
+    {{-- 右側：拠点（SWIPE時のみ）/ タスク / 通知 / ハンバーガーメニュー（テーマ切替はサイドメニュー内） --}}
     <div class="header-right">
         @php
             $taskTotal = isset($todoList) ? count($todoList) : 0;
             $taskHigh  = isset($taskHighCount) ? (int) $taskHighCount : 0;
             $bellCount = isset($unreadNewsCount) ? (int) $unreadNewsCount : 0;
         @endphp
+
+        {{-- 探索拠点アイコン：キャストの SWIPE（/cast/home）でのみ表示。旧サイドメニュー
+             「探索拠点の設定」から移設。距離ソートの前提を SWIPE 画面から直接調整できるよう、
+             ヘッダー右端にコンパクトなトリガーを置く。他画面（検索）ではピルで別途表示。 --}}
+        @if($isCast && request()->routeIs('cast.home'))
+            @include('layouts.parts.location-pill', ['variant' => 'icon'])
+        @endif
         <button id="btn-header-task"
                 class="header-icon-btn {{ $taskHigh > 0 ? 'is-urgent' : '' }} {{ $taskTotal > 0 ? 'has-badge' : '' }}"
                 aria-label="やることリスト（{{ $taskTotal }}件）"

@@ -3,10 +3,10 @@
     $isCastPortal = request()->is('cast/*');
     $keepItems = $keepItems ?? [];
     $keepProfileRoute = $keepProfileRoute ?? ($isCastPortal ? 'cast.shopprofile.show' : 'shop.castprofileview.show');
-    // 空状態でも「ここが保存済みリストで、検索から追加する」導線を明確に伝える
+    // 空状態でも「ここがキープリストで、検索から追加する」導線を明確に伝える
     $emptyKeepMsg = $isCastPortal
-        ? '保存済みのお店はまだありません。検索やスワイプで気になるお店を🔖で保存すると、ここに一覧表示されます。'
-        : '保存済みのキャストはまだいません。検索やスワイプで気になるキャストを🔖で保存すると、ここに一覧表示されます。';
+        ? 'キープしたお店はまだありません。検索やスワイプで気になるお店を🔖でキープすると、ここに一覧表示されます。'
+        : 'キープしたキャストはまだいません。検索やスワイプで気になるキャストを🔖でキープすると、ここに一覧表示されます。';
 
     $recommendItems = $recommendItems ?? [];
     $recommendType = $recommendType ?? ($isCastPortal ? 'shop' : 'cast');

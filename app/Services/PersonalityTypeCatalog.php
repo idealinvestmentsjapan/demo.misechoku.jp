@@ -11,16 +11,21 @@ namespace App\Services;
  */
 class PersonalityTypeCatalog
 {
-    /** @var array<string, array{label: string, text: string}> */
+    /**
+     * Each axis carries a Font Awesome 6 icon so the profile view can render
+     * a small illustration per axis (in addition to the letter code).
+     *
+     * @var array<string, array{label: string, text: string, icon: string, tone: string}>
+     */
     public const AXES = [
-        'L' => ['label' => 'リード型',   'text' => '会話の主導権を握り、積極的に場を盛り上げるのが得意なタイプです。'],
-        'F' => ['label' => 'フォロワー型', 'text' => '聞き役に徹し、お客様のペースに合わせて心地よい空間を作るのが得意なタイプです。'],
-        'C' => ['label' => '恋人型',     'text' => '「女性らしさ」や「色気」を武器に、お客様を異性としてドキドキさせるのが得意なタイプです。'],
-        'P' => ['label' => 'パートナー型', 'text' => '「知性」や「人間的な面白さ」を武器に、お客様と対等な関係を築くのが得意なタイプです。'],
-        'I' => ['label' => '懐（ふところ）型', 'text' => '「人懐っこさ」や「素の自分」を見せ、短時間でお客様の懐に飛び込むのが得意なタイプです。'],
-        'O' => ['label' => '領域（テリトリー）型', 'text' => '「プロとしての距離感」を保ち、「憧れ」や「ミステリアスさ」を演出するのが得意なタイプです。'],
-        'H' => ['label' => 'ハンター型', 'text' => '「瞬発力」で、イベントなど短期集中的に大きな結果を出すのが得意なタイプです。'],
-        'R' => ['label' => 'リレーション型', 'text' => '「マメな連絡」や「継続力」で、お客様との関係をじっくり育てるのが得意なタイプです。'],
+        'L' => ['label' => 'リード型',   'text' => '会話の主導権を握り、積極的に場を盛り上げるのが得意なタイプです。', 'icon' => 'fa-bullhorn', 'tone' => 'warm'],
+        'F' => ['label' => 'フォロワー型', 'text' => '聞き役に徹し、お客様のペースに合わせて心地よい空間を作るのが得意なタイプです。', 'icon' => 'fa-comment', 'tone' => 'cool'],
+        'C' => ['label' => '恋人型',     'text' => '「女性らしさ」や「色気」を武器に、お客様を異性としてドキドキさせるのが得意なタイプです。', 'icon' => 'fa-heart', 'tone' => 'romance'],
+        'P' => ['label' => 'パートナー型', 'text' => '「知性」や「人間的な面白さ」を武器に、お客様と対等な関係を築くのが得意なタイプです。', 'icon' => 'fa-lightbulb', 'tone' => 'wisdom'],
+        'I' => ['label' => '懐（ふところ）型', 'text' => '「人懐っこさ」や「素の自分」を見せ、短時間でお客様の懐に飛び込むのが得意なタイプです。', 'icon' => 'fa-hand-holding-heart', 'tone' => 'warm'],
+        'O' => ['label' => '領域（テリトリー）型', 'text' => '「プロとしての距離感」を保ち、「憧れ」や「ミステリアスさ」を演出するのが得意なタイプです。', 'icon' => 'fa-moon', 'tone' => 'cool'],
+        'H' => ['label' => 'ハンター型', 'text' => '「瞬発力」で、イベントなど短期集中的に大きな結果を出すのが得意なタイプです。', 'icon' => 'fa-bolt', 'tone' => 'spark'],
+        'R' => ['label' => 'リレーション型', 'text' => '「マメな連絡」や「継続力」で、お客様との関係をじっくり育てるのが得意なタイプです。', 'icon' => 'fa-handshake', 'tone' => 'calm'],
     ];
 
     /** @var array<string, array{title: string, strength: string, description: string, weakness: string}> */
@@ -127,7 +132,7 @@ class PersonalityTypeCatalog
      * タイプコードから解説一式を返す。未登録・不正コードは null。
      *
      * @return ?array{code: string, title: string, strength: string, description: string, weakness: string,
-     *                axes: array<int, array{code: string, label: string, text: string}>}
+     *                axes: array<int, array{code: string, label: string, text: string, icon: string, tone: string}>}
      */
     public static function get(?string $code): ?array
     {

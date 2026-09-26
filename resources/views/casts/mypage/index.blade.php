@@ -242,14 +242,19 @@
         <div data-tab-panel="details">
             <div class="p-4 flex flex-col gap-4">
 
-                {{-- プロフィール編集（DETAILS の内容を編集する入口としてここに配置） --}}
+                {{-- プロフィール編集（DETAILS の内容を編集する入口としてここに配置）
+                     サイト共通のグラデCTA（保存/アップロードと同じピンクグラデ + shadow-btn-3d）で
+                     「情報カードではなく、押せるボタン」であることを明示する。 --}}
                 <a href="{{ route('cast.profile.edit') }}"
-                   class="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-line-accent/40 bg-gradient-to-br from-surface-from to-base shadow-card-3d hover:border-accent/60 active:scale-[0.99] transition-all">
+                   class="flex items-center justify-between gap-3 px-5 py-3 rounded-full
+                          bg-gradient-to-r from-accent-grad-from to-accent-grad-to
+                          text-on-accent-strong shadow-btn-3d
+                          active:translate-y-px transition-all">
                     <span class="flex items-center gap-2.5 min-w-0">
-                        <i class="fas fa-user-pen text-accent-text text-[14px]"></i>
-                        <span class="text-[13px] font-bold text-text-main">プロフィールを編集する</span>
+                        <i class="fas fa-user-pen text-[15px]"></i>
+                        <span class="text-[14px] font-bold tracking-wide">プロフィールを編集する</span>
                     </span>
-                    <i class="fas fa-chevron-right text-text-sub text-[11px] shrink-0"></i>
+                    <i class="fas fa-chevron-right text-[12px] opacity-80 shrink-0"></i>
                 </a>
 
                 <x-ui.card class="p-5">
@@ -513,6 +518,7 @@ window.MYPAGE_GALLERY_CONFIG = {
 <link rel="stylesheet" href="{{ asset('assets/css/cast_profile.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/css/mypage.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/css/mypage-tiles.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/personality-type.css') }}?v=20260926-ptype-illust">
 {{-- ギャラリーグリッドへの上書き（#gallery-list 配下のみ。色は触らずレイアウトだけ） --}}
 <style>
     #gallery-list {

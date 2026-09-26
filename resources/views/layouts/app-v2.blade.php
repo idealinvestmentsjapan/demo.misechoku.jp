@@ -673,14 +673,12 @@
         #side-menu,
         #side-menu .sidebar-sub-menu a,
         #side-menu .menu-summary,
-        #side-menu .sidebar-theme-toggle,
         #side-menu .btn-sidebar-close {
             color: #4b465c !important;
             text-shadow: none;
         }
         #side-menu .sidebar-sub-menu a i,
-        #side-menu .menu-summary i:first-child,
-        #side-menu .sidebar-theme-toggle i {
+        #side-menu .menu-summary i:first-child {
             color: #6d28d9 !important;
         }
         #side-menu .menu-label-header {
@@ -688,7 +686,6 @@
             text-shadow: none;
         }
         .sidebar-sub-menu a:hover,
-        #side-menu .sidebar-theme-toggle:hover,
         .btn-sidebar-close:hover {
             background: rgba(124, 58, 237, 0.07) !important;
         }
@@ -846,7 +843,7 @@
     <script src="{{ asset('assets/js/motion.js') }}?v={{ $assetVersion }}" defer></script>
     {{-- ライトモード（薄ラベンダー基調）。全ルールが body.theme-light スコープのため常時読み込みで安全。
          テーマトグル（ライト/ダーク）のライブ切替を可能にするため @if を外して常時ロードする --}}
-    <link rel="stylesheet" href="{{ asset('assets/css/light-theme.css') }}?v=20260922-location">
+    <link rel="stylesheet" href="{{ asset('assets/css/light-theme.css') }}?v=20260926-keep-rename">
     {{-- プレミアムホワイト（MyPage）: 全ルールが body.theme-premium-white スコープ。同上で常時ロード --}}
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700;900&family=Cinzel:wght@600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('assets/css/premium-white.css') }}?v=20260720-pwhite-09">
@@ -966,7 +963,7 @@
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script src="{{ asset('assets/js/character-guide.js') }}?v={{ $assetVersion }}"></script>
     <script src="{{ asset('assets/js/push-notification.js') }}"></script>
-    <script src="{{ asset('assets/js/location-modal.js') }}?v=20260922-location" defer></script>
+    <script src="{{ asset('assets/js/location-modal.js') }}?v=20260926-multi-trigger" defer></script>
     <script src="{{ asset('assets/js/share-menu.js') }}" defer></script>
 
     @stack('scripts')

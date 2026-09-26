@@ -19,14 +19,16 @@
                     <span class="tl-row__age">({{ $c['age'] }})</span>
                 @endif
             </h3>
-            <div class="tl-row__meta">
-                @if($locLine !== '')
+            @if($locLine !== '')
+                <div class="tl-row__meta">
                     <span class="tl-row__loc"><i class="fas fa-map-marker-alt"></i>{{ $locLine }}</span>
-                @endif
-                @if(!empty($c['updated_at']))
-                    <span class="tl-row__time"><i class="fas fa-bookmark"></i>{{ $c['updated_at'] }} 保存</span>
-                @endif
-            </div>
+                </div>
+            @endif
+            @if(!empty($c['updated_at']))
+                <div class="tl-row__kept-at">
+                    <i class="fas fa-bookmark" aria-hidden="true"></i>{{ $c['updated_at'] }}にキープ
+                </div>
+            @endif
         </div>
     </a>
     <div class="tl-row__actions" aria-label="クイックアクション">

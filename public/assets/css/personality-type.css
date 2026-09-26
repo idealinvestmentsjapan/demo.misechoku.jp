@@ -1,0 +1,366 @@
+/* ==========================================================================
+   Personality type diagnosis: card + modal illustrations
+   Related view: resources/views/casts/profile/parts/personality-type.blade.php
+   Loaded from:  casts/mypage/index.blade.php, casts/profile/show.blade.php
+   Design goals:
+     - Card is unambiguously a "tap me" object: strong orb, axis strip, glow.
+     - Modal has an illustrative hero (orb + sparkles + type code + axis row).
+     - Axis rows in the body use color-coded orbs to visualise each axis.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Compact card (登録済み)
+   -------------------------------------------------------------------------- */
+.ptype-card {
+    isolation: isolate;
+}
+.ptype-card__deco {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+.ptype-card__deco-star {
+    position: absolute;
+    color: rgba(var(--accent-rgb, 214, 112, 162), 0.35);
+    filter: drop-shadow(0 0 6px rgba(var(--accent-rgb, 214, 112, 162), 0.35));
+}
+.ptype-card__deco-star--1 { top: 8px;  right: 18px; font-size: 14px; transform: rotate(-12deg); }
+.ptype-card__deco-star--2 { top: 22px; right: 60px; font-size: 10px; opacity: 0.7; }
+.ptype-card__deco-star--3 { bottom: 46px; right: 8px; font-size: 8px;  transform: rotate(20deg); opacity: 0.55; }
+
+.ptype-card__code {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: rgba(var(--accent-rgb, 214, 112, 162), 0.18);
+    letter-spacing: 0.12em;
+    font-size: 0.7rem;
+    font-weight: 900;
+    color: var(--accent-text, #f0a6c4);
+}
+
+/* Axis strip below the main row: 4 illustrated chips */
+.ptype-axis-strip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    padding: 0 12px 12px;
+    position: relative;
+    z-index: 1;
+}
+
+.ptype-axis-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-height: 32px;
+    padding: 4px 6px;
+    border-radius: 999px;
+    color: #fff;
+    font-size: 0.72rem;
+    line-height: 1;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.28),
+                inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.ptype-axis-chip i { font-size: 0.75rem; }
+.ptype-axis-chip__code {
+    font-size: 0.68rem;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+}
+
+/* --------------------------------------------------------------------------
+   Modal hero (登録済み)
+   -------------------------------------------------------------------------- */
+.ptype-hero {
+    background:
+        radial-gradient(120% 90% at 50% 0%,
+            rgba(var(--accent-rgb, 214, 112, 162), 0.22),
+            rgba(var(--accent-rgb, 214, 112, 162), 0.02) 65%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0));
+    border-bottom: 1px solid rgba(var(--accent-rgb, 214, 112, 162), 0.28);
+}
+.ptype-hero__deco {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+.ptype-hero__deco-star {
+    position: absolute;
+    color: rgba(var(--accent-rgb, 214, 112, 162), 0.55);
+    filter: drop-shadow(0 0 8px rgba(var(--accent-rgb, 214, 112, 162), 0.55));
+}
+.ptype-hero__deco-star--a { top: 12px; left: 22px;  font-size: 12px; transform: rotate(-8deg); }
+.ptype-hero__deco-star--b { top: 28px; left: 55px;  font-size: 9px;  opacity: 0.75; }
+.ptype-hero__deco-star--c { top: 18px; right: 30px; font-size: 14px; transform: rotate(14deg); }
+.ptype-hero__deco-star--d { top: 44px; right: 62px; font-size: 8px;  opacity: 0.65; }
+.ptype-hero__deco-star--e { bottom: 12px; left: 40%; font-size: 10px; opacity: 0.6; transform: rotate(20deg); }
+
+.ptype-hero__orb {
+    width: 68px;
+    height: 68px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--accent-grad-from, #e88bb2), var(--accent-grad-to, #a83d70));
+    color: var(--on-accent-strong, #fff);
+    font-size: 26px;
+    box-shadow:
+        inset 0 3px 5px rgba(255, 255, 255, 0.30),
+        inset 0 -3px 8px rgba(0, 0, 0, 0.20),
+        0 10px 24px rgba(0, 0, 0, 0.35),
+        0 0 24px rgba(var(--accent-rgb, 214, 112, 162), 0.35);
+    position: relative;
+}
+.ptype-hero__orb::before,
+.ptype-hero__orb::after {
+    content: "\f005"; /* fa-star */
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    position: absolute;
+    color: rgba(255, 255, 255, 0.9);
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.5));
+    pointer-events: none;
+}
+.ptype-hero__orb::before { top: -6px; right: -2px; font-size: 12px; }
+.ptype-hero__orb::after  { bottom: -2px; left: -4px; font-size: 8px; opacity: 0.75; }
+
+.ptype-hero__label {
+    font-size: 0.68rem;
+    letter-spacing: 0.24em;
+    font-weight: 800;
+    color: var(--accent-text, #f0a6c4);
+    text-transform: uppercase;
+}
+.ptype-hero__code {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 12px;
+    border-radius: 999px;
+    background: rgba(var(--accent-rgb, 214, 112, 162), 0.22);
+    color: var(--accent-text, #f0a6c4);
+    font-size: 1.1rem;
+    font-weight: 900;
+    letter-spacing: 0.18em;
+    border: 1px solid rgba(var(--accent-rgb, 214, 112, 162), 0.45);
+}
+.ptype-hero__title {
+    margin: 2px 0 0;
+    font-size: 1.15rem;
+    font-weight: 900;
+    color: var(--color-text-main, #f5f5f5);
+    line-height: 1.25;
+    letter-spacing: 0.01em;
+}
+
+.ptype-hero__axis-row {
+    margin-top: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.ptype-hero__axis-chip {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 14px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35),
+                inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+/* --------------------------------------------------------------------------
+   Modal content blocks
+   -------------------------------------------------------------------------- */
+.ptype-block {
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--color-line, #2a2a2a);
+    background: rgba(255, 255, 255, 0.02);
+}
+.ptype-block--strength {
+    background: rgba(var(--accent-rgb, 214, 112, 162), 0.10);
+    border-color: rgba(var(--accent-rgb, 214, 112, 162), 0.35);
+}
+.ptype-block--caution {
+    background: rgba(255, 255, 255, 0.02);
+    border-color: rgba(184, 184, 184, 0.25);
+}
+
+.ptype-block__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 4px;
+    font-size: 0.66rem;
+    letter-spacing: 0.16em;
+    font-weight: 900;
+    color: var(--accent-text, #f0a6c4);
+    text-transform: uppercase;
+}
+.ptype-block__label--plain { color: var(--accent-text, #f0a6c4); }
+.ptype-block__label--muted { color: var(--color-text-mute, #8a8a8a); }
+.ptype-block__label i { font-size: 0.72rem; }
+
+.ptype-block__body {
+    margin: 0;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: var(--color-text-main, #f5f5f5);
+}
+.ptype-block__body--strong { font-weight: 800; }
+.ptype-block__body--muted {
+    color: var(--color-text-sub, #b8b8b8);
+    font-size: 0.78rem;
+}
+
+/* Axis rows in the modal (illustrative orbs on the left) */
+.ptype-axis-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.ptype-axis-row__orb {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 14px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.32),
+                inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+.ptype-axis-row__code {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: rgba(var(--accent-rgb, 214, 112, 162), 0.20);
+    color: var(--accent-text, #f0a6c4);
+    font-size: 0.68rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+}
+
+/* --------------------------------------------------------------------------
+   CTA card (未登録・自分)
+   -------------------------------------------------------------------------- */
+.ptype-cta {
+    background: linear-gradient(135deg,
+        rgba(var(--accent-rgb, 214, 112, 162), 0.05),
+        rgba(255, 255, 255, 0.02));
+}
+.ptype-cta__deco {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+.ptype-cta__deco-icon {
+    position: absolute;
+    color: rgba(var(--accent-rgb, 214, 112, 162), 0.20);
+    filter: drop-shadow(0 0 6px rgba(var(--accent-rgb, 214, 112, 162), 0.25));
+    transition: transform 0.4s ease;
+}
+.ptype-cta:hover .ptype-cta__deco-icon { transform: translateY(-2px); }
+.ptype-cta__deco-icon--1 { top:  8px; right:  18px; font-size: 22px; transform: rotate(-10deg); }
+.ptype-cta__deco-icon--2 { top: 32px; right:  62px; font-size: 14px; opacity: 0.7; }
+.ptype-cta__deco-icon--3 { bottom: 6px; right: 40%;  font-size: 16px; transform: rotate(14deg); opacity: 0.6; }
+.ptype-cta__deco-icon--4 { top: 10px; left:  38%;   font-size: 12px; opacity: 0.55; }
+
+/* --------------------------------------------------------------------------
+   Premium-white theme: keep the pink/violet palette readable on the light
+   surface. The card gradient (accent → white) already blends in; the axis
+   chips inherit their gradients (they're on-page, saturated).
+   -------------------------------------------------------------------------- */
+body.theme-premium-white .ptype-card {
+    background:
+        linear-gradient(135deg, rgba(124, 58, 237, 0.10), #ffffff 65%, var(--pw-surface, #f7f3fc));
+    border-color: rgba(124, 58, 237, 0.30);
+    box-shadow: var(--pw-shadow-md, 0 6px 18px rgba(76, 29, 149, 0.10));
+}
+body.theme-premium-white .ptype-card__code {
+    background: rgba(124, 58, 237, 0.14);
+    color: var(--pw-violet-deep, #5b21b6);
+}
+body.theme-premium-white .ptype-card__deco-star {
+    color: rgba(124, 58, 237, 0.35);
+    filter: drop-shadow(0 0 6px rgba(124, 58, 237, 0.30));
+}
+
+body.theme-premium-white .ptype-hero {
+    background:
+        radial-gradient(120% 90% at 50% 0%, rgba(124, 58, 237, 0.16), rgba(124, 58, 237, 0.02) 65%),
+        linear-gradient(180deg, #ffffff, var(--pw-surface, #f7f3fc));
+    border-bottom-color: rgba(124, 58, 237, 0.20);
+}
+body.theme-premium-white .ptype-hero__deco-star {
+    color: rgba(124, 58, 237, 0.55);
+    filter: drop-shadow(0 0 8px rgba(124, 58, 237, 0.35));
+}
+body.theme-premium-white .ptype-hero__label { color: var(--pw-violet-deep, #5b21b6); }
+body.theme-premium-white .ptype-hero__code {
+    background: rgba(124, 58, 237, 0.12);
+    color: var(--pw-violet-deep, #5b21b6);
+    border-color: rgba(124, 58, 237, 0.35);
+}
+body.theme-premium-white .ptype-hero__title { color: #1e1a30; }
+
+body.theme-premium-white .ptype-block {
+    border-color: rgba(124, 58, 237, 0.20);
+    background: #ffffff;
+}
+body.theme-premium-white .ptype-block--strength {
+    background: rgba(124, 58, 237, 0.08);
+    border-color: rgba(124, 58, 237, 0.35);
+}
+body.theme-premium-white .ptype-block--caution {
+    background: #ffffff;
+    border-color: rgba(107, 100, 130, 0.25);
+}
+body.theme-premium-white .ptype-block__label,
+body.theme-premium-white .ptype-block__label--plain { color: var(--pw-violet-deep, #5b21b6); }
+body.theme-premium-white .ptype-block__label--muted { color: #857ca0; }
+body.theme-premium-white .ptype-block__body { color: #1e1a30; }
+body.theme-premium-white .ptype-block__body--muted { color: #6b6482; }
+
+body.theme-premium-white .ptype-axis-row {
+    background: var(--pw-surface, #f7f3fc);
+    border-color: rgba(124, 58, 237, 0.14);
+}
+body.theme-premium-white .ptype-axis-row__code {
+    background: rgba(124, 58, 237, 0.14);
+    color: var(--pw-violet-deep, #5b21b6);
+}
+
+body.theme-premium-white .ptype-cta {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.06), #ffffff);
+}
+body.theme-premium-white .ptype-cta__deco-icon {
+    color: rgba(124, 58, 237, 0.22);
+    filter: drop-shadow(0 0 6px rgba(124, 58, 237, 0.25));
+}
+
+/* --------------------------------------------------------------------------
+   Light theme (non-premium-white): normal dark → light inversion
+   -------------------------------------------------------------------------- */
+body.theme-light .ptype-block { background: #ffffff; border-color: rgba(124, 58, 237, 0.20); }
+body.theme-light .ptype-block__body { color: #1e1a30; }
+body.theme-light .ptype-block__body--muted { color: #6b6482; }
+body.theme-light .ptype-hero__title { color: #1e1a30; }

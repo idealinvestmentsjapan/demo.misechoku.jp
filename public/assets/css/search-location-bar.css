@@ -349,6 +349,15 @@ body.page-search .content-wrapper { overflow-x: clip; }
 /* 開閉エリア内の探索拠点ピルの余白を詰める（バー内に収める） */
 .search-topbar-extra .location-pill-wrap { padding: 8px 0 0; }
 
+/* SEARCH 画面：探索拠点バー（サイドメニューから移設。#search-topbar の直前に常時表示）。
+   サブヘッダーと検索バーの間に薄く挟み、拠点の存在と状態を常に伝える。 */
+.search-location-bar {
+    padding: 8px var(--content-padding-x, 16px) 0;
+}
+.search-location-bar .location-pill-wrap {
+    padding: 0;
+}
+
 /* 検索ページ：サブヘッダーと検索バーの間の空間を詰めてぴったり接続 */
 body.page-search .tab-page-body { padding-top: 0; }
 body.page-search .search-topbar .search-filter-box { border-radius: 0 0 14px 14px; }

@@ -4,11 +4,11 @@
 @section('body-class', request()->is('cast/*') && ($activeTab ?? null) === 'pane-ai' ? 'page-search page-search-ai' : 'page-search')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/search.css') }}?v=20260926-concierge-pin">
-<link rel="stylesheet" href="{{ asset('assets/css/search-location-bar.css') }}?v=20260926-footer-safearea">
+<link rel="stylesheet" href="{{ asset('assets/css/search.css') }}?v=20260926-summary-oneline">
+<link rel="stylesheet" href="{{ asset('assets/css/search-location-bar.css') }}?v=20260926-decouple-sidebar">
 <link rel="stylesheet" href="{{ asset('assets/css/sub-header.css') }}">
 <style>
-    /* SEARCH のタブ（検索 / 保存済み）：ラベル前のアイコン。文字と同じ色に追従させ、
+    /* SEARCH のタブ（検索 / キープ）：ラベル前のアイコン。文字と同じ色に追従させ、
        僅かな右マージンだけ入れて、フォントサイズは 1em 相当で自然に馴染ませる */
     .sub-header-wrapper .sub-header-tabs .tab-item .tab-item__icon {
         margin-right: 6px;
@@ -37,12 +37,12 @@
     } elseif ($showAiTab) {
         $tabsForHeader = [
             ['id' => 'pane-list', 'label' => '検索', 'icon' => 'fas fa-magnifying-glass', 'url' => route('cast.search.index', array_merge($searchQuery, ['tab' => 'list'])), 'active' => $activeTab === 'pane-list'],
-            ['id' => 'pane-keep', 'label' => '保存済み', 'icon' => 'fas fa-bookmark', 'url' => route('cast.search.index', array_merge($searchQuery, ['tab' => 'keep'])), 'active' => $activeTab === 'pane-keep'],
+            ['id' => 'pane-keep', 'label' => 'キープ', 'icon' => 'fas fa-bookmark', 'url' => route('cast.search.index', array_merge($searchQuery, ['tab' => 'keep'])), 'active' => $activeTab === 'pane-keep'],
         ];
     } else {
         $tabsForHeader = [
             ['id' => 'pane-list', 'label' => '検索', 'icon' => 'fas fa-magnifying-glass', 'url' => route('shop.search.index', $searchQuery), 'active' => $activeTab === 'pane-list'],
-            ['id' => 'pane-keep', 'label' => '保存済み', 'icon' => 'fas fa-bookmark', 'url' => route('shop.search.index', array_merge($searchQuery, ['tab' => 'keep'])), 'active' => $activeTab === 'pane-keep'],
+            ['id' => 'pane-keep', 'label' => 'キープ', 'icon' => 'fas fa-bookmark', 'url' => route('shop.search.index', array_merge($searchQuery, ['tab' => 'keep'])), 'active' => $activeTab === 'pane-keep'],
         ];
     }
 
@@ -93,8 +93,15 @@
 <div class="{{ !empty($tabsForHeader) ? 'tab-page-body' : 'search-page-body' }}">
     {{-- 検索パネル：タイムライン＋一覧を統合した画面 --}}
     <div id="pane-list" class="tab-pane {{ $activeTab === 'pane-list' ? 'active' : '' }}" style="{{ $activeTab !== 'pane-list' ? 'display:none' : '' }}">
+        {{-- 探索拠点：キャストのみ（店舗は住所固定）。フィルターの上に常時表示して
+             検索結果の距離ソート／半径の前提を明示する。旧サイドメニュー「探索拠点の設定」から移設。 --}}
+        @if($prefix === 'cast')
+            <div class="search-location-bar">
+                @include('layouts.parts.location-pill')
+            </div>
+        @endif
         {{-- 上部検索バー：スクロールしても固定（sticky）。
-             探索拠点・詳細フィルター・指定中条件は開閉エリアに集約し、
+             詳細フィルター・指定中条件は開閉エリアに集約し、
              閉じると検索窓1行だけになり結果一覧が広がる。
              ※ デフォルトは「閉じ」状態で描画してちらつき防止（明示タップで開ける） --}}
         <div class="search-topbar is-collapsed" id="search-topbar">
@@ -211,7 +218,7 @@
 @push('scripts')
 <script src="{{ asset('assets/js/sub-header.js') }}"></script>
 <script src="{{ asset('assets/js/search-detail.js') }}?v=20260924-summary-pills"></script>
-<script src="{{ asset('assets/js/favorite-quick.js') }}?v=20260924-coalesce"></script>
+<script src="{{ asset('assets/js/favorite-quick.js') }}?v=20260926-keep-rename"></script>
 <script>
 {{-- 上部検索バーの開閉：デフォルトは閉じ（HTML初期状態）→ タップで開閉するだけ。
      localStorage 保存はやめて、SEARCH を開くたびに常に閉じた状態からスタートさせる --}}

@@ -33,11 +33,6 @@ class RepositoryServiceProvider extends ServiceProvider
         );
 
         $this->app->bind(
-            \App\Repositories\Member\MemberRepositoryInterface::class,
-            \App\Repositories\Member\MemberRepository::class,
-        );
-
-        $this->app->bind(
             \App\Repositories\Master\IndustryRepositoryInterface::class,
             \App\Repositories\Master\IndustryRepository::class,
         );
@@ -59,16 +54,6 @@ class RepositoryServiceProvider extends ServiceProvider
             \App\Repositories\Matching\MatchingRepositoryInterface::class,
             \App\Repositories\Matching\MatchingRepository::class,
         );     
-        $this->app->bind(
-            \App\Repositories\Scout\ScoutRepositoryInterface::class,
-            \App\Repositories\Scout\ScoutRepository::class,
-        );
-
-        $this->app->bind(
-            \App\Repositories\Follow\FollowRepositoryInterface::class,
-            \App\Repositories\Follow\FollowRepository::class,
-        );
-
         $this->app->bind(
             \App\Repositories\Bank\BankAccountRepositoryInterface::class,
             \App\Repositories\Bank\BankAccountRepository::class,
@@ -121,11 +106,6 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             \App\Repositories\Review\ReviewRepositoryInterface::class,
             \App\Repositories\Review\ReviewRepository::class,
-        );
-
-        $this->app->bind(
-            \App\Repositories\Column\ColumnRepositoryInterface::class,
-            \App\Repositories\Column\ColumnRepository::class,
         );
     }
 

@@ -344,6 +344,9 @@ body.page-search-ai .ai-chat__thread {
 }
 .search-filter-minimal__input::placeholder {
     color: #6a5a58;
+    font-size: 0.74rem;
+    letter-spacing: 0.01em;
+    opacity: 1;
 }
 .search-filter-minimal__input:focus {
     border-color: rgba(168, 85, 247, 0.65);
@@ -1779,6 +1782,9 @@ body.page-search .connection-list--search {
         font-size: 0.92rem;
         padding: 11px 14px;
     }
+    .search-filter-minimal__input::placeholder {
+        font-size: 0.76rem;
+    }
     .search-filter-icon-btn {
         width: 40px;
         height: 40px;
@@ -2266,9 +2272,12 @@ body.page-search #pane-ai.tab-pane.active .ai-chat__thread {
     position: relative;
     list-style: none;
 }
-/* リスト内の行と行の間は控えめなヘアラインで区切る */
+/* リスト内の行と行の間は控えめなヘアラインで区切る。
+   一覧の視認性を上げるため、ヘアラインを二重（濃いラインの上に薄いハイライト）にして
+   カード同士の境界を分かりやすくする（それでも装飾は最小限） */
 .tl-row + .tl-row {
-    border-top: 1px solid rgba(168, 85, 247, 0.10);
+    border-top: 1px solid rgba(168, 85, 247, 0.18);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 /* ホバー時の薄いハイライト
    セレクタ詳細度を上げ、既存の .connection-item--shop-rich .connection-item__link
@@ -2471,6 +2480,68 @@ li.connection-item.tl-row a.tl-row__link {
     font-weight: 600;
 }
 
+/* === 給与カード（ボーナス金 + 時給）: 2 セルのピル ===
+   検索一覧で最も注目される数値情報。ラベル(小さめ大文字) + 金額(太字)
+   の階層を強め、ボーナスはゴールド系、時給はブランドの紫系で色分けする。
+   フォントは tabular-nums で桁揃え。 */
+.tl-pay {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 6px;
+    margin-top: 4px;
+}
+.tl-pay__cell {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 3px 10px 4px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    line-height: 1.15;
+    min-width: 0;
+    max-width: 100%;
+}
+.tl-pay__cell--bonus {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.16), rgba(245, 158, 11, 0.09));
+    border-color: rgba(251, 191, 36, 0.42);
+}
+.tl-pay__cell--wage {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.16), rgba(124, 58, 237, 0.09));
+    border-color: rgba(168, 85, 247, 0.42);
+}
+.tl-pay__label {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: rgba(229, 220, 215, 0.72);
+    white-space: nowrap;
+}
+.tl-pay__cell--bonus .tl-pay__label { color: #fcd34d; }
+.tl-pay__cell--wage .tl-pay__label  { color: #c4b5fd; }
+.tl-pay__amount {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    color: #f5f0ed;
+    font-variant-numeric: tabular-nums;
+    display: inline-flex;
+    align-items: baseline;
+    white-space: nowrap;
+}
+.tl-pay__yen {
+    font-size: 11px;
+    font-weight: 700;
+    margin-right: 1px;
+    opacity: 0.85;
+}
+.tl-pay__unit {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: rgba(229, 220, 215, 0.58);
+    margin-left: 1px;
+}
+
 /* === 最下部：控えめな最終更新（必要ならマッチ度バッジ併記） === */
 .tl-row__foot {
     display: flex;
@@ -2487,6 +2558,26 @@ li.connection-item.tl-row a.tl-row__link {
     color: var(--color-text-sub);
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
+}
+
+/* KEEP list: displays the kept-at timestamp on its own 3rd line, in faint text.
+   Rendered by common/search/keep-item.blade.php. Kept intentionally lighter than
+   .tl-row__meta so it reads as a subtle memory-cue, not a primary attribute. */
+.tl-row__kept-at {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 2px;
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: rgba(229, 220, 215, 0.45);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+.tl-row__kept-at i {
+    font-size: 9.5px;
+    color: rgba(168, 85, 247, 0.42);
 }
 .tl-row__match {
     color: #e6dffc;
@@ -2786,55 +2877,62 @@ li.connection-item.tl-row a.tl-row__link {
 
 
 /* ============================================================================
-   検索サマリ（件数・並び順・適用中の条件チップ） — 2026-09-24 デザイン刷新
-   旧: `.search-results-summary` の '1234件・～順' + `data-applied-search-summary`
-       のプレーンテキスト羅列 → デザインを崩す "生の文字列" の代表例だった
-   新: 件数はガラスピル、並び順は開閉トリガを兼ねたピル、適用中の条件は横スクロール
-       できるチップ列。すべて色・角丸・アイコンで意味を可視化する
+   検索サマリ（件数・並び順・適用中の条件チップ） — 2026-09-26 単一行化
+   結果一覧の視認性を最優先し、件数 / 並び順 / 適用中の条件を「1行の横スクロール」
+   にまとめる。旧: 2 段構成でオーバースペースを取っていた → 新: 1 段のみ、高さ約
+   30-36px に圧縮。あふれた条件はスワイプで確認する。
    ============================================================================ */
 .search-summary {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 10px 12px 8px;
-    margin: 0 4px 4px;
-}
-.search-summary__pills {
-    display: flex;
     align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px 12px;
+    margin: 0 4px 4px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-wrap: nowrap;
+}
+.search-summary::-webkit-scrollbar { display: none; }
+.search-summary__pills {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
 }
 
-/* 件数ピル：控えめなガラス面。数値は tabular-nums で大きく. */
+/* 件数ピル：控えめなガラス面。数値は tabular-nums でしっかり読める大きさ */
 .search-summary__count {
     display: inline-flex;
     align-items: baseline;
-    gap: 3px;
-    padding: 6px 12px;
+    gap: 2px;
+    padding: 3px 10px;
     border-radius: 999px;
     background: rgba(168, 85, 247, 0.10);
     border: 1px solid rgba(168, 85, 247, 0.25);
     color: #e6dffc;
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: 0.7rem;
+    font-weight: 700;
     letter-spacing: 0.02em;
-    line-height: 1.15;
+    line-height: 1.2;
+    flex: 0 0 auto;
+    white-space: nowrap;
 }
 .search-summary__count-ico {
-    font-size: 0.72rem;
+    font-size: 0.66rem;
     color: var(--gold-light, #c4b5fd);
-    margin-right: 4px;
+    margin-right: 3px;
     align-self: center;
 }
 .search-summary__count-num {
-    font-size: 0.98rem;
+    font-size: 0.86rem;
     font-weight: 800;
     color: #ffffff;
     font-variant-numeric: tabular-nums;
 }
 .search-summary__count-unit {
-    font-size: 0.7rem;
+    font-size: 0.62rem;
     color: rgba(196, 181, 253, 0.85);
     margin-left: 1px;
 }
@@ -2843,34 +2941,34 @@ li.connection-item.tl-row a.tl-row__link {
 .search-summary__sort {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 10px 6px 12px;
+    gap: 4px;
+    padding: 3px 8px 3px 10px;
     border-radius: 999px;
     border: 1px solid rgba(168, 85, 247, 0.25);
     background: rgba(20, 14, 22, 0.55);
     color: #e6dffc;
-    font-size: 0.76rem;
+    font-size: 0.7rem;
     font-weight: 700;
     letter-spacing: 0.02em;
+    line-height: 1.2;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
-    max-width: 100%;
-    min-width: 0;
+    flex: 0 0 auto;
 }
 .search-summary__sort > span {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 180px;
+    max-width: 130px;
 }
 .search-summary__sort i {
     color: var(--gold-light, #c4b5fd);
-    font-size: 0.78rem;
+    font-size: 0.7rem;
     flex: 0 0 auto;
 }
 .search-summary__sort-caret {
-    font-size: 0.62rem !important;
+    font-size: 0.56rem !important;
     opacity: 0.7;
     margin-left: 1px;
 }
@@ -2884,37 +2982,34 @@ li.connection-item.tl-row a.tl-row__link {
     outline-offset: 2px;
 }
 
-/* 適用条件チップ列：横スクロールで溢れ対応（モバイル最適）。
-   各チップは詳細フィルターを開くタップターゲットも兼ねる。 */
+/* 適用条件チップ列：同じ行に inline 展開。各チップは詳細フィルターを開く CTA を兼ねる。 */
 .search-summary__chips {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 6px;
     flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding-bottom: 2px;
-    margin: 0 -12px 0;
-    padding-left: 12px;
-    padding-right: 12px;
+    flex: 0 0 auto;
+    padding: 0;
+    margin: 0;
+    overflow: visible;
 }
-.search-summary__chips::-webkit-scrollbar { display: none; }
+.search-summary__chips[hidden] { display: none; }
 .search-summary__chip {
     flex: 0 0 auto;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
+    gap: 4px;
+    padding: 3px 9px;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(168, 85, 247, 0.28);
     color: rgba(230, 223, 252, 0.92);
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     font-weight: 600;
     letter-spacing: 0.01em;
+    line-height: 1.2;
     cursor: pointer;
-    max-width: 220px;
+    max-width: 180px;
     -webkit-tap-highlight-color: transparent;
     transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
 }
@@ -2925,7 +3020,7 @@ li.connection-item.tl-row a.tl-row__link {
 }
 .search-summary__chip i {
     color: var(--gold-light, #c4b5fd);
-    font-size: 0.68rem;
+    font-size: 0.6rem;
     flex: 0 0 auto;
 }
 .search-summary__chip:hover {

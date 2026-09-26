@@ -13,9 +13,12 @@
     }
 
     ready(function () {
-        var trigger = document.getElementById('location-pill-trigger');
+        // Multiple triggers can co-exist on the same page (e.g. the SWIPE header icon
+        // and the search-page pill both open the same modal). Each trigger is tagged
+        // with [data-location-open]; the modal renders once via Blade's @once.
+        var triggers = document.querySelectorAll('[data-location-open]');
         var overlay = document.getElementById('location-modal-overlay');
-        if (!trigger || !overlay) return;
+        if (!triggers.length || !overlay) return;
 
         var msgEl = document.getElementById('location-modal-message');
         var passportForm = document.getElementById('location-passport-form');
@@ -78,9 +81,11 @@
             });
         }
 
-        trigger.addEventListener('click', function () {
-            clearMessage();
-            open();
+        triggers.forEach(function (trigger) {
+            trigger.addEventListener('click', function () {
+                clearMessage();
+                open();
+            });
         });
         closeBtns.forEach(function (btn) { btn.addEventListener('click', close); });
         overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });

@@ -11,25 +11,27 @@
     /* ========================================================
        採用・入金 統合タイムライン
        ======================================================== */
-    /* 絞り込みチップ（ダッシュボード数値カードは廃止） */
-    .case-filter { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    /* 絞り込みチップ（ダッシュボード数値カードは廃止）
+       2026-09-26: 大きすぎたため縮小 + アクティブ塗りを控えめに */
+    .case-filter { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
     .case-filter__chip {
-        display: inline-flex; align-items: center; gap: 6px;
-        padding: 8px 16px; border-radius: 999px;
-        font-size: 0.84rem; font-weight: 700; font-family: inherit;
-        background: #ffffff; border: 1px solid rgba(124, 58, 237, 0.22);
-        color: #574d6f; cursor: pointer;
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 5px 12px; border-radius: 999px;
+        font-size: 0.74rem; font-weight: 700; font-family: inherit;
+        background: transparent; border: 1px solid rgba(124, 58, 237, 0.30);
+        color: #5b21b6; cursor: pointer; line-height: 1.3;
         transition: background .15s, color .15s, border-color .15s;
     }
+    .case-filter__chip:hover { background: rgba(124, 58, 237, 0.05); }
     .case-filter__chip.is-active {
-        background: rgba(124, 58, 237, 0.12);
-        border-color: rgba(124, 58, 237, 0.45);
-        color: #5b21b6;
+        background: rgba(124, 58, 237, 0.10);
+        border-color: rgba(124, 58, 237, 0.55);
+        color: #4c1d95;
     }
     .case-filter__num {
-        min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
+        min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px;
         background: #ef4444; color: #ffffff;
-        font-size: 0.68rem; font-weight: 700; line-height: 18px; text-align: center;
+        font-size: 0.62rem; font-weight: 800; line-height: 16px; text-align: center;
         font-variant-numeric: tabular-nums;
     }
 

@@ -218,7 +218,6 @@ return [
         'ShopInfoUtil' => App\Lib\ShopInfoUtil::class,
         'ShopImgInfoUtil' => App\Lib\ShopImgInfoUtil::class,
 
-        'MemberInfoUtil' => App\Lib\MemberInfoUtil::class,
         'NewsInfoUtil' => App\Lib\NewsInfoUtil::class,
 
         'FileConsts' =>  App\Consts\FileConsts::class,

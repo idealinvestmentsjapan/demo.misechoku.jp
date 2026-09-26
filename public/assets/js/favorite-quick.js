@@ -190,8 +190,8 @@
 
             showToast(
                 isActive
-                    ? '🔖 保存しました（SEARCH ＞ 保存済みから確認できます）'
-                    : '保存済みから外しました',
+                    ? '🔖 キープしました（SEARCH ＞ キープから確認できます）'
+                    : 'キープから外しました',
                 isActive ? 'keep' : null
             );
         } catch (e) {
@@ -237,8 +237,8 @@
             ov.id = 'fav-keep-confirm';
             ov.className = 'fav-confirm-overlay';
             ov.innerHTML =
-                '<div class="fav-confirm-panel" role="alertdialog" aria-modal="true" aria-label="保存済みから外す確認">' +
-                '  <p class="fav-confirm-text">保存済みから外しますか？</p>' +
+                '<div class="fav-confirm-panel" role="alertdialog" aria-modal="true" aria-label="キープから外す確認">' +
+                '  <p class="fav-confirm-text">キープから外しますか？</p>' +
                 '  <div class="fav-confirm-actions">' +
                 '    <button type="button" class="fav-confirm-btn fav-confirm-btn--cancel" data-confirm-cancel>やめる</button>' +
                 '    <button type="button" class="fav-confirm-btn fav-confirm-btn--ok" data-confirm-ok>外す</button>' +

@@ -1,11 +1,15 @@
-{{-- 探索拠点（現在地 or パスポート）の表示＋切替ピル
+{{-- 探索拠点（現在地 or パスポート）の表示＋切替トリガー
      使い方:
-        @include('layouts.parts.location-pill')
+        @include('layouts.parts.location-pill')                       -- フル幅ピル（既定）
+        @include('layouts.parts.location-pill', ['variant' => 'icon']) -- ヘッダー用の小さいアイコンボタン
 
      呼び出し元のレイアウト／コントローラから $userLocation 変数（UserLocationService::getActiveLocation の結果 or null）が渡されることを想定。
      渡されない場合は app() 経由でその場で解決する。
      - キャスト側: 現在地／エリア指定（パスポート）／プロフィール住所を保存できるモーダルを開く
      - 店舗側: 拠点は店舗住所固定（仕様）のため、説明＋検索半径のみのモーダルを開く
+
+     同じページに複数のトリガー（検索画面のピル + SWIPE ヘッダーのアイコン等）が並ぶことを許容するため、
+     トリガーは data 属性 [data-location-open] で識別し、モーダル HTML/CSS は @once で 1 回だけ描画する。
 --}}
 @php
     $locationService = app(\App\Services\UserLocationService::class);
@@ -33,33 +37,51 @@
     $locationDistanceOptions = \App\Services\UserLocationService::DISTANCE_OPTIONS_KM;
     // One-tap presets for well-known nightlife areas (geocoded server-side)
     $locationAreaPresets = ['新宿', '渋谷', '六本木', '銀座', '池袋', '中洲', 'すすきの'];
+
+    $locationVariant = $variant ?? 'pill';
 @endphp
 
-<div class="location-pill-wrap">
+@if($locationVariant === 'icon')
+    {{-- Header-slot compact trigger. Fits alongside existing .header-icon-btn siblings. --}}
     <button type="button"
-            class="location-pill {{ $userLocation ? 'is-set' : 'is-unset' }}"
-            id="location-pill-trigger"
+            class="header-icon-btn header-location-btn {{ $userLocation ? '' : 'is-unset has-badge' }}"
+            data-location-open
             aria-haspopup="dialog"
-            aria-controls="location-modal-overlay">
-        @if($userLocation)
-            <i class="fas fa-location-dot location-pill__icon location-pill__icon--set" aria-hidden="true"></i>
-            @if($showModeChip)
-                <span class="location-pill__mode">{{ $modeLabel }}</span>
-            @endif
-            <span class="location-pill__label">{{ !empty($userLocation['label']) ? $userLocation['label'] : $modeLabel }}</span>
-            @if($locationMaxKm > 0)
-                <span class="location-pill__radius">半径{{ $locationMaxKm }}km</span>
-            @endif
-            <span class="location-pill__cta">{{ $isCastSide ? '変更' : '詳細' }}</span>
-        @else
-            <i class="fas fa-location-dot location-pill__icon location-pill__icon--unset" aria-hidden="true"></i>
-            <span class="location-pill__label location-pill__label--unset">位置情報が未設定です（距離の表示・並び替えが無効）</span>
-            <span class="location-pill__cta location-pill__cta--unset">設定する</span>
+            aria-controls="location-modal-overlay"
+            aria-label="探索拠点の設定{{ $userLocation ? '（' . ($userLocation['label'] ?? $modeLabel) . '）' : '（未設定）' }}">
+        <i class="fas fa-location-dot header-icon-btn__ico" aria-hidden="true"></i>
+        @if(!$userLocation)
+            <span class="header-badge is-accent" aria-hidden="true">!</span>
         @endif
-        <i class="fas fa-chevron-right location-pill__chev" aria-hidden="true"></i>
     </button>
-</div>
+@else
+    <div class="location-pill-wrap">
+        <button type="button"
+                class="location-pill {{ $userLocation ? 'is-set' : 'is-unset' }}"
+                data-location-open
+                aria-haspopup="dialog"
+                aria-controls="location-modal-overlay">
+            @if($userLocation)
+                <i class="fas fa-location-dot location-pill__icon location-pill__icon--set" aria-hidden="true"></i>
+                @if($showModeChip)
+                    <span class="location-pill__mode">{{ $modeLabel }}</span>
+                @endif
+                <span class="location-pill__label">{{ !empty($userLocation['label']) ? $userLocation['label'] : $modeLabel }}</span>
+                @if($locationMaxKm > 0)
+                    <span class="location-pill__radius">半径{{ $locationMaxKm }}km</span>
+                @endif
+                <span class="location-pill__cta">{{ $isCastSide ? '変更' : '詳細' }}</span>
+            @else
+                <i class="fas fa-location-dot location-pill__icon location-pill__icon--unset" aria-hidden="true"></i>
+                <span class="location-pill__label location-pill__label--unset">位置情報が未設定です（距離の表示・並び替えが無効）</span>
+                <span class="location-pill__cta location-pill__cta--unset">設定する</span>
+            @endif
+            <i class="fas fa-chevron-right location-pill__chev" aria-hidden="true"></i>
+        </button>
+    </div>
+@endif
 
+@once
 {{-- モーダル（同じページに1つだけ） --}}
 <div id="location-modal-overlay" class="location-modal-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-label="探索拠点の設定">
     <div class="location-modal">
@@ -465,4 +487,23 @@
     border-color: rgba(74, 222, 128, 0.4);
     color: var(--color-success);
 }
+/* Header-slot compact trigger (variant=icon). Displayed inline with .header-icon-btn siblings.
+   Adds a small dot when the location is unset so users notice the setup is pending. */
+.header-location-btn { position: relative; }
+.header-location-btn .header-badge.is-accent {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    min-width: 6px;
+    height: 6px;
+    padding: 0;
+    border-radius: 50%;
+    background: #e15c5c;
+    color: transparent;
+    font-size: 0;
+    line-height: 0;
+    border: 1.5px solid var(--dark-bg, #17131f);
+    box-shadow: 0 0 0 1px rgba(225, 92, 92, 0.35);
+}
 </style>
+@endonce
