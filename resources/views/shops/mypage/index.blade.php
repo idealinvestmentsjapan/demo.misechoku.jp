@@ -309,7 +309,7 @@
                                  非オーナー向けの案内文言だけ残す。 --}}
                             @unlessshopowner
                                 <span class="text-sm text-text-sub">公開設定の変更はオーナーにご依頼ください</span>
-                            @endunlessshopowner
+                            @endshopowner
                         </div>
                         <div class="flex items-center gap-4 text-[11px]">
                             <span><span class="text-text-sub">応募</span> <strong class="text-text-main">{{ number_format($js['applicant_count'] ?? 0) }}</strong></span>

@@ -987,7 +987,7 @@
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script src="{{ asset('assets/js/character-guide.js') }}?v={{ $assetVersion }}"></script>
     <script src="{{ asset('assets/js/push-notification.js') }}"></script>
-    <script src="{{ asset('assets/js/location-modal.js') }}?v=20260926-multi-trigger" defer></script>
+    <script src="{{ asset('assets/js/location-modal.js') }}?v=20260926-body-reparent" defer></script>
     <script src="{{ asset('assets/js/share-menu.js') }}" defer></script>
 
     @stack('scripts')

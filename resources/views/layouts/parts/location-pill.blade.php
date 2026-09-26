@@ -227,17 +227,20 @@
     -webkit-backdrop-filter: blur(4px);
     z-index: 9999;
     display: flex;
-    align-items: center;
+    /* Anchor to the top so the modal never spills below the viewport when content grows.
+       Vertical scroll happens inside the modal via its own overflow-y:auto. */
+    align-items: flex-start;
     justify-content: center;
     /* Respect iOS safe areas so the modal's top/bottom aren't cut by notch / home indicator */
     padding:
-        max(16px, env(safe-area-inset-top, 0px))
-        16px
-        max(16px, env(safe-area-inset-bottom, 0px));
+        max(12px, env(safe-area-inset-top, 0px))
+        12px
+        max(12px, env(safe-area-inset-bottom, 0px));
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.18s ease;
     overscroll-behavior: contain;
+    box-sizing: border-box;
 }
 .location-modal-overlay[aria-hidden="false"] {
     opacity: 1;
@@ -246,28 +249,40 @@
 .location-modal {
     position: relative;
     width: min(420px, 100%);
-    /* Fit within the visible viewport minus safe-area insets (iOS notch / home indicator).
-       Uses dvh so mobile browser chrome collapse/expand doesn't push the modal off-screen. */
-    max-height: calc(100vh - 32px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
-    max-height: calc(100dvh - 32px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    /* Constrain to the overlay's flex content area. `100%` refers to the flex container
+       (the overlay), which already deducts safe-area insets via its padding. This is more
+       robust than a manual dvh calc because it always tracks the overlay's actual size. */
+    max-height: 100%;
     overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
     background: linear-gradient(180deg, var(--color-sub), var(--dark-bg));
     border: 1px solid var(--color-border-strong);
     border-radius: 18px;
-    padding: 22px 22px 18px;
+    padding: 18px 20px 16px;
     color: var(--color-text-header);
     box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
+    box-sizing: border-box;
+    /* Guarantee the last button remains reachable above iOS bottom safe area even when the
+       modal's own scroll ends flush at the container bottom. */
+    scroll-padding-bottom: 24px;
 }
 /* Short viewports (landscape phones, small tablets in split view): tighten paddings so
    the primary sections stay reachable without excessive scrolling. */
 @media (max-height: 640px) {
-    .location-modal { padding: 16px 18px 14px; }
-    .location-modal__title { margin-bottom: 6px; }
-    .location-modal__current { margin-bottom: 10px; padding: 8px 10px; }
-    .location-modal__section { margin-bottom: 10px; }
-    .location-modal__divider { margin: 8px 0; }
+    .location-modal { padding: 14px 16px 12px; }
+    .location-modal__title { font-size: 0.98rem; margin-bottom: 4px; }
+    .location-modal__lead { margin-bottom: 10px; }
+    .location-modal__current { margin-bottom: 8px; padding: 7px 10px; font-size: 0.78rem; }
+    .location-modal__section { margin-bottom: 8px; }
+    .location-modal__section-title { margin-bottom: 6px; }
+    .location-modal__divider { margin: 6px 0; }
+    .location-modal__hint { font-size: 0.66rem; }
+    .location-modal__btn-primary,
+    .location-modal__btn-secondary { padding: 9px 12px; font-size: 0.86rem; }
+    .location-modal__input { height: 38px; font-size: 0.88rem; }
+    .location-modal__chip { padding: 5px 10px; font-size: 0.76rem; }
+    .location-modal__radius-chip { padding: 5px 10px; font-size: 0.74rem; }
 }
 .location-modal__close {
     position: absolute;

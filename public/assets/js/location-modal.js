@@ -20,6 +20,15 @@
         var overlay = document.getElementById('location-modal-overlay');
         if (!triggers.length || !overlay) return;
 
+        // Relocate the modal to <body> so it can never be clipped or z-index-trapped
+        // by ancestors (e.g. #home-screen has overflow:hidden on SWIPE, and .cast-card
+        // uses will-change:transform which contains fixed descendants in some browsers).
+        // The @once Blade block renders the modal inline; moving it out is safe because
+        // its state is purely CSS/JS-driven and it has no layout dependency on its parent.
+        if (overlay.parentElement !== document.body) {
+            document.body.appendChild(overlay);
+        }
+
         var msgEl = document.getElementById('location-modal-message');
         var passportForm = document.getElementById('location-passport-form');
         var passportInput = document.getElementById('location-passport-input');

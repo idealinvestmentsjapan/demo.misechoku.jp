@@ -4,7 +4,7 @@
 @section('body-class', 'no-scroll page-home')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/home.css') }}?v=20260926-safe-zones-photo-clear">
+<link rel="stylesheet" href="{{ asset('assets/css/home.css') }}?v=20260926-noband-cta-lift">
 {{-- Perf / tier-chip / cssMode overrides live in a separate file; load AFTER home.css. --}}
 <link rel="stylesheet" href="{{ asset('assets/css/home-perf.css') }}?v=20260809-perf-bundle">
 @endpush
@@ -29,50 +29,10 @@
         @include('layouts.parts.location-pill', ['variant' => 'floating'])
     @endif
 
-    {{-- Help recruitment ribbon (top-overlay, ~52px). Shop entry / Cast band. --}}
-    @php $helpBand = $helpBand ?? null; @endphp
-    @if($helpBand && ($helpBand['kind'] ?? '') === 'shop-entry')
-        <a href="{{ route('shop.help-recruitment.index') }}" class="home-help-band home-help-band--shop">
-            <span class="home-help-band__icon"><i class="fas fa-bolt"></i></span>
-            <span class="home-help-band__text">
-                <span class="home-help-band__title">ヘルプ募集を管理する</span>
-                <span class="home-help-band__sub">
-                    @if(!empty($helpBand['has_dates']))
-                        {{ implode('・', $helpBand['dates']) }} で募集中
-                    @else
-                        募集日を選ぶとキャストの検索・SWIPE で優先表示
-                    @endif
-                </span>
-            </span>
-            <span class="home-help-band__chev"><i class="fas fa-chevron-right"></i></span>
-        </a>
-    @elseif($helpBand && ($helpBand['kind'] ?? '') === 'cast-band' && !empty($helpBand['shops']))
-        <div class="home-help-band home-help-band--cast">
-            <div class="home-help-band__header">
-                <span class="home-help-band__badge">
-                    <i class="fas fa-bolt"></i>
-                    <span>本日・明日ヘルプ募集中 <span class="home-help-band__count">{{ count($helpBand['shops']) }}</span></span>
-                </span>
-                <a href="{{ route('cast.search.index', ['tab' => 'search']) }}" class="home-help-band__more">全部見る <i class="fas fa-chevron-right"></i></a>
-            </div>
-            <ul class="home-help-band__chips">
-                @foreach($helpBand['shops'] as $s)
-                    <li class="home-help-band__chip">
-                        <a href="{{ route('cast.shopprofile.show', ['id' => $s['id']]) }}" class="home-help-band__chip-link">
-                            <img src="{{ $s['image'] }}" alt="" class="home-help-band__chip-img" loading="lazy">
-                            <span class="home-help-band__chip-info">
-                                <span class="home-help-band__chip-date">{{ $s['date_label'] }}</span>
-                                <span class="home-help-band__chip-name">{{ $s['name'] }}</span>
-                                @if($s['wage_label'] !== '')
-                                    <span class="home-help-band__chip-wage">{{ $s['wage_label'] }}</span>
-                                @endif
-                            </span>
-                        </a>
-                    </li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
+    {{-- 2026-09-26: 上部ヘルプバンド（店舗側「ヘルプ募集を管理する」/ キャスト側の
+         「本日・明日ヘルプ募集中」リスト）は撤去。両サイドのカードを同一構造に揃え、
+         スワイプ面積を最大化する。ヘルプ募集の管理は /shop/help-recruitment を
+         サイドメニュー等から遷移する導線に一本化。 --}}
 
     {{-- メインスワイパー（上下） --}}
     <div class="main-swiper swiper">
@@ -105,18 +65,8 @@
                         'isRecruit' => $isRecruit,
                     ])
 
-                    {{-- 求人カードのみ：店長からのメッセージ（画像上部オーバーレイ） --}}
-                    @if($isRecruit && !empty($mo['show']))
-                        <div class="rc-manager-msg" aria-label="キャッチコピー">
-                            <div class="rc-manager-msg__backdrop">
-                                <div class="rc-manager-msg__inner">
-                                    @if(!empty($mo['line1_html']))
-                                        <p class="rc-manager-msg__line1">{!! $mo['line1_html'] !!}</p>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    @endif
+                    {{-- キャッチコピー（rc-manager-msg）は写真を隠すため 2026-09-26 に撤去。
+                         同じ情報は詳細ページ（cast.shopprofile.show）で伝える。 --}}
 
                     {{-- 画像下端を黒に溶かすグラデーション（両カード共通） --}}
                     <div class="rc-img-gradient" aria-hidden="true"></div>
