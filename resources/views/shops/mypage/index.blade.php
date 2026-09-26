@@ -150,8 +150,8 @@
         @php
             $availSelected   = $availabilityDates ?? [];
             $availActive     = count($availSelected) > 0;
-            $availDeclareUrl = route('help-recruitment.dates.declare');
-            $availClearUrl   = route('help-recruitment.dates.clear');
+            $availDeclareUrl = route('shop.help-recruitment.dates.declare');
+            $availClearUrl   = route('shop.help-recruitment.dates.clear');
             $availMaxDates   = \App\Services\AvailabilityService::MAX_DATES;
             $availDaysAhead  = \App\Services\AvailabilityService::MAX_DAYS_AHEAD;
         @endphp
