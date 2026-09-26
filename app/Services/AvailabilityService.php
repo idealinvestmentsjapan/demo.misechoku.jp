@@ -200,6 +200,43 @@ class AvailabilityService
         return $date->toDateString();
     }
 
+    /**
+     * Normalize multiple user-selected filter dates. Accepts either an array
+     * (from ?available_on[]=...) or a comma/space separated string. Returns a
+     * unique ascending list of Y-m-d strings within range.
+     *
+     * @return list<string>
+     */
+    public function normalizeFilterDates(mixed $raw): array
+    {
+        if ($raw === null || $raw === '' || $raw === []) {
+            return [];
+        }
+
+        if (is_string($raw)) {
+            $raw = preg_split('/[\s,]+/', $raw) ?: [];
+        }
+        if (!is_array($raw)) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($raw as $item) {
+            if (!is_string($item)) {
+                continue;
+            }
+            $d = $this->normalizeFilterDate($item);
+            if ($d !== null) {
+                $out[$d] = true;
+            }
+        }
+
+        $dates = array_keys($out);
+        sort($dates);
+
+        return $dates;
+    }
+
     /** Short Japanese label like '9/28' (with '本日' for today). */
     public static function shortLabel(string $date): string
     {

@@ -214,12 +214,18 @@ class SearchController extends BaseSearchController
         $filters = $request->only(['age_min', 'age_max', 'shift_frequency', 'work_periods', 'looks_tag_ids', 'personality_tag_ids', 'night_work_exp']);
         $filterService = app(\App\Services\SearchFilterService::class);
 
-        // Candidate-date filter: only casts who declared the selected date
+        // Candidate-date filter: only casts who declared any of the selected dates (OR)
         $availabilityService = app(\App\Services\AvailabilityService::class);
-        $availableOn = $availabilityService->normalizeFilterDate($request->query('available_on'));
-        $availableCastIdSet = $availableOn !== null
-            ? array_fill_keys($availabilityService->ownerIdsAvailableOn(\App\Models\AvailabilityDate::OWNER_CAST, $availableOn), true)
-            : null;
+        $availableOnDates = $availabilityService->normalizeFilterDates($request->query('available_on'));
+        $availableCastIdSet = null;
+        if ($availableOnDates !== []) {
+            $availableCastIdSet = [];
+            foreach ($availableOnDates as $d) {
+                foreach ($availabilityService->ownerIdsAvailableOn(\App\Models\AvailabilityDate::OWNER_CAST, $d) as $ownerId) {
+                    $availableCastIdSet[(string) $ownerId] = true;
+                }
+            }
+        }
 
         $items = $allRows
             ->filter(function ($row) use ($keywordTokens, $filters, $castTagsByCastId, $castPrefsByCastId, $filterService, $availableCastIdSet) {

@@ -121,9 +121,11 @@
                     </div>
                 </div>
 
-                {{-- すぐに入れる日（〇月〇日にヘルプ募集している店舗を探す） --}}
+                {{-- すぐに入れる日（複数選択可。この日にヘルプ募集している店舗を探す） --}}
                 @php
-                    $availableOnValue = (string) request('available_on', '');
+                    $availableOnRaw = request('available_on', []);
+                    if (is_string($availableOnRaw)) { $availableOnRaw = [$availableOnRaw]; }
+                    $availableOnDates = app(\App\Services\AvailabilityService::class)->normalizeFilterDates($availableOnRaw);
                     $availableOnMin = \Carbon\Carbon::today()->toDateString();
                     $availableOnMax = \Carbon\Carbon::today()->addDays(\App\Services\AvailabilityService::MAX_DAYS_AHEAD)->toDateString();
                 @endphp
@@ -134,10 +136,21 @@
                     </button>
                     <div class="detail-search-accordion__body" hidden>
                         <div class="detail-search-subsection">
-                            <span class="detail-search-subsection__label">この日にヘルプ募集している店舗を探す</span>
-                            <input type="date" name="available_on" class="detail-search-select"
-                                   value="{{ $availableOnValue }}"
-                                   min="{{ $availableOnMin }}" max="{{ $availableOnMax }}">
+                            <span class="detail-search-subsection__label">この日にヘルプ募集している店舗を探す（複数選択可）</span>
+                            <div class="detail-search-date-picker" data-date-picker>
+                                <input type="date" class="detail-search-select" data-date-picker-input
+                                       min="{{ $availableOnMin }}" max="{{ $availableOnMax }}">
+                                <div class="detail-search-date-picker__selected" data-date-picker-selected>
+                                    @foreach($availableOnDates as $d)
+                                        <span class="detail-search-area-chip" data-date-chip>
+                                            <span class="detail-search-area-chip__label">{{ \App\Services\AvailabilityService::shortLabel($d) }}</span>
+                                            <button type="button" class="detail-search-area-chip__remove" data-date-chip-remove aria-label="{{ $d }} を外す">&times;</button>
+                                            <input type="hidden" name="available_on[]" value="{{ $d }}">
+                                        </span>
+                                    @endforeach
+                                </div>
+                                <p class="detail-search-area-suggest__hint">日付を選ぶと下にタグとして追加されます。</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -311,6 +324,70 @@
     var form = document.getElementById('detail-search-form');
     if (!form) return;
 
+    // ===== Multi-date picker (すぐに入れる日) =====
+    form.querySelectorAll('[data-date-picker]').forEach(function (block) {
+        var input = block.querySelector('[data-date-picker-input]');
+        var selected = block.querySelector('[data-date-picker-selected]');
+        if (!input || !selected) return;
+
+        function currentDates() {
+            return Array.from(selected.querySelectorAll('input[name="available_on[]"]'))
+                .map(function (i) { return i.value; });
+        }
+
+        function shortLabel(iso) {
+            // iso = 'YYYY-MM-DD' -> 'M/D（曜）' or '本日'
+            var d = new Date(iso + 'T00:00:00');
+            if (isNaN(d.getTime())) return iso;
+            var today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (d.getTime() === today.getTime()) return '本日';
+            var weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+            return (d.getMonth() + 1) + '/' + d.getDate() + '（' + weekdays[d.getDay()] + '）';
+        }
+
+        function addDate(iso) {
+            if (!iso) return;
+            if (currentDates().indexOf(iso) !== -1) return;
+            var wrap = document.createElement('span');
+            wrap.className = 'detail-search-area-chip';
+            wrap.setAttribute('data-date-chip', '');
+            var labelEl = document.createElement('span');
+            labelEl.className = 'detail-search-area-chip__label';
+            labelEl.textContent = shortLabel(iso);
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'detail-search-area-chip__remove';
+            btn.setAttribute('data-date-chip-remove', '');
+            btn.setAttribute('aria-label', iso + ' を外す');
+            btn.innerHTML = '&times;';
+            var hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'available_on[]';
+            hidden.value = iso;
+            wrap.appendChild(labelEl);
+            wrap.appendChild(btn);
+            wrap.appendChild(hidden);
+            selected.appendChild(wrap);
+            form.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        input.addEventListener('change', function () {
+            var v = input.value;
+            if (!v) return;
+            addDate(v);
+            input.value = '';
+        });
+
+        selected.addEventListener('click', function (e) {
+            var btn = e.target.closest && e.target.closest('[data-date-chip-remove]');
+            if (!btn) return;
+            var chip = btn.closest('[data-date-chip]');
+            if (chip) chip.remove();
+            form.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+    });
+
     // ===== Area suggest input =====
     var areaBlocks = form.querySelectorAll('[data-area-suggest]');
     areaBlocks.forEach(function (block) {
@@ -480,6 +557,15 @@
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
+}
+
+/* ===== Multi-date picker (すぐに入れる日) ===== */
+.detail-search-date-picker { display: flex; flex-direction: column; gap: 10px; }
+.detail-search-date-picker__selected { display: flex; flex-wrap: wrap; gap: 6px; min-height: 4px; }
+.detail-search-date-picker__hint {
+    margin: 0;
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 /* ===== Area suggest input ===== */

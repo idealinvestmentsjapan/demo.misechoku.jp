@@ -186,13 +186,16 @@ class SearchController extends BaseSearchController
             \App\Models\AvailabilityDate::OWNER_SHOP,
             $allRows->pluck('id')->map(fn ($v) => (string) $v)->all()
         );
-        $availableOn = $availabilityService->normalizeFilterDate($request->query('available_on'));
+        $availableOnDates = $availabilityService->normalizeFilterDates($request->query('available_on'));
         $todayStr = Carbon::today()->toDateString();
 
         $items = $allRows
-            ->filter(function ($row) use ($keywordTokens, $areas, $hourlyWage, $reward, $jobTagFilters, $shopTagFilters, $availabilityFilters, $shopAvailability, $filterService, $availableOn, $helpDatesByShop) {
-                if ($availableOn !== null && !in_array($availableOn, $helpDatesByShop[(string) $row->id] ?? [], true)) {
-                    return false;
+            ->filter(function ($row) use ($keywordTokens, $areas, $hourlyWage, $reward, $jobTagFilters, $shopTagFilters, $availabilityFilters, $shopAvailability, $filterService, $availableOnDates, $helpDatesByShop) {
+                if ($availableOnDates !== []) {
+                    $declared = $helpDatesByShop[(string) $row->id] ?? [];
+                    if (array_intersect($availableOnDates, $declared) === []) {
+                        return false;
+                    }
                 }
                 if (!$filterService->matchesAvailability($availabilityFilters, $shopAvailability->get($row->id)?->toArray() ?? [])) {
                     return false;
