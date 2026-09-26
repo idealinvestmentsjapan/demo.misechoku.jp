@@ -5856,3 +5856,49 @@ body.theme-premium-white:not(.mode-dark) .home-location-fab__radius::before { co
 body.theme-light:not(.mode-dark) .home-location-fab__chev,
 body.theme-premium-white:not(.mode-dark) .home-location-fab__chev { color: rgba(30, 26, 46, 0.5); }
 
+/* ============================================================================
+   2026-09-26: 求人カード (cast-side SWIPE) の画像レイアウトを .cast-card--profile
+   (shop-side) と揃える。従来はフルブリード cover のため 4:5 写真の左右が portrait
+   phone で ~140px 単位で切り取られ、店舗写真の看板・装飾が見えなくなっていた。
+   画像エリアを上部 62% に切り出し、下端 8% を線形マスクで暗色背景にフェードして
+   画像とカード黒背景の境目を柔らかく溶かす。
+   ============================================================================ */
+body.page-home .cast-card--recruit .rc-img-wrap.home-photo-wrap,
+body.page-home .cast-card--recruit .rc-img-wrap {
+    position: absolute !important;
+    inset: auto !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: 100% !important;
+    /* .cast-card--profile と同じ 62%。求人情報スタック（バッジ / 名前 / メタ /
+       pslate / CTA + gap × 5）約 240px 分を下に確保する。 */
+    height: 62% !important;
+    max-height: 62% !important;
+    flex: none !important;
+    overflow: hidden !important;
+    border-radius: 0 !important;
+    cursor: pointer;
+    /* 画像下端 → カード黒背景 (--discovery-base) への境目を線形フェードで柔らかく。
+       下端 12% だけを軽くマスク（88%以降を徐々に透過）する。単一 linear-gradient で
+       webkit / mask-composite の互換性問題を回避。マスクは wrap 全体（写真・グラデ）
+       に適用され、透過部から下のカード地色 (#050505) が透けて自然な境目になる。 */
+    -webkit-mask-image: linear-gradient(to bottom, #000 88%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 88%, transparent 100%);
+}
+
+/* 画像の位置：店舗写真は看板 / 店内装飾が上部フレームに写ることが多いため上寄せ
+   cover にして被写体を確実に残す（.cast-card--profile の 50% 8% と揃える）。 */
+body.page-home .cast-card--recruit .home-photo,
+body.page-home .cast-card--recruit .photo-swiper .swiper-slide img {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: cover !important;
+    object-position: 50% 8% !important;
+    border-radius: 0 !important;
+    background-color: var(--color-main);
+}
+
