@@ -172,12 +172,9 @@
             $bellCount = isset($unreadNewsCount) ? (int) $unreadNewsCount : 0;
         @endphp
 
-        {{-- 探索拠点アイコン：キャストの SWIPE（/cast/home）でのみ表示。旧サイドメニュー
-             「探索拠点の設定」から移設。距離ソートの前提を SWIPE 画面から直接調整できるよう、
-             ヘッダー右端にコンパクトなトリガーを置く。他画面（検索）ではピルで別途表示。 --}}
-        @if($isCast && request()->routeIs('cast.home'))
-            @include('layouts.parts.location-pill', ['variant' => 'icon'])
-        @endif
+        {{-- 探索拠点は SWIPE（/cast/home）ではカード左上のフローティングピルに移設（2026-09-26）。
+             ラベル無しのアイコンでは「何のアイコンか」「今どのエリアで検索中か」が伝わらなかったため、
+             現在のエリア名 + 半径 + ∨ を出す形へ変更。他画面（検索）ではピルで別途表示。 --}}
         <button id="btn-header-task"
                 class="header-icon-btn {{ $taskHigh > 0 ? 'is-urgent' : '' }} {{ $taskTotal > 0 ? 'has-badge' : '' }}"
                 aria-label="やることリスト（{{ $taskTotal }}件）"

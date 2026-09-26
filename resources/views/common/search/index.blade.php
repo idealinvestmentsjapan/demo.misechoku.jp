@@ -4,7 +4,7 @@
 @section('body-class', request()->is('cast/*') && ($activeTab ?? null) === 'pane-ai' ? 'page-search page-search-ai' : 'page-search')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/search.css') }}?v=20260926-summary-oneline">
+<link rel="stylesheet" href="{{ asset('assets/css/search.css') }}?v=20260926-summary-two-row">
 <link rel="stylesheet" href="{{ asset('assets/css/search-location-bar.css') }}?v=20260926-decouple-sidebar">
 <link rel="stylesheet" href="{{ asset('assets/css/sub-header.css') }}">
 <style>
@@ -93,41 +93,37 @@
 <div class="{{ !empty($tabsForHeader) ? 'tab-page-body' : 'search-page-body' }}">
     {{-- 検索パネル：タイムライン＋一覧を統合した画面 --}}
     <div id="pane-list" class="tab-pane {{ $activeTab === 'pane-list' ? 'active' : '' }}" style="{{ $activeTab !== 'pane-list' ? 'display:none' : '' }}">
-        {{-- 探索拠点：キャストのみ（店舗は住所固定）。フィルターの上に常時表示して
-             検索結果の距離ソート／半径の前提を明示する。旧サイドメニュー「探索拠点の設定」から移設。 --}}
-        @if($prefix === 'cast')
-            <div class="search-location-bar">
-                @include('layouts.parts.location-pill')
-            </div>
-        @endif
+        {{-- 2026-09-26: 「プロフィール住所」のフル幅ピルを撤去。
+             拠点（現在地／エリア指定）の変更は詳細フィルターモーダルの「拠点」セクションで完結する。 --}}
         {{-- 上部検索バー：スクロールしても固定（sticky）。
              詳細フィルター・指定中条件は開閉エリアに集約し、
-             閉じると検索窓1行だけになり結果一覧が広がる。
-             ※ デフォルトは「閉じ」状態で描画してちらつき防止（明示タップで開ける） --}}
+             閉じると検索窓1行だけになり結果一覧が広がる。 --}}
         <div class="search-topbar is-collapsed" id="search-topbar">
             <div class="search-filter-box">
                 @include($partsView . '.filter')
             </div>
         </div>
 
-        {{-- 検索サマリ：件数・並び順・適用中の条件をピル/チップで表示（2026-09-24 デザイン刷新）
-             従来は「1234件・ひとこと更新が新しい順」+ プレーンテキストの条件羅列で
-             デザイン性を損なっていたため、視覚的なピル+チップに置換。並び順はタップで
-             既存の sort パネル（#search-sort-trigger）を開くショートカットとして機能する。 --}}
+        {{-- 検索サマリ（2026-09-26 再整理）:
+             ・並び替えトリガは検索フィルター上部から撤去（機能重複回避）
+             ・件数は左端にプレーンテキスト、並び替えは右端にピル状ドロップダウン
+             ・適用中の条件チップは 2 行目に配置し、はみ出す場合のみ横スクロール --}}
         <div class="search-summary" role="status" aria-live="polite">
-            <div class="search-summary__pills">
+            <div class="search-summary__row">
                 <span class="search-summary__count" aria-label="検索結果 {{ number_format($resultCount ?? count($items)) }}件">
-                    <i class="fas fa-list-check search-summary__count-ico" aria-hidden="true"></i>
-                    <span class="search-summary__count-num">{{ number_format($resultCount ?? count($items)) }}</span>
-                    <span class="search-summary__count-unit">件</span>
+                    <strong class="search-summary__count-num">{{ number_format($resultCount ?? count($items)) }}</strong><span class="search-summary__count-unit">件</span>
                 </span>
-                <button type="button" class="search-summary__sort"
-                        onclick="const t=document.getElementById('search-sort-trigger'); if(t){t.click();}"
-                        aria-label="並び替えを変更">
-                    <i class="fas fa-sort-amount-down" aria-hidden="true"></i>
-                    <span>{{ $sortOptions[$sort] ?? 'ひとこと更新が新しい順' }}</span>
-                    <i class="fas fa-chevron-down search-summary__sort-caret" aria-hidden="true"></i>
-                </button>
+                <div class="search-summary__sort-wrap">
+                    <button type="button" id="search-sort-trigger"
+                            class="search-summary__sort"
+                            aria-label="並び替えを変更"
+                            aria-haspopup="true" aria-expanded="false" aria-controls="search-sort-panel">
+                        <span class="search-summary__sort-label">並び替え</span>
+                        <span class="search-summary__sort-value">{{ $sortOptions[$sort] ?? 'ひとこと更新が新しい順' }}</span>
+                        <i class="fas fa-chevron-down search-summary__sort-caret" aria-hidden="true"></i>
+                    </button>
+                    @include('common.search.sort-panel')
+                </div>
             </div>
             <div class="search-summary__chips" data-applied-search-chips hidden></div>
         </div>

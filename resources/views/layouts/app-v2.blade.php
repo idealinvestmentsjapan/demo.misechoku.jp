@@ -8,7 +8,7 @@
         $metaDescription = trim($__env->yieldContent('meta_description')) ?: 'ミセチョクのデモサイトです。';
         $metaImage = trim($__env->yieldContent('meta_image')) ?: asset('assets/images/pwa/icon-512.png');
         $canonicalUrl = trim($__env->yieldContent('canonical')) ?: url()->current();
-        $assetVersion = '20260926-footer-flat';
+        $assetVersion = '20260926-search-refine';
         $resolvedTitle = $metaTitle !== ''
             ? $metaTitle
             : ($pageTitle !== '' ? $pageTitle . ' | ' . config('app.name', 'ミセチョク') : config('app.name', 'ミセチョク'));
@@ -537,14 +537,38 @@
             box-sizing: border-box !important;
         }
         /* ナビの文字・アイコン：フラットな紫（影・ネオンなしのシンプル表示）
-           2026-09-26: グラスモーフィズム解除に合わせてアイコンの視認性を優先。 */
+           2026-09-26: 非アクティブが暗いラベンダーで沈んでいたのでコントラストを強化。
+           アクティブは明るいラベンダー + 上端に細いインジケータ + わずかなグロー。 */
         nav[data-bottom-nav] .nav-item {
-            color: rgba(196, 181, 253, 0.92) !important;
+            color: #e5deff !important;      /* was rgba(196,181,253,0.92) — 沈み対策で明るく */
             text-shadow: none !important;
+            position: relative;
+            transition: color 0.2s ease, transform 0.15s ease;
         }
+        nav[data-bottom-nav] .nav-item .nav-icon,
+        nav[data-bottom-nav] .nav-item i { opacity: 0.95; }
+        nav[data-bottom-nav] .nav-item:active { transform: scale(0.96); }
         nav[data-bottom-nav] .nav-item.is-active {
             color: #c4b5fd !important;
             text-shadow: none !important;
+        }
+        nav[data-bottom-nav] .nav-item.is-active .nav-icon,
+        nav[data-bottom-nav] .nav-item.is-active i {
+            opacity: 1;
+            filter: drop-shadow(0 0 6px rgba(196, 181, 253, 0.55));
+        }
+        /* アクティブ表示の上端インジケータ（現在ページを明確化） */
+        nav[data-bottom-nav] .nav-item.is-active::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 22px;
+            height: 2px;
+            border-radius: 0 0 2px 2px;
+            background: #c4b5fd;
+            box-shadow: 0 0 8px rgba(196, 181, 253, 0.65);
         }
         /* ライトテーマ：ヘッダーと上下対称の艶ガラス（下端ハイライト + 上方向の浮遊影） */
         /* さがす・トーク一覧：main の下余白を外し、リストがフッターの
@@ -835,7 +859,7 @@
     @stack('head-styles')
 
     {{-- ボタン/CTA の役割ベース統一（全ページCSSの後に読み込んで上書き。DESIGN.md §10） --}}
-    <link rel="stylesheet" href="{{ asset('assets/css/ui-consistency.css') }}?v={{ $assetVersion }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/ui-consistency.css') }}?v={{ $assetVersion }}-pslate-wage-fit">
     {{-- 入力コンポーネントの全画面統一（文字列/文章/数値/日付/選択） --}}
     <link rel="stylesheet" href="{{ asset('assets/css/form-controls.css') }}?v={{ $assetVersion }}">
     {{-- モーション基盤（タブ/モーダル/画像/リビールのなめらか化。Step1） --}}
@@ -843,7 +867,7 @@
     <script src="{{ asset('assets/js/motion.js') }}?v={{ $assetVersion }}" defer></script>
     {{-- ライトモード（薄ラベンダー基調）。全ルールが body.theme-light スコープのため常時読み込みで安全。
          テーマトグル（ライト/ダーク）のライブ切替を可能にするため @if を外して常時ロードする --}}
-    <link rel="stylesheet" href="{{ asset('assets/css/light-theme.css') }}?v=20260926-keep-rename">
+    <link rel="stylesheet" href="{{ asset('assets/css/light-theme.css') }}?v=20260926-summary-two-row">
     {{-- プレミアムホワイト（MyPage）: 全ルールが body.theme-premium-white スコープ。同上で常時ロード --}}
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700;900&family=Cinzel:wght@600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('assets/css/premium-white.css') }}?v=20260720-pwhite-09">

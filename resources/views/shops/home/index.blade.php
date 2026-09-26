@@ -4,7 +4,7 @@
 @section('body-class', 'no-scroll page-home')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/home.css') }}?v=20260926-footer-safearea">
+<link rel="stylesheet" href="{{ asset('assets/css/home.css') }}?v=20260926-location-fab">
 {{-- Perf / tier-chip / cssMode overrides live in a separate file; load AFTER home.css. --}}
 <link rel="stylesheet" href="{{ asset('assets/css/home-perf.css') }}?v=20260809-perf-bundle">
 @endpush
@@ -22,6 +22,13 @@
 @endphp
 @section('content')
 <div id="home-screen" data-discovery-mode="{{ $itemType }}">
+    {{-- 探索拠点：カード左上のフローティングピル（cast SWIPE のみ）。
+         ヘッダー右のアイコンでは「今どのエリアで検索中か」が一目で伝わらないため、
+         現在のエリア名 + 半径 + ∨ を表示してタップで拠点変更モーダルを開く。 --}}
+    @if($isRecruit)
+        @include('layouts.parts.location-pill', ['variant' => 'floating'])
+    @endif
+
     {{-- Help recruitment ribbon (top-overlay, ~52px). Shop entry / Cast band. --}}
     @php $helpBand = $helpBand ?? null; @endphp
     @if($helpBand && ($helpBand['kind'] ?? '') === 'shop-entry')

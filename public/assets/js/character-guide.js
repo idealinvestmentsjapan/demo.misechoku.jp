@@ -91,6 +91,26 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // スクロール中は body に is-scrolling を付けて、ガイドを半透明化する（CSS 側で opacity 0.35）。
+    // 検索結果の視認性を邪魔しないための配慮。停止後 320ms でフェード復帰。
+    if (characterGuide) {
+        var scrollFadeTimer = null;
+        var scrollFadePassive = { passive: true };
+        var onScrollFade = function () {
+            if (!document.body.classList.contains('is-scrolling')) {
+                document.body.classList.add('is-scrolling');
+            }
+            if (scrollFadeTimer) window.clearTimeout(scrollFadeTimer);
+            scrollFadeTimer = window.setTimeout(function () {
+                document.body.classList.remove('is-scrolling');
+            }, 320);
+        };
+        window.addEventListener('scroll', onScrollFade, scrollFadePassive);
+        // タブページ本体（.tab-page-body 等）が独自スクロールする画面もあるため main も監視
+        var mainEl = document.getElementById('main-content');
+        if (mainEl) mainEl.addEventListener('scroll', onScrollFade, scrollFadePassive);
+    }
+
     // 外部（Swiperなど）からメッセージを更新する関数（ホームのスワイプ画面ではオコジョを表示しない）
     window.updateCharacterMessage = function(newMessage) {
         if (!messageContent || !characterGuide) return;

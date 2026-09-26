@@ -124,28 +124,82 @@ body.theme-light main hr { border-color: var(--color-line); }
 
 /* --------------------------------------------------------------------------
    4. SEARCH 画面
+   2026-09-26: 検索条件エリアを「白カード（検索バー）」+ 「白カード（サマリ）」の
+   2 ブロックにコンパクト化。プロフィール住所ピルは撤去（詳細フィルター内へ集約）。
    -------------------------------------------------------------------------- */
 body.theme-light .search-filter-box {
-    background: linear-gradient(180deg, #ffffff, #f7f4fc);
+    background: #ffffff;
+    padding: 12px 14px 14px;
     border-bottom: 1px solid var(--color-line);
+    box-shadow: 0 1px 0 rgba(76, 29, 149, 0.05);
+}
+body.theme-light .search-filter-minimal-row {
+    gap: 10px;
 }
 body.theme-light .search-filter-minimal__input {
-    background: #ffffff;
+    background: #f7f4fc;
     color: var(--color-text-main);
-    border: 1px solid rgba(124, 58, 237, 0.24);
+    border: 1px solid rgba(124, 58, 237, 0.20);
+    box-shadow: inset 0 1px 2px rgba(76, 29, 149, 0.05);
 }
-body.theme-light .search-filter-icon-btn {
+body.theme-light .search-filter-minimal__input:focus {
     background: #ffffff;
-    color: #7c3aed;
-    border: 1px solid rgba(124, 58, 237, 0.28);
+    border-color: rgba(124, 58, 237, 0.55);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
 }
+/* 副次アクション（詳細フィルター）は控えめに */
+body.theme-light .search-filter-icon-btn {
+    background: #f7f4fc;
+    color: #7c3aed;
+    border: 1px solid rgba(124, 58, 237, 0.20);
+}
+body.theme-light .search-filter-icon-btn:hover {
+    background: rgba(124, 58, 237, 0.08);
+    border-color: rgba(124, 58, 237, 0.35);
+}
+/* 主要アクション: 検索ボタンだけ塗りグラデーションで「押してほしい」を明示 */
 body.theme-light .search-filter-icon-btn--gold {
     background: linear-gradient(135deg, var(--accent-grad-from, #a78bfa), var(--accent-grad-to, #7c3aed));
     color: #ffffff;
     border: 0;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 body.theme-light .search-filter-summary {
     color: var(--color-text-sub);
+}
+/* サマリ：白カードで検索フィルターと視覚的に連結。件数はテキスト、並び替えは淡いピル */
+body.theme-light .search-summary {
+    background: #ffffff;
+    border-bottom: 1px solid var(--color-line);
+    box-shadow: 0 4px 10px -6px rgba(76, 29, 149, 0.14);
+    margin: 0 0 8px;
+    padding: 8px 14px 10px;
+}
+body.theme-light .search-summary__count { color: #241f33; }
+body.theme-light .search-summary__count-num { color: #1e1a30; }
+body.theme-light .search-summary__count-unit { color: #6b6685; }
+body.theme-light .search-summary__sort {
+    background: #f7f4fc;
+    border-color: rgba(124, 58, 237, 0.30);
+    color: #241f33;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+body.theme-light .search-summary__sort-label { color: #857ca0; }
+body.theme-light .search-summary__sort-value { color: #4c1d95; }
+body.theme-light .search-summary__sort:hover {
+    background: rgba(124, 58, 237, 0.08);
+    border-color: rgba(124, 58, 237, 0.50);
+}
+body.theme-light .search-summary__chip {
+    background: #ffffff;
+    border-color: rgba(124, 58, 237, 0.24);
+    color: #4b465c;
+}
+body.theme-light .search-summary__chip i { color: #7c3aed; }
+body.theme-light .search-summary__chip:hover {
+    background: rgba(124, 58, 237, 0.08);
+    border-color: rgba(124, 58, 237, 0.50);
+    color: #241f33;
 }
 
 /* タイムライン行（検索結果・キープ一覧） */
@@ -167,19 +221,17 @@ body.theme-light .tl-row__kept-at { color: rgba(75, 70, 92, 0.48); }
 body.theme-light .tl-row__kept-at i { color: rgba(124, 58, 237, 0.42); }
 body.theme-light .tl-row__thumb { background: #ece7f7; }
 
-/* 給与カード（ライト配色） */
-body.theme-light .tl-pay__cell--bonus {
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.10), rgba(217, 119, 6, 0.05));
-    border-color: rgba(217, 119, 6, 0.36);
-}
+/* 給与情報（ライト配色 / フラット化）: 塗りは廃止、時給を主・ボーナスを副として色分け */
+body.theme-light .tl-pay__cell--bonus,
 body.theme-light .tl-pay__cell--wage {
-    background: linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(109, 40, 217, 0.04));
-    border-color: rgba(124, 58, 237, 0.30);
+    background: transparent;
+    border: 0;
 }
-body.theme-light .tl-pay__label { color: rgba(75, 70, 92, 0.75); }
-body.theme-light .tl-pay__cell--bonus .tl-pay__label { color: #b45309; }
+body.theme-light .tl-pay__label { color: rgba(75, 70, 92, 0.62); }
+body.theme-light .tl-pay__cell--bonus .tl-pay__label { color: rgba(75, 70, 92, 0.55); }
 body.theme-light .tl-pay__cell--wage  .tl-pay__label { color: #6d28d9; }
-body.theme-light .tl-pay__amount { color: #241f33; }
+body.theme-light .tl-pay__cell--wage  .tl-pay__amount { color: #4c1d95; }
+body.theme-light .tl-pay__cell--bonus .tl-pay__amount { color: rgba(36, 31, 51, 0.75); }
 body.theme-light .tl-pay__yen    { opacity: 0.75; }
 body.theme-light .tl-pay__unit   { color: rgba(75, 70, 92, 0.55); }
 body.theme-light .no-data-wrapper,

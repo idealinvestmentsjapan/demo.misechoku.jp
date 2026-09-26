@@ -679,7 +679,7 @@ body.theme-light .page-lead { color: #5f5876; }
     flex-direction: column;
     justify-content: center;
     gap: 3px;
-    padding-right: 12px;
+    padding-right: 10px;
 }
 .pslate__label {
     font-size: 0.6rem;
@@ -728,8 +728,8 @@ body.theme-light .page-lead { color: #5f5876; }
     min-width: 0;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding-left: 12px;
+    gap: 8px;
+    padding-left: 10px;
 }
 .pslate__wage {
     flex: 1 1 50%;
@@ -739,16 +739,40 @@ body.theme-light .page-lead { color: #5f5876; }
     justify-content: center;
     gap: 3px;
 }
+/* Money must never be visually truncated. Instead of relying on ellipsis, the
+   font size scales to viewport (clamp) and letter-spacing is tightened so full
+   digits fit in the narrow half-column even on a 360px viewport. */
 .pslate__wage-amount {
     font-family: 'Cinzel', 'Playfair Display', 'Noto Serif JP', serif;
-    font-size: 0.95rem;
+    font-size: clamp(0.78rem, 3.0vw, 0.95rem);
     font-weight: 600;
     line-height: 1.15;
+    letter-spacing: -0.01em;
     color: #f3eefc;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     font-variant-numeric: tabular-nums;
+}
+
+/* Very narrow viewports: stack the two wage rows vertically so full amounts
+   (e.g. "¥4,500〜" / "¥5,000〜") never get clipped by the horizontal split. */
+@media (max-width: 360px) {
+    .pslate { padding: 10px 12px; }
+    .pslate__bonus { padding-right: 8px; }
+    .pslate__wages {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 4px;
+        padding-left: 8px;
+    }
+    .pslate__wage {
+        flex: 0 0 auto;
+        flex-direction: row;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 6px;
+    }
+    .pslate__wage .pslate__label { flex: 0 0 auto; }
+    .pslate__wage-amount { font-size: 0.9rem; text-align: right; }
 }
 @keyframes pslateShimmer {
     0%   { background-position: 0% 0; }

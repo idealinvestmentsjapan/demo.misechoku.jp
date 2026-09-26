@@ -29,12 +29,14 @@
     transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
-/* キャラクター画像：囲みなし。閉じるボタン用にスタッキングコンテキストを作る */
+/* キャラクター画像：囲みなし。閉じるボタン用にスタッキングコンテキストを作る
+   2026-09-26: リスト画面で本文に被って邪魔になっていたためサイズを縮小し、
+   スクロール中は半透明になるようにして「邪魔しない」ように調整。 */
 .guide-character-wrap {
     position: relative;
     pointer-events: auto; /* ここだけクリック可能に */
     cursor: pointer;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.25s ease, transform 0.2s ease;
 }
 
 .discovery-guide.bubble-hidden .guide-character-wrap {
@@ -42,11 +44,18 @@
 }
 
 .guide-character-wrap img {
-    width: 85px; /* サイズ調整 */
+    width: 68px;   /* was 85px — 本文に被りにくく、フットプリントを縮小 */
     height: auto;
     display: block;
     filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3)); /* 影をつけて視認性確保 */
+    transition: opacity 0.25s ease;
 }
+
+/* スクロール中は半透明化して求人情報の視認性を優先。
+   body.is-scrolling は下段の同ファイル末尾スクリプトで付け外しする。 */
+body.is-scrolling .discovery-guide .guide-character-wrap { opacity: 0.35; }
+body.is-scrolling .discovery-guide .guide-speech-bubble  { opacity: 0.35; }
+body.is-scrolling .discovery-guide .guide-ai-badge       { opacity: 0.35; }
 
 /* 吹き出し：左側に配置。×は外側に出したのでパディングを軽く戻す */
 .guide-speech-bubble {

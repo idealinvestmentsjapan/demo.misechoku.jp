@@ -1,7 +1,8 @@
 {{-- 探索拠点（現在地 or パスポート）の表示＋切替トリガー
      使い方:
-        @include('layouts.parts.location-pill')                       -- フル幅ピル（既定）
-        @include('layouts.parts.location-pill', ['variant' => 'icon']) -- ヘッダー用の小さいアイコンボタン
+        @include('layouts.parts.location-pill')                            -- フル幅ピル（既定）
+        @include('layouts.parts.location-pill', ['variant' => 'icon'])     -- ヘッダー用の小さいアイコンボタン
+        @include('layouts.parts.location-pill', ['variant' => 'floating']) -- SWIPE カード左上のフローティングピル
 
      呼び出し元のレイアウト／コントローラから $userLocation 変数（UserLocationService::getActiveLocation の結果 or null）が渡されることを想定。
      渡されない場合は app() 経由でその場で解決する。
@@ -53,6 +54,27 @@
         @if(!$userLocation)
             <span class="header-badge is-accent" aria-hidden="true">!</span>
         @endif
+    </button>
+@elseif($locationVariant === 'floating')
+    {{-- SWIPE カード左上のフローティングピル。現在のエリア名と半径をラベル表示し、
+         タップで拠点変更モーダルを開く。ヘッダーアイコンでは「何のアイコンか」「今どの
+         エリアで検索しているか」が一目で分からなかったため、テキスト付きで置き換え。 --}}
+    <button type="button"
+            class="home-location-fab {{ $userLocation ? 'is-set' : 'is-unset' }}"
+            data-location-open
+            aria-haspopup="dialog"
+            aria-controls="location-modal-overlay"
+            aria-label="探索拠点の設定{{ $userLocation ? '（' . ($userLocation['label'] ?? $modeLabel) . '）' : '（未設定）' }}">
+        <i class="fas fa-location-dot home-location-fab__ico" aria-hidden="true"></i>
+        @if($userLocation)
+            <span class="home-location-fab__label">{{ !empty($userLocation['label']) ? $userLocation['label'] : $modeLabel }}</span>
+            @if($locationMaxKm > 0)
+                <span class="home-location-fab__radius">{{ $locationMaxKm }}km</span>
+            @endif
+        @else
+            <span class="home-location-fab__label home-location-fab__label--unset">エリア未設定</span>
+        @endif
+        <i class="fas fa-chevron-down home-location-fab__chev" aria-hidden="true"></i>
     </button>
 @else
     <div class="location-pill-wrap">

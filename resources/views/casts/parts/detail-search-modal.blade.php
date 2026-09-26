@@ -159,20 +159,20 @@
                     </div>
                 </div>
 
-                {{-- ヘルプ募集日（〇月〇日のヘルプ募集を探す） --}}
+                {{-- すぐに入れる日（〇月〇日にヘルプ募集している店舗を探す） --}}
                 @php
                     $availableOnValue = (string) request('available_on', '');
                     $availableOnMin = \Carbon\Carbon::today()->toDateString();
                     $availableOnMax = \Carbon\Carbon::today()->addDays(\App\Services\AvailabilityService::MAX_DAYS_AHEAD)->toDateString();
                 @endphp
-                <div class="detail-search-accordion detail-search-accordion--panel" data-accordion data-summary-group="ヘルプ募集日" data-open="true">
+                <div class="detail-search-accordion detail-search-accordion--panel" data-accordion data-summary-group="すぐに入れる日" data-open="true">
                     <button type="button" class="detail-search-accordion__head" data-accordion-trigger aria-expanded="true">
-                        <span><i class="fas fa-calendar-days" aria-hidden="true"></i>ヘルプ募集日</span>
+                        <span><i class="fas fa-calendar-days" aria-hidden="true"></i>すぐに入れる日</span>
                         <span class="detail-search-accordion__icon">−</span>
                     </button>
                     <div class="detail-search-accordion__body">
                         <div class="detail-search-subsection">
-                            <span class="detail-search-subsection__label">この日のヘルプ募集を探す</span>
+                            <span class="detail-search-subsection__label">この日にヘルプ募集している店舗を探す</span>
                             <input type="date" name="available_on" class="detail-search-select"
                                    value="{{ $availableOnValue }}"
                                    min="{{ $availableOnMin }}" max="{{ $availableOnMax }}">

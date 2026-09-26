@@ -62,9 +62,9 @@
             </div>
         </div>
 
-        {{-- ===== 「入れる候補日」宣言（最大5日・30日先まで） =====
-             本日を含む候補日を宣言すると、店舗側 DISCOVERY の Tier A と
-             日付検索（「〇月〇日に入れる子」）に表示される。 --}}
+        {{-- ===== 「働きたい日を設定」（最大5日・30日先まで） =====
+             MyPage 上はラベル + ボタンのみ。機能説明とカレンダーはモーダル内に集約し、
+             上限や優先表示の仕組みなどは初回タップ時に見せる。 --}}
         @php
             $availSelected   = $availabilityDates ?? [];
             $availActive     = count($availSelected) > 0;
@@ -74,7 +74,7 @@
             $availDaysAhead  = \App\Services\AvailabilityService::MAX_DAYS_AHEAD;
         @endphp
         <section id="availability-card"
-                 class="cast-avail {{ $availActive ? 'is-active' : '' }}"
+                 class="cast-avail cast-avail--compact {{ $availActive ? 'is-active' : '' }}"
                  data-availability-declare-url="{{ $availDeclareUrl }}"
                  data-availability-clear-url="{{ $availClearUrl }}"
                  data-availability-max="{{ $availMaxDates }}"
@@ -85,34 +85,20 @@
                 <span class="cast-avail__icon" aria-hidden="true">
                     <i class="fas {{ $availActive ? 'fa-bolt' : 'fa-calendar-days' }}"></i>
                 </span>
-                <div class="cast-avail__title-block">
-                    <p id="availability-card-title" class="cast-avail__title">
-                        入れる日を宣言
-                    </p>
-                    <p class="cast-avail__lead" data-availability-summary>
-                        @if($availActive)
-                            {{ collect($availSelected)->map(fn ($d) => \App\Services\AvailabilityService::shortLabel($d))->implode('・') }} <span class="cast-avail__lead-tag">宣言中</span>
-                        @else
-                            選ぶだけで店舗の検索・SWIPE で優先表示
-                        @endif
-                    </p>
-                </div>
+                <p id="availability-card-title" class="cast-avail__title">
+                    働きたい日を設定
+                    <span class="cast-avail__status-tag" data-availability-status-tag
+                          {{ $availActive ? '' : 'hidden' }}>設定中</span>
+                </p>
                 <div class="cast-avail__actions">
                     <button type="button" class="cast-avail__btn cast-avail__btn--primary" data-availability-open
                             aria-haspopup="dialog" aria-controls="availability-modal">
-                        <i class="fas fa-calendar-days"></i>
-                        <span>{{ $availActive ? '変更' : '日を選ぶ' }}</span>
+                        <span data-availability-open-label>{{ $availActive ? '変更' : '設定' }}</span>
                     </button>
-                    @if($availActive)
-                        <button type="button" class="cast-avail__btn cast-avail__btn--danger cast-avail__btn--icon-only" data-availability-clear
-                                aria-label="宣言を取消">
-                            <i class="fas fa-xmark" aria-hidden="true"></i>
-                        </button>
-                    @endif
                 </div>
             </div>
 
-            {{-- Modal popup: calendar and save action --}}
+            {{-- Modal popup: description + calendar + save/clear actions --}}
             <div class="cast-avail__modal" id="availability-modal" role="dialog"
                  aria-modal="true" aria-labelledby="availability-modal-title" hidden>
                 <div class="cast-avail__backdrop" data-availability-close></div>
@@ -120,7 +106,7 @@
                     <header class="cast-avail__dialog-head">
                         <h2 id="availability-modal-title" class="cast-avail__dialog-title">
                             <i class="fas fa-calendar-days" aria-hidden="true"></i>
-                            入れる日を選ぶ
+                            働きたい日を設定
                         </h2>
                         <button type="button" class="cast-avail__dialog-close"
                                 data-availability-close aria-label="閉じる">
@@ -128,12 +114,22 @@
                         </button>
                     </header>
                     <div class="cast-avail__dialog-body">
+                        <p class="cast-avail__dialog-desc">
+                            働きたい日を選ぶと、その日にキャストを探している店舗の
+                            <strong>検索・SWIPE で優先表示</strong>されます。
+                        </p>
                         <p class="cast-avail__dialog-hint">
                             最大{{ $availMaxDates }}日・{{ $availDaysAhead }}日先まで
                         </p>
                         <div class="cast-avail__cal" data-availability-calendar></div>
                     </div>
                     <footer class="cast-avail__dialog-foot">
+                        <button type="button" class="cast-avail__btn cast-avail__btn--danger cast-avail__btn--text"
+                                data-availability-clear
+                                {{ $availActive ? '' : 'hidden' }}>
+                            <i class="fas fa-xmark" aria-hidden="true"></i> 取消
+                        </button>
+                        <span class="cast-avail__dialog-foot-spacer"></span>
                         <button type="button" class="cast-avail__btn cast-avail__btn--ghost" data-availability-close>
                             戻る
                         </button>
@@ -243,18 +239,15 @@
             <div class="p-4 flex flex-col gap-4">
 
                 {{-- プロフィール編集（DETAILS の内容を編集する入口としてここに配置）
-                     サイト共通のグラデCTA（保存/アップロードと同じピンクグラデ + shadow-btn-3d）で
-                     「情報カードではなく、押せるボタン」であることを明示する。 --}}
+                     元のカード型デザインに戻し、背景を薄く紫にトーンして情報カードから
+                     差別化（求人票を編集するボタンと同じトーン）。 --}}
                 <a href="{{ route('cast.profile.edit') }}"
-                   class="flex items-center justify-between gap-3 px-5 py-3 rounded-full
-                          bg-gradient-to-r from-accent-grad-from to-accent-grad-to
-                          text-on-accent-strong shadow-btn-3d
-                          active:translate-y-px transition-all">
+                   class="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-line-accent/50 bg-gradient-to-br from-accent/15 via-accent/6 to-surface-from shadow-card-3d hover:border-accent/70 active:scale-[0.99] transition-all">
                     <span class="flex items-center gap-2.5 min-w-0">
-                        <i class="fas fa-user-pen text-[15px]"></i>
-                        <span class="text-[14px] font-bold tracking-wide">プロフィールを編集する</span>
+                        <i class="fas fa-user-pen text-accent-text text-[14px]"></i>
+                        <span class="text-[13px] font-bold text-text-main">プロフィールを編集する</span>
                     </span>
-                    <i class="fas fa-chevron-right text-[12px] opacity-80 shrink-0"></i>
+                    <i class="fas fa-chevron-right text-text-sub text-[11px] shrink-0"></i>
                 </a>
 
                 <x-ui.card class="p-5">
@@ -489,7 +482,7 @@
 <script>
 window.MYPAGE_AVAILABILITY_CONFIG = { csrfToken: @json(csrf_token()) };
 </script>
-<script src="{{ asset('assets/js/mypage-availability.js') }}?v=20260926-availability-card2"></script>
+<script src="{{ asset('assets/js/mypage-availability.js') }}?v=20260926-availability-compact"></script>
 
 {{-- ===== ギャラリー機能：元のスクリプト群 ===== --}}
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
@@ -597,5 +590,5 @@ window.MYPAGE_GALLERY_CONFIG = {
 
 </style>
 {{-- 「今すぐ入れる」宣言カードの外部 CSS --}}
-<link rel="stylesheet" href="{{ asset('assets/css/mypage-availability.css') }}?v=20260926-availability-card2">
+<link rel="stylesheet" href="{{ asset('assets/css/mypage-availability.css') }}?v=20260926-availability-compact">
 @endpush

@@ -1,4 +1,6 @@
-/* フッター：黒ベース + シャンパンゴールド */
+/* フッター：黒ベース + シャンパンゴールド
+   2026-09-26: 非アクティブ時のアイコン/ラベルが暗く沈んでいた（#a0a0a0 相当）ため、
+   コントラスト強化（#d4d4d4 相当）。アクティブは既存のアクセント紫を維持。 */
 #bottom-nav {
     position: fixed;
     bottom: 0;
@@ -7,10 +9,10 @@
     width: 100%;
     max-width: var(--max-content-width);
     height: 75px;
-    background: rgba(10, 10, 10, 0.90);
+    background: rgba(6, 6, 8, 0.94);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-    border-top: 1px solid var(--color-border);
+    border-top: 1px solid rgba(168, 85, 247, 0.28);
     display: flex;
     justify-content: space-around;
     align-items: center;
@@ -25,25 +27,29 @@
     flex-direction: column;
     align-items: center;
     text-decoration: none;
-    color: var(--color-text-muted);
-    transition: color 0.3s;
+    color: #d4d4d8;                  /* was: var(--color-text-muted) ~ #a0a0a0 */
+    transition: color 0.2s ease, transform 0.15s ease;
 }
+.nav-item:hover { color: #ffffff; }
+.nav-item:active { transform: scale(0.96); }
 
 .nav-item i {
     font-size: 1.4rem;
     margin-bottom: 4px;
+    opacity: 0.92;
 }
 
 .nav-item span {
     font-size: 11px;
-    font-weight: bold;
+    font-weight: 700;
     /* 日本語ラベル用：uppercase / トラッキングは日本語で違和感が出るため無効化 */
     text-transform: none;
-    letter-spacing: 0;
+    letter-spacing: 0.02em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 100%;
+    opacity: 0.95;
 }
 @media (max-width: 360px) {
     .nav-item i {
@@ -54,13 +60,29 @@
     }
 }
 
-/* アクティブ時のゴールドカラー */
-.nav-item.active {
-    color: var(--gold);
+/* アクティブ時：アクセント紫 + 上部インジケータバーで「今どこか」を明確化 */
+.nav-item {
+    position: relative;
 }
-
+.nav-item.active {
+    color: var(--gold, #a78bfa);
+}
 .nav-item.active i {
-    filter: drop-shadow(0 0 5px rgba(168, 85, 247, 0.5));
+    opacity: 1;
+    filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.55));
+}
+.nav-item.active span { opacity: 1; }
+.nav-item.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 22px;
+    height: 2px;
+    background: var(--gold, #a78bfa);
+    border-radius: 0 0 2px 2px;
+    box-shadow: 0 0 8px rgba(168, 85, 247, 0.6);
 }
 
 /* 画像編集モーダル表示中はボトムナビを隠す */

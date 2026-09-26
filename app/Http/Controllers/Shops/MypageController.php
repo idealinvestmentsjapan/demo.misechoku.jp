@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Shops;
 
+use App\Models\AvailabilityDate;
 use App\Models\ShopLicenseDocument;
 use App\Rules\KouzaMeig;
+use App\Services\AvailabilityService;
 use App\Services\BillingManagementService;
 use App\Services\DocumentReviewService;
 use App\Services\GeocodingService;
@@ -268,6 +270,9 @@ class MypageController extends Controller
 
         $searchLocationSettings = app(UserLocationService::class)->loadProfileSettings();
 
+        $availabilityService = app(AvailabilityService::class);
+        $availabilityDates = $availabilityService->getDates(AvailabilityDate::OWNER_SHOP, (string) $shopId);
+
         return view('shops.mypage.index', [
             'pageId'    => 'mypage',
             'shopData'  => $shopData,
@@ -276,6 +281,7 @@ class MypageController extends Controller
             'allDocumentsApproved' => $documentData['all_approved'],
             'searchLocationSettings' => $searchLocationSettings,
             'searchLocationDistanceOptions' => UserLocationService::DISTANCE_OPTIONS_KM,
+            'availabilityDates' => $availabilityDates,
             'shopInfo' => [
                 'shop_name' => $row->shop_name ?? '',
                 'word' => $hitokotoBody,

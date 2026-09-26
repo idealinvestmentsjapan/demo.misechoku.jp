@@ -12,14 +12,16 @@
         </div>
 
         <div class="tl-row__body">
-            {{-- 1行目：アイコンの隣に来る「名前」のみで強くフォーカス --}}
-            <h3 class="tl-row__name">{{ $item['name'] ?? '' }}</h3>
-
-            {{-- 2行目：年齢・位置・距離（メタ情報を分離） --}}
-            <div class="tl-row__meta">
+            {{-- 1行目：名前 + 年齢（キープタブと同じく紫文字で名前の隣に併記） --}}
+            <h3 class="tl-row__name">
+                {{ $item['name'] ?? '' }}
                 @if(!empty($item['age']))
                     <span class="tl-row__age">({{ $item['age'] }})</span>
                 @endif
+            </h3>
+
+            {{-- 2行目：位置・距離 --}}
+            <div class="tl-row__meta">
                 @if($area !== '')
                     <span class="tl-row__loc">
                         <i class="fas fa-map-marker-alt" aria-hidden="true"></i>{{ $area }}

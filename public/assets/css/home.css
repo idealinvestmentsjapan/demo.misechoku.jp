@@ -5715,3 +5715,117 @@ body.page-home {
     .home-help-band__chip-name { font-size: 0.74rem; }
 }
 
+/* =====================================================================
+   SWIPE 用フローティング拠点ピル（cast /cast/home）
+   ---------------------------------------------------------------------
+   ヘッダー右端のアイコンだけでは「今どのエリアで検索中か」「タップして
+   変更できるのか」が伝わらないため、カード左上に現在のエリア名 + 半径 + ∨
+   を出したフローティングトリガーを設置（2026-09-26）。
+   #home-screen を基準に絶対配置。カード本体（画像・下部情報）より前面に浮かせる。
+   ===================================================================== */
+.home-location-fab {
+    position: absolute;
+    top: calc(24px + 12px); /* #home-screen top padding is 24px; nest the pill 12px inside the card image */
+    left: calc(var(--content-padding-x, 15px) + 10px);
+    z-index: 30;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: calc(100% - 24px);
+    padding: 7px 10px 7px 11px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    background: linear-gradient(180deg, rgba(20, 14, 36, 0.72), rgba(10, 6, 22, 0.68));
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    backdrop-filter: blur(14px) saturate(140%);
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(168, 85, 247, 0.18) inset;
+    transition: transform 0.15s ease, background 0.18s ease, border-color 0.18s ease;
+}
+.home-location-fab:hover,
+.home-location-fab:focus-visible {
+    background: linear-gradient(180deg, rgba(34, 21, 60, 0.82), rgba(18, 11, 38, 0.78));
+    border-color: rgba(255, 255, 255, 0.34);
+    outline: none;
+}
+.home-location-fab:active { transform: scale(0.97); }
+.home-location-fab__ico {
+    color: var(--gold, #f6da7a);
+    font-size: 0.86rem;
+    flex-shrink: 0;
+}
+.home-location-fab__label {
+    max-width: 12em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.home-location-fab__radius {
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #f3eefc;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+}
+.home-location-fab__chev {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.68rem;
+    margin-left: 1px;
+    flex-shrink: 0;
+}
+.home-location-fab.is-unset {
+    border-color: rgba(248, 113, 113, 0.55);
+    background: linear-gradient(180deg, rgba(60, 12, 22, 0.72), rgba(30, 6, 12, 0.68));
+}
+.home-location-fab.is-unset .home-location-fab__ico { color: #f87171; }
+.home-location-fab.is-unset .home-location-fab__label--unset { color: #fecaca; }
+
+/* Help-recruitment band (top overlay, ~72-100px) is a sibling of the pill and
+   also sits at the top of #home-screen. Push the pill below the band when
+   present so they don't collide. */
+#home-screen:has(.home-help-band--cast) .home-location-fab {
+    top: calc(24px + 8px + 110px);
+}
+#home-screen:has(.home-help-band--shop) .home-location-fab {
+    top: calc(24px + 8px + 62px);
+}
+
+/* Small viewports: tighten the pill so long ward names still show fully. */
+@media (max-width: 380px) {
+    .home-location-fab {
+        top: calc(24px + 10px);
+        left: calc(var(--content-padding-x, 15px) + 8px);
+        padding: 6px 9px;
+        font-size: 0.78rem;
+        gap: 5px;
+    }
+    .home-location-fab__label { max-width: 9.5em; }
+    .home-location-fab__radius { font-size: 0.66rem; padding: 2px 6px; }
+}
+
+/* Light-mode override: keep contrast on white/premium-white surfaces. */
+body.theme-light:not(.mode-dark) .home-location-fab,
+body.theme-premium-white:not(.mode-dark) .home-location-fab {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(244, 240, 252, 0.92));
+    border-color: rgba(124, 58, 237, 0.28);
+    color: #2a2440;
+    box-shadow: 0 6px 18px rgba(76, 29, 149, 0.18), 0 0 0 1px rgba(168, 85, 247, 0.14) inset;
+}
+body.theme-light:not(.mode-dark) .home-location-fab__ico,
+body.theme-premium-white:not(.mode-dark) .home-location-fab__ico { color: #8a5a00; }
+body.theme-light:not(.mode-dark) .home-location-fab__radius,
+body.theme-premium-white:not(.mode-dark) .home-location-fab__radius {
+    background: rgba(124, 58, 237, 0.12);
+    color: #4c1d95;
+}
+body.theme-light:not(.mode-dark) .home-location-fab__chev,
+body.theme-premium-white:not(.mode-dark) .home-location-fab__chev { color: rgba(30, 26, 46, 0.6); }
+

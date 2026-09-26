@@ -35,23 +35,24 @@
         var daysAhead = Number(availCard.getAttribute('data-availability-days-ahead') || 30);
 
         var calendarEl = availCard.querySelector('[data-availability-calendar]');
-        var summaryEl = availCard.querySelector('[data-availability-summary]');
         var saveBtn = availCard.querySelector('[data-availability-save]');
         var modalEl = availCard.querySelector('#availability-modal');
         var openBtn = availCard.querySelector('[data-availability-open]');
+        var openLabelEl = availCard.querySelector('[data-availability-open-label]');
+        var statusTagEl = availCard.querySelector('[data-availability-status-tag]');
+        var clearBtn = availCard.querySelector('[data-availability-clear]');
         var savedSnapshot = null;
 
-        // Sync the visual state of the trigger button and inline icon with is-active.
+        // Sync the visual state of the trigger button, icon, and status tag with is-active.
         function syncActiveVisual(isActive) {
-            if (openBtn) {
-                var labelEl = openBtn.querySelector('span');
-                if (labelEl) labelEl.textContent = isActive ? '変更' : '日を選ぶ';
-            }
+            if (openLabelEl) openLabelEl.textContent = isActive ? '変更' : '設定';
             var iconWrap = availCard.querySelector('.cast-avail__icon i');
             if (iconWrap) {
                 iconWrap.classList.remove('fa-bolt', 'fa-calendar-days');
                 iconWrap.classList.add(isActive ? 'fa-bolt' : 'fa-calendar-days');
             }
+            if (statusTagEl) statusTagEl.hidden = !isActive;
+            if (clearBtn) clearBtn.hidden = !isActive;
         }
 
         function openModal() {
@@ -111,27 +112,7 @@
             return monthDiff(viewYear, viewMonth, rangeEnd.getFullYear(), rangeEnd.getMonth()) > 0;
         }
 
-        function shortLabel(dateStr) {
-            var parts = dateStr.split('-');
-            var d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-            if (d.getTime() === today.getTime()) return '本日';
-            return (d.getMonth() + 1) + '/' + d.getDate();
-        }
-
-        function refreshSummary(saved) {
-            var dates = Array.from(selected).sort();
-            if (summaryEl) {
-                if (dates.length === 0) {
-                    summaryEl.textContent = '選ぶだけで店舗の検索・SWIPE で優先表示';
-                } else {
-                    var tagLabel = saved ? '宣言中' : '未保存';
-                    summaryEl.innerHTML = dates.map(shortLabel).map(function (label) {
-                        return label.replace(/[&<>"']/g, function (c) {
-                            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-                        });
-                    }).join('・') + ' <span class="cast-avail__lead-tag">' + tagLabel + '</span>';
-                }
-            }
+        function refreshSummary(_saved) {
             if (saveBtn) saveBtn.disabled = false;
         }
 
@@ -304,9 +285,9 @@
                 return;
             }
 
-            var clearBtn = e.target.closest('[data-availability-clear]');
-            if (clearBtn) {
-                clearBtn.disabled = true;
+            var clearHit = e.target.closest('[data-availability-clear]');
+            if (clearHit) {
+                clearHit.disabled = true;
                 fetch(clearUrl, {
                     method: 'DELETE',
                     headers: {
@@ -317,22 +298,22 @@
                 })
                 .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
                 .then(function (res) {
-                    clearBtn.disabled = false;
+                    clearHit.disabled = false;
                     if (res.ok && res.body && res.body.success) {
                         selected.clear();
                         savedSnapshot = [];
                         availCard.classList.remove('is-active');
                         syncActiveVisual(false);
-                        if (clearBtn.parentNode) clearBtn.parentNode.removeChild(clearBtn);
                         renderCalendar();
                         refreshSummary(true);
+                        closeModal(false);
                         (window.appToast || function () {})('候補日の設定を取り消しました', 'success');
                     } else {
                         (window.appToast || window.alert)('取り消せませんでした', 'error');
                     }
                 })
                 .catch(function () {
-                    clearBtn.disabled = false;
+                    clearHit.disabled = false;
                     (window.appToast || window.alert)('通信エラーで取り消せませんでした', 'error');
                 });
             }

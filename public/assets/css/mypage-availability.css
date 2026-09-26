@@ -59,6 +59,15 @@
     line-height: 1.2;
     letter-spacing: 0.01em;
 }
+/* Compact layout: title is the flex child directly, no lead line */
+.cast-avail--compact .cast-avail__title {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.92rem;
+}
 .cast-avail__lead {
     margin: 3px 0 0;
     font-size: 0.72rem;
@@ -73,7 +82,8 @@
     color: var(--color-text-header, #f5f5f5);
     font-weight: 700;
 }
-.cast-avail__lead-tag {
+.cast-avail__lead-tag,
+.cast-avail__status-tag {
     display: inline-flex;
     align-items: center;
     padding: 1px 8px;
@@ -85,6 +95,7 @@
     color: var(--on-accent-strong, #fff);
     box-shadow: 0 2px 6px rgba(var(--accent-rgb, 214, 112, 162), 0.35);
 }
+.cast-avail__status-tag[hidden] { display: none; }
 
 .cast-avail__actions {
     flex: 0 0 auto;
@@ -215,6 +226,20 @@
     padding: 12px 16px;
     overflow-y: auto;
 }
+.cast-avail__dialog-desc {
+    margin: 0 0 10px;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: var(--color-text-header, #e5e7eb);
+    padding: 10px 12px;
+    background: rgba(168, 85, 247, 0.08);
+    border: 1px solid rgba(168, 85, 247, 0.24);
+    border-radius: 10px;
+}
+.cast-avail__dialog-desc strong {
+    color: var(--gold-light, #c4b5fd);
+    font-weight: 800;
+}
 .cast-avail__dialog-hint {
     margin: 0 0 10px;
     font-size: 0.72rem;
@@ -235,6 +260,14 @@
     padding: 8px 18px;
     font-size: 0.82rem;
 }
+.cast-avail__dialog-foot-spacer { flex: 1 1 auto; }
+.cast-avail__btn--text {
+    background: transparent;
+    padding: 6px 10px;
+    min-height: 32px;
+    font-size: 0.75rem;
+}
+.cast-avail__btn[hidden] { display: none; }
 
 body.has-availability-modal { overflow: hidden; }
 
@@ -412,6 +445,18 @@ body.theme-light .cast-avail__dialog-title i { color: #7c3aed; }
 body.theme-light .cast-avail__dialog-close { color: #6b6482; }
 body.theme-light .cast-avail__dialog-close:hover { background: rgba(30, 26, 48, 0.06); }
 body.theme-light .cast-avail__dialog-hint { color: #6b6482; }
+body.theme-light .cast-avail__dialog-desc {
+    color: #1e1a30;
+    background: rgba(124, 58, 237, 0.08);
+    border-color: rgba(124, 58, 237, 0.22);
+}
+body.theme-light .cast-avail__dialog-desc strong { color: #6d28d9; }
+body.theme-premium-white .cast-avail__dialog-desc {
+    background: rgba(124, 58, 237, 0.08);
+    border-color: rgba(124, 58, 237, 0.22);
+    color: #1e1a30;
+}
+body.theme-premium-white .cast-avail__dialog-desc strong { color: #6d28d9; }
 
 /* --------------------------------------------------------------------------
    Premium White (cast MyPage) — align card surface with neighbouring cards.

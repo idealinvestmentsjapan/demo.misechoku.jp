@@ -54,8 +54,87 @@
             </div>
         </div>
 
-        {{-- Help recruitment (dates + wage + applicants) moved to /shop/help-recruitment.
-             The MyPage availability card was deprecated on 2026-09-24. --}}
+        {{-- ===== 「ヘルプ募集日を設定」（キャスト MyPage の「働きたい日を設定」と対称） =====
+             MyPage 上はラベル + ボタンのみ。機能説明とカレンダーはモーダル内に集約する。
+             時給設定・応募者一覧は /shop/help-recruitment に集約。
+             宣言ルートは shop.owner ミドルウェア配下のため、オーナーのみ表示。 --}}
+        @shopowner
+        @php
+            $availSelected   = $availabilityDates ?? [];
+            $availActive     = count($availSelected) > 0;
+            $availDeclareUrl = route('help-recruitment.dates.declare');
+            $availClearUrl   = route('help-recruitment.dates.clear');
+            $availMaxDates   = \App\Services\AvailabilityService::MAX_DATES;
+            $availDaysAhead  = \App\Services\AvailabilityService::MAX_DAYS_AHEAD;
+        @endphp
+        <section id="availability-card"
+                 class="cast-avail cast-avail--compact {{ $availActive ? 'is-active' : '' }}"
+                 data-availability-declare-url="{{ $availDeclareUrl }}"
+                 data-availability-clear-url="{{ $availClearUrl }}"
+                 data-availability-max="{{ $availMaxDates }}"
+                 data-availability-days-ahead="{{ $availDaysAhead }}"
+                 data-availability-selected="{{ json_encode(array_values($availSelected)) }}"
+                 aria-labelledby="availability-card-title">
+            <div class="cast-avail__row">
+                <span class="cast-avail__icon" aria-hidden="true">
+                    <i class="fas {{ $availActive ? 'fa-bolt' : 'fa-calendar-days' }}"></i>
+                </span>
+                <p id="availability-card-title" class="cast-avail__title">
+                    ヘルプ募集日を設定
+                    <span class="cast-avail__status-tag" data-availability-status-tag
+                          {{ $availActive ? '' : 'hidden' }}>設定中</span>
+                </p>
+                <div class="cast-avail__actions">
+                    <button type="button" class="cast-avail__btn cast-avail__btn--primary" data-availability-open
+                            aria-haspopup="dialog" aria-controls="availability-modal">
+                        <span data-availability-open-label>{{ $availActive ? '変更' : '設定' }}</span>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Modal popup: description + calendar + save/clear actions --}}
+            <div class="cast-avail__modal" id="availability-modal" role="dialog"
+                 aria-modal="true" aria-labelledby="availability-modal-title" hidden>
+                <div class="cast-avail__backdrop" data-availability-close></div>
+                <div class="cast-avail__dialog" role="document">
+                    <header class="cast-avail__dialog-head">
+                        <h2 id="availability-modal-title" class="cast-avail__dialog-title">
+                            <i class="fas fa-calendar-days" aria-hidden="true"></i>
+                            ヘルプ募集日を設定
+                        </h2>
+                        <button type="button" class="cast-avail__dialog-close"
+                                data-availability-close aria-label="閉じる">
+                            <i class="fas fa-xmark" aria-hidden="true"></i>
+                        </button>
+                    </header>
+                    <div class="cast-avail__dialog-body">
+                        <p class="cast-avail__dialog-desc">
+                            ヘルプで人手が欲しい日を選ぶと、その日に働けるキャストの
+                            <strong>検索・SWIPE で優先表示</strong>されます。
+                        </p>
+                        <p class="cast-avail__dialog-hint">
+                            最大{{ $availMaxDates }}日・{{ $availDaysAhead }}日先まで
+                        </p>
+                        <div class="cast-avail__cal" data-availability-calendar></div>
+                    </div>
+                    <footer class="cast-avail__dialog-foot">
+                        <button type="button" class="cast-avail__btn cast-avail__btn--danger cast-avail__btn--text"
+                                data-availability-clear
+                                {{ $availActive ? '' : 'hidden' }}>
+                            <i class="fas fa-xmark" aria-hidden="true"></i> 取消
+                        </button>
+                        <span class="cast-avail__dialog-foot-spacer"></span>
+                        <button type="button" class="cast-avail__btn cast-avail__btn--ghost" data-availability-close>
+                            戻る
+                        </button>
+                        <button type="button" class="cast-avail__btn cast-avail__btn--primary" data-availability-save disabled>
+                            <i class="fas fa-check"></i> 決定
+                        </button>
+                    </footer>
+                </div>
+            </div>
+        </section>
+        @endshopowner
 
         {{-- ===== 店舗名 + 控えめバッヂ行 =====
              旧: 優良店/レビューの大型2カラムカード → 目立ちすぎのため
@@ -201,10 +280,11 @@
             <div class="p-4 flex flex-col gap-4">
                 @php $js = $jobSummary ?? []; @endphp
 
-                {{-- 求人票を編集（タブの内容を編集する入口。オーナー専用） --}}
+                {{-- 求人票を編集（タブの内容を編集する入口。オーナー専用）
+                     背景を薄く紫にトーンして情報カードから差別化 --}}
                 @shopowner
                 <a href="{{ route('shop.recruits.edit') }}"
-                   class="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-line-accent/40 bg-gradient-to-br from-surface-from to-base shadow-card-3d hover:border-accent/60 active:scale-[0.99] transition-all">
+                   class="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-line-accent/50 bg-gradient-to-br from-accent/15 via-accent/6 to-surface-from shadow-card-3d hover:border-accent/70 active:scale-[0.99] transition-all">
                     <span class="flex items-center gap-2.5 min-w-0">
                         <i class="fas fa-pen-to-square text-accent-text text-[14px]"></i>
                         <span class="text-[13px] font-bold text-text-main">求人票を編集する</span>
@@ -217,18 +297,20 @@
                 <x-ui.card class="p-4">
                     <div class="flex items-center justify-between gap-3 flex-wrap">
                         <div class="flex items-center gap-2">
+                            {{-- 公開ステータスバッジ。プレミアムホワイト背景（薄紫）でも文字を読みやすくするため
+                                 濃い緑/濃いスレートを直接指定（tint 塗りではなく濃色 text で可読性を担保） --}}
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide
                                 {{ ($js['is_published'] ?? false)
-                                    ? 'bg-green-500/15 text-green-300 border border-green-400/40'
-                                    : 'bg-gray-700/30 text-text-sub border border-line' }}">
+                                    ? 'bg-emerald-500/12 text-emerald-700 border border-emerald-500/45'
+                                    : 'bg-slate-500/10 text-slate-700 border border-slate-400/45' }}">
                                 <i class="fas {{ ($js['is_published'] ?? false) ? 'fa-circle-check' : 'fa-pause' }} text-[10px]"></i>
                                 {{ $js['status_label'] ?? '未設定' }}
                             </span>
-                            @shopowner
-                                <a href="{{ route('shop.recruits.edit') }}" class="text-[13px] font-bold text-accent-text underline">ステータス管理</a>
-                            @else
+                            {{-- 「ステータス管理」リンクは求人票を編集するボタンと同じ遷移先のため削除。
+                                 非オーナー向けの案内文言だけ残す。 --}}
+                            @unlessshopowner
                                 <span class="text-sm text-text-sub">公開設定の変更はオーナーにご依頼ください</span>
-                            @endshopowner
+                            @endunlessshopowner
                         </div>
                         <div class="flex items-center gap-4 text-[11px]">
                             <span><span class="text-text-sub">応募</span> <strong class="text-text-main">{{ number_format($js['applicant_count'] ?? 0) }}</strong></span>
@@ -369,18 +451,16 @@
         <div data-tab-panel="shop">
             <div class="p-4 flex flex-col gap-4">
                 {{-- プロファイルを編集（オーナー専用。スタッフには非表示）
-                     サイト共通のグラデCTAで「情報カードではなく、押せるボタン」であることを明示。 --}}
+                     元のカード型デザインに戻し、背景を薄く紫にトーンして情報カードから
+                     差別化（求人票を編集するボタンと同じトーン）。 --}}
                 @shopowner
                 <a href="{{ route('shop.profile.edit') }}"
-                   class="flex items-center justify-between gap-3 px-5 py-3 rounded-full
-                          bg-gradient-to-r from-accent-grad-from to-accent-grad-to
-                          text-on-accent-strong shadow-btn-3d
-                          active:translate-y-px transition-all">
+                   class="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-line-accent/50 bg-gradient-to-br from-accent/15 via-accent/6 to-surface-from shadow-card-3d hover:border-accent/70 active:scale-[0.99] transition-all">
                     <span class="flex items-center gap-2.5 min-w-0">
-                        <i class="fas fa-store text-[15px]"></i>
-                        <span class="text-[14px] font-bold tracking-wide">プロファイルを編集する</span>
+                        <i class="fas fa-store text-accent-text text-[14px]"></i>
+                        <span class="text-[13px] font-bold text-text-main">プロファイルを編集する</span>
                     </span>
-                    <i class="fas fa-chevron-right text-[12px] opacity-80 shrink-0"></i>
+                    <i class="fas fa-chevron-right text-text-sub text-[11px] shrink-0"></i>
                 </a>
                 @endshopowner
 
@@ -680,7 +760,7 @@
 
 </style>
 {{-- Candidate-date availability card styles (shared with cast mypage) --}}
-<link rel="stylesheet" href="{{ asset('assets/css/mypage-availability.css') }}?v=20260926-availability-modal">
+<link rel="stylesheet" href="{{ asset('assets/css/mypage-availability.css') }}?v=20260926-availability-compact">
 @endpush
 
 @push('scripts')
@@ -833,5 +913,5 @@ window.MYPAGE_GALLERY_CONFIG = {
 <script>
 window.MYPAGE_AVAILABILITY_CONFIG = { csrfToken: @json(csrf_token()) };
 </script>
-<script src="{{ asset('assets/js/mypage-availability.js') }}?v=20260926-availability-modal"></script>
+<script src="{{ asset('assets/js/mypage-availability.js') }}?v=20260926-availability-compact"></script>
 @endpush
