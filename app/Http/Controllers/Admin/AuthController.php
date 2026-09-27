@@ -10,11 +10,21 @@ class AuthController extends Controller
     /**
      * 管理者ログイン画面
      *
-     * system_accounts を用いた管理者ログイン画面。
+     * cast / shop と同じ common.role-login ビューを再利用し、
+     * ログイン UI をロール間で統一する。運営ログインは
+     * config('admin.login_path') 配下の obscure URL に配置される。
      */
     public function showLoginForm()
     {
-        return view('admin.auth.login');
+        return view('common.role-login', [
+            'role'          => 'admin',
+            'title'         => '運営ログイン',
+            'bodyClass'     => 'page-auth-login page-auth-login-admin',
+            'formAction'    => route('admin.login.post'),
+            // 運営は自己登録できないため未使用だが、ビュー側の未定義参照を避けるために埋めておく
+            'registerUrl'   => route('login.demo'),
+            'registerLabel' => '',
+        ]);
     }
 
     /**

@@ -129,16 +129,27 @@ Route::get('/bk/{path}', function ($path) {
 | 隱崎ｨｼ縺ｾ繧上ｊ縺ｯ莉雁ｾ梧僑蠑ｵ縺励ｄ縺吶＞繧医≧縺ｫ繝ｫ繝ｼ繝医ｒ蛻・屬縺励※縺翫￥縲・
 |
 */
+
+// 運営（管理者）ログイン：予測不可能な obscure パスに配置（config/admin.php + .env）
+// /admin プレフィックスの外側に置くため、/admin/login への直接アクセスは 404 になる。
+// パスは環境変数 ADMIN_LOGIN_PATH で差し替え可能。
+$adminLoginPath = trim((string) config('admin.login_path', 'staff-portal-a7k92pf'), '/');
+Route::get('/' . $adminLoginPath, [AdminAuth::class, 'showLoginForm'])
+    ->name('admin.login');
+// Rate-limit: 5 attempts per 15 minutes per IP (brute-force protection)
+Route::post('/' . $adminLoginPath, [AdminAuth::class, 'login'])
+    ->middleware('throttle:5,15')
+    ->name('admin.login.post');
+Route::post('/' . $adminLoginPath . '/logout', [AdminAuth::class, 'logout'])
+    ->name('admin.logout');
+
 Route::prefix('admin')->name('admin.')->group(function () {
 
     // 繝ｭ繧ｰ繧､繝ｳ縺ｯ蜈ｱ騾・/login 縺ｫ邨ｱ荳・医Μ繝繧､繝ｬ繧ｯ繝医・縺ｿ・・
-    // 運営（管理者）ログイン：本番用の独立URL
-    Route::get('/login', [AdminAuth::class, 'showLoginForm'])->name('login');
-    // Rate-limit: 5 attempts per 15 minutes per IP (brute-force protection)
-    Route::post('/login', [AdminAuth::class, 'login'])
-        ->middleware('throttle:5,15')
-        ->name('login.post');
-    Route::post('/logout', [AdminAuth::class, 'logout'])->name('logout');
+    // 運営（管理者）ログインは /admin プレフィックスの外へ移動（obscure パス）。
+    // 下部の Route::get('/' . $adminLoginPath, ...) を参照。
+    // 名前付きルート admin.login / admin.login.post / admin.logout は維持しているため、
+    // route('admin.login') / route('admin.logout') を使う既存コードは変更不要。
 
     // 邂｡逅・判髱｢譛ｬ菴・
     Route::middleware([])->group(function () {

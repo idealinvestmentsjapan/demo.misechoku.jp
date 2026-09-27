@@ -98,14 +98,6 @@
             </button>
         </section>
 
-        {{-- 削除候補は別画面（バッチ運用）へ誘導 --}}
-        <div class="admin-alert admin-alert-info admin-alert-thin">
-            <i class="fas fa-shield-halved"></i>
-            保持期間を過ぎた書類の<strong>削除候補</strong>は、
-            <a href="{{ route('admin.purge.index') }}"><strong>「書類 削除候補（バッチ）」画面</strong></a>
-            で定期的にまとめて処理してください（取得 → NAS移動 → サーバから削除）。
-        </div>
-
         {{-- タブ切替（キャスト / 店舗） --}}
         <div class="admin-tabs" role="tablist">
             <button type="button" class="admin-tab {{ $defaultTab === 'cast' ? 'is-active' : '' }}" data-verif-tab="cast" role="tab">

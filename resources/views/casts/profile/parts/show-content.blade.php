@@ -98,26 +98,48 @@
         @endif
     </div>
 
-    {{-- ===== 縦積みレイアウト（2026-08-01: GALLERY/PROFILE タブを廃止して縦に統合） =====
-         モバイルで「タブ切替のワンステップ」を挟まないほうが読みやすい。写真 → プロフィール の順で
-         スクロール1本で全情報が見える。data-tabs 系の JS 依存も外れる。 --}}
-    <div>
-        {{-- 写真ギャラリー：登録済み写真のみ。空スロットは出さない --}}
-        @if(count($profileImages) > 0)
-            <ul id="profile-gallery-list">
-                @foreach($profileImages as $i => $img)
-                    <li class="profile-gallery-item">
-                        <button type="button" class="profile-gallery-slot has-img js-lightbox-target" data-image-url="{{ $img }}" aria-label="写真 {{ $i + 1 }} を拡大">
-                            <img src="{{ $img }}" alt="" loading="lazy">
-                            @if($i === 0)<span class="profile-gallery-badge">MAIN</span>@endif
-                        </button>
-                    </li>
-                @endforeach
-            </ul>
-        @endif
+    {{-- ===== Tabs：GALLERY / PROFILE（キャスト MyPage と同じ 2 タブ構成）=====
+         2026-09-27: 相手プロフィール画面を MyPage と同じタブ式に統一。
+         キャストには「求人票」がないため中段タブは無し（cast.mypage の GALLERY/PROFILE と対称）。 --}}
+    <div data-tabs-scope>
+        <div data-tabs class="border-t border-b border-line-accent/40 bg-base/90 backdrop-blur-md sticky top-0 z-10">
+            <div class="flex">
+                <button type="button" data-tab="gallery"
+                        class="is-active flex-1 py-3 flex flex-col items-center justify-center gap-0.5 transition-colors border-b-2 border-transparent text-text-sub [&.is-active]:text-accent-text [&.is-active]:border-accent">
+                    <i class="fas fa-images text-[14px]"></i>
+                    <span class="app-title text-[10px] tracking-widest">GALLERY</span>
+                </button>
+                <button type="button" data-tab="profile"
+                        class="flex-1 py-3 flex flex-col items-center justify-center gap-0.5 transition-colors border-b-2 border-transparent text-text-sub [&.is-active]:text-accent-text [&.is-active]:border-accent">
+                    <i class="fas fa-address-card text-[14px]"></i>
+                    <span class="app-title text-[10px] tracking-widest">PROFILE</span>
+                </button>
+            </div>
+        </div>
 
-        {{-- プロフィール：スペック・自己PR・接客タイプ・キャリア --}}
-        <div>
+        {{-- ========== GALLERY ========== --}}
+        <div data-tab-panel="gallery" class="is-active">
+            @if(count($profileImages) > 0)
+                <ul id="profile-gallery-list">
+                    @foreach($profileImages as $i => $img)
+                        <li class="profile-gallery-item">
+                            <button type="button" class="profile-gallery-slot has-img js-lightbox-target" data-image-url="{{ $img }}" aria-label="写真 {{ $i + 1 }} を拡大">
+                                <img src="{{ $img }}" alt="" loading="lazy">
+                                @if($i === 0)<span class="profile-gallery-badge">MAIN</span>@endif
+                            </button>
+                        </li>
+                    @endforeach
+                </ul>
+            @else
+                <div class="p-8 text-center text-text-sub text-[13px]">
+                    <i class="far fa-image text-2xl mb-2 block opacity-50"></i>
+                    写真はまだ登録されていません
+                </div>
+            @endif
+        </div>
+
+        {{-- ========== PROFILE：スペック・自己PR・接客タイプ・キャリア ========== --}}
+        <div data-tab-panel="profile">
             <div class="p-4 flex flex-col gap-4">
 
                 @php

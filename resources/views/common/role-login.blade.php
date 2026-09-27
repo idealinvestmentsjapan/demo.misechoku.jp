@@ -5,11 +5,22 @@
 
 @section('content')
     @php
-        // Cross-link target: the opposite role's login page
-        $isCastPage      = ($role === 'cast');
-        $altRouteName    = $isCastPage ? 'shop.login' : 'cast.login';
-        $altLabel        = $isCastPage ? '店舗のログイン画面へ' : 'キャストのログイン画面へ';
-        $roleLabel       = $isCastPage ? 'キャスト' : '店舗';
+        // ロール別ラベル。admin は cast/shop と違って新規登録・クロスリンクなし。
+        $isAdminPage = ($role === 'admin');
+        $isCastPage  = ($role === 'cast');
+        $isShopPage  = ($role === 'shop');
+        $roleLabel   = match ($role) {
+            'admin' => '運営',
+            'shop'  => '店舗',
+            default => 'キャスト',
+        };
+        $crossLinks = match ($role) {
+            'cast' => [['route' => 'shop.login', 'label' => '店舗のログイン画面へ', 'icon' => 'store']],
+            'shop' => [['route' => 'cast.login', 'label' => 'キャストのログイン画面へ', 'icon' => 'user']],
+            // admin は他ロールへのクロスリンクを持たない（URL 露出を避ける）
+            default => [],
+        };
+        $showRegister = !$isAdminPage; // 運営は自己登録なし
     @endphp
     <div class="role-login-shell">
         <div class="role-login-page">
@@ -57,28 +68,34 @@
                         <span>ログイン</span>
                     </button>
 
-                    <div class="role-login-forgot">
-                        <a href="{{ route('password.forgot.show') }}">パスワードをお忘れの方はこちら</a>
-                    </div>
+                    @if (!$isAdminPage)
+                        <div class="role-login-forgot">
+                            <a href="{{ route('password.forgot.show') }}">パスワードをお忘れの方はこちら</a>
+                        </div>
+                    @endif
                 </form>
             </div>
 
-            {{-- Cross link + signup CTA + demo login back --}}
+            {{-- 下段：クロスリンク → 新規登録 → デモログインへ --}}
             <div class="role-login-links">
-                <a href="{{ route($altRouteName) }}" class="role-login-crosslink">
-                    <i class="fas fa-{{ $isCastPage ? 'store' : 'user' }}" aria-hidden="true"></i>
-                    <span>{{ $altLabel }}</span>
-                </a>
-
-                <div class="role-login-signup-block">
-                    <p class="role-login-signup-lead">アカウントをお持ちでない方</p>
-                    <a href="{{ $registerUrl }}" class="role-login-signup">
-                        <i class="fas fa-user-plus" aria-hidden="true"></i>
-                        <span>{{ $roleLabel }} 新規登録</span>
+                @foreach ($crossLinks as $link)
+                    <a href="{{ route($link['route']) }}" class="role-login-crosslink">
+                        <i class="fas fa-{{ $link['icon'] }}" aria-hidden="true"></i>
+                        <span>{{ $link['label'] }}</span>
                     </a>
-                </div>
+                @endforeach
 
-                <a href="{{ route('login.demo') }}" class="role-login-back">デモログイン一覧へ戻る</a>
+                @if ($showRegister)
+                    <div class="role-login-signup-block">
+                        <p class="role-login-signup-lead">アカウントをお持ちでない方</p>
+                        <a href="{{ $registerUrl }}" class="role-login-signup">
+                            <i class="fas fa-user-plus" aria-hidden="true"></i>
+                            <span>{{ $roleLabel }} 新規登録</span>
+                        </a>
+                    </div>
+                @endif
+
+                <a href="{{ route('login.demo') }}" class="role-login-back">デモ用ログイン画面へ</a>
             </div>
         </div>
     </div>
