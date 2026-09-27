@@ -387,6 +387,7 @@ class RecruitmentController extends Controller
         $shopTagGroups = $this->resolveShopInfoTagGroups($shopId);
 
         $shop = [
+            'id'         => $shopId,
             'name'       => $row->shop_name,
             'word'       => $shopHitokoto,
             'main_img'   => $mainImg,
@@ -433,6 +434,24 @@ class RecruitmentController extends Controller
             } catch (\Throwable) {
                 $data['shop']['is_premium'] = false;
             }
+        }
+
+        // 閲覧中のキャストが実際に KEEP 済みか（行が存在 = アクティブ）。
+        // 未ログインや行なしなら false。cast → shop 方向で判定する。
+        if (is_array($data['recruit'] ?? null) && !isset($data['recruit']['is_kept'])) {
+            $isKeptByViewer = false;
+            $viewerCastId = auth()->guard('member')->check()
+                ? (string) auth()->guard('member')->id()
+                : '';
+            if ($viewerCastId !== '' && Schema::hasTable('favorites')) {
+                $isKeptByViewer = DB::table('favorites')
+                    ->where('cast_id', $viewerCastId)
+                    ->where('shop_id', $likeShopId)
+                    ->where('sender_type', 'cast')
+                    ->where('action_type', 'KEEP')
+                    ->exists();
+            }
+            $data['recruit']['is_kept'] = $isKeptByViewer;
         }
 
         // レビュー概要 + 明細（キャストからも詳細を閲覧できるようにする）
@@ -869,6 +888,7 @@ class RecruitmentController extends Controller
             'recruit_trial' => $trialOut,
             'recruit_help' => $helpOut,
             'shop' => [
+                'id' => $shopId,
                 'name' => $row->shop_name ?? '店舗',
                 'word' => $shopHitokoto,
                 'main_img' => $mainImage,

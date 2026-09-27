@@ -697,6 +697,8 @@ CREATE TABLE IF NOT EXISTS `shop_plan_subscriptions` (
   `invoice_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '請求書番号 PLN-YYYYMM-xxxx',
   `invoice_issued_at` datetime DEFAULT NULL COMMENT '請求書発行日時（契約時）',
   `payment_due_date` date DEFAULT NULL COMMENT '振込期限（契約から7日）',
+  `shop_payment_reported_at` datetime DEFAULT NULL COMMENT '店舗が「振り込み済み」を運営に通知した日時',
+  `shop_payment_reference` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '店舗が申告した参照番号／振込人名義（任意）',
   `paid_confirmed_at` datetime DEFAULT NULL COMMENT '運営が入金を目視確認した日時',
   `confirmed_by` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '確認した運営アカウントID',
   `receipt_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '領収書番号 RCT-YYYYMM-xxxx',
@@ -706,7 +708,8 @@ CREATE TABLE IF NOT EXISTS `shop_plan_subscriptions` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `sps_shop_status_idx` (`shop_id`,`status`),
-  KEY `sps_status_due_idx` (`status`,`payment_due_date`)
+  KEY `sps_status_due_idx` (`status`,`payment_due_date`),
+  KEY `sps_status_reported_idx` (`status`,`shop_payment_reported_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `user_talk_templates` (

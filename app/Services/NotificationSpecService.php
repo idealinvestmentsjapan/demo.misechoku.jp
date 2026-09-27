@@ -237,6 +237,13 @@ class NotificationSpecService
              'default_title' => 'キャストへの振込を実行する',
              'default_body' => '銀行口座情報を確認の上、当日中にキャストへの振込を実行してください。'],
 
+            ['key' => 'plan.shop_payment_reported', 'group' => '運営タスク', 'actor' => '運営',
+             'label' => 'Premiumプラン振込通知を照合する',
+             'condition' => '店舗が /subscription から「振り込み済みの通知」を送信し、shop_plan_subscriptions.status = 1（入金待ち）かつ shop_payment_reported_at が入っている状態',
+             'resolution' => '運営が「入金確認」を実行し status が 2（有効）に進むと自動的に消える',
+             'default_title' => 'Premiumプラン振込通知が届きました',
+             'default_body' => '銀行明細を照合し、入金確認を実行してください。'],
+
             ['key' => 'verification.cast_pending', 'group' => '運営タスク', 'actor' => '運営',
              'label' => 'キャスト本人確認の審査',
              'condition' => 'キャストが本人確認書類を提出し、cast_identity_documents.status = 1（審査中）の状態',

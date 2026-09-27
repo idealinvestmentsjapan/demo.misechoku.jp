@@ -472,6 +472,105 @@
 .cast-identity-submit-hint[hidden] { display: none; }
 .cast-identity-submit-hint i { margin-top: 2px; color: #b45309; }
 
+/* ============================================================
+   提出済みプレビュー（承認待ち / 承認済み / 差し戻し で表示）
+   ============================================================ */
+.doc-submitted {
+    margin: 0 0 14px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(124, 58, 237, 0.04);
+    border: 1px solid var(--doc-line);
+}
+.doc-submitted__label {
+    margin: 0 0 10px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--doc-body);
+    letter-spacing: 0.02em;
+    display: inline-flex; align-items: center; gap: 6px;
+}
+.doc-submitted__label i { color: var(--doc-accent); }
+.doc-submitted__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+}
+.doc-submitted__item { margin: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.doc-submitted__cap {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--doc-muted);
+    letter-spacing: 0.04em;
+}
+.doc-submitted__img {
+    display: block;
+    width: 100%;
+    max-height: 220px;
+    object-fit: contain;
+    background: #ffffff;
+    border-radius: 10px;
+    border: 1px solid var(--doc-line);
+    box-shadow: 0 2px 8px rgba(76, 29, 149, 0.08);
+    transition: transform 0.15s ease;
+}
+.doc-submitted__img:hover { transform: scale(1.01); }
+.doc-submitted__pdf {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(220, 38, 38, 0.06);
+    border: 1px solid rgba(220, 38, 38, 0.30);
+    color: #b91c1c;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+.doc-submitted__pdf:hover { background: rgba(220, 38, 38, 0.10); }
+.doc-submitted__pdf i { font-size: 1.1rem; }
+
+/* ============================================================
+   ロック状態（承認待ち・承認済み）: 取り下げゾーン
+   ============================================================ */
+.doc-withdraw {
+    padding: 14px;
+    border-radius: 12px;
+    background: rgba(180, 83, 9, 0.05);
+    border: 1px solid rgba(180, 83, 9, 0.28);
+    display: flex; flex-direction: column; gap: 10px;
+}
+.doc-withdraw__note {
+    margin: 0;
+    font-size: 0.84rem;
+    line-height: 1.65;
+    color: var(--doc-body);
+    display: flex; align-items: flex-start; gap: 6px;
+}
+.doc-withdraw__note i {
+    margin-top: 3px;
+    color: #b45309;
+    font-size: 0.85rem;
+    flex: 0 0 auto;
+}
+.doc-withdraw__note strong { color: #b45309; font-weight: 800; }
+.doc-withdraw__form { margin: 0; }
+.doc-withdraw__btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%;
+    min-height: 46px;
+    padding: 11px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(180, 83, 9, 0.35);
+    background: #ffffff;
+    color: #b45309;
+    font-size: 0.90rem; font-weight: 800;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+}
+.doc-withdraw__btn:hover { background: rgba(180, 83, 9, 0.06); border-color: rgba(180, 83, 9, 0.55); }
+.doc-withdraw__btn:active { transform: scale(0.98); }
+.doc-withdraw__btn:disabled { opacity: 0.6; cursor: progress; }
+
 /* ===== 提出完了モーダル ===== */
 .cast-identity-submitted-modal {
     position: fixed; inset: 0; z-index: 2600;
@@ -692,6 +791,31 @@
                             </button>
                         </div>
                     </div>
+
+                    {{-- 取り下げ確認モーダル：PENDING/APPROVED → DRAFT に戻す明示的アクション --}}
+                    <div class="cast-identity-submitted-modal" data-cast-withdraw-modal hidden role="dialog" aria-modal="true" aria-labelledby="cast-withdraw-title">
+                        <div class="cast-identity-submitted-modal__overlay" data-cast-withdraw-cancel></div>
+                        <div class="cast-identity-submitted-modal__panel">
+                            <span class="cast-identity-submitted-modal__icon" aria-hidden="true" style="background: rgba(180, 83, 9, 0.15); color: #b45309;">
+                                <i class="fas fa-rotate-left"></i>
+                            </span>
+                            <h3 id="cast-withdraw-title" class="cast-identity-submitted-modal__title">提出を取り下げますか？</h3>
+                            <p class="cast-identity-submitted-modal__text">
+                                取り下げると審査が中断され、書類を差し替えることができます。<br>
+                                再度提出するまで本人確認は完了しません。
+                            </p>
+                            <div style="display:flex; gap:8px;">
+                                <button type="button" class="cast-identity-submitted-modal__btn" data-cast-withdraw-cancel
+                                        style="background: transparent; color: var(--doc-body); border: 1px solid var(--doc-line-2); box-shadow: none;">
+                                    キャンセル
+                                </button>
+                                <button type="button" class="cast-identity-submitted-modal__btn" data-cast-withdraw-confirm
+                                        style="background: linear-gradient(135deg, #f59e0b, #b45309);">
+                                    <i class="fas fa-rotate-left"></i> 取り下げる
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -738,6 +862,82 @@ document.addEventListener('DOMContentLoaded', function () {
     var csrfToken = '{{ csrf_token() }}';
     var uploadUrl = '{{ route("cast.mypage.identity.upload") }}';
     var submitUrl = '{{ route("cast.mypage.identity.submit") }}';
+    var withdrawUrl = '{{ route("cast.mypage.identity.withdraw") }}';
+
+    // ===== 取り下げモーダル + フォーム送信 =====
+    var withdrawModal = document.querySelector('[data-cast-withdraw-modal]');
+    var withdrawConfirmBtn = document.querySelector('[data-cast-withdraw-confirm]');
+    var pendingWithdrawCategory = null;
+    var pendingWithdrawForm = null;
+
+    function openWithdrawModal(category, form) {
+        pendingWithdrawCategory = category;
+        pendingWithdrawForm = form;
+        if (!withdrawModal) return;
+        withdrawModal.hidden = false;
+        document.body.style.overflow = 'hidden';
+    }
+    function closeWithdrawModal() {
+        pendingWithdrawCategory = null;
+        pendingWithdrawForm = null;
+        if (!withdrawModal) return;
+        withdrawModal.hidden = true;
+        document.body.style.overflow = '';
+    }
+    if (withdrawModal) {
+        withdrawModal.querySelectorAll('[data-cast-withdraw-cancel]').forEach(function (el) {
+            el.addEventListener('click', closeWithdrawModal);
+        });
+    }
+
+    document.querySelectorAll('form[data-cast-withdraw-form]').forEach(function (form) {
+        var categoryInput = form.querySelector('input[name="category"]');
+        var errorEl = form.querySelector('[data-cast-withdraw-error]');
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            if (errorEl) errorEl.hidden = true;
+            openWithdrawModal(categoryInput ? categoryInput.value : '', form);
+        });
+    });
+
+    if (withdrawConfirmBtn) {
+        withdrawConfirmBtn.addEventListener('click', function () {
+            var category = pendingWithdrawCategory;
+            var form = pendingWithdrawForm;
+            if (!category) { closeWithdrawModal(); return; }
+            var errorEl = form ? form.querySelector('[data-cast-withdraw-error]') : null;
+            var btn = form ? form.querySelector('.doc-withdraw__btn') : null;
+            withdrawConfirmBtn.disabled = true;
+            if (btn) btn.disabled = true;
+
+            fetch(withdrawUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({ category: category }),
+            })
+            .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw j; return j; }); })
+            .then(function () {
+                closeWithdrawModal();
+                window.location.reload();
+            })
+            .catch(function (err) {
+                withdrawConfirmBtn.disabled = false;
+                if (btn) btn.disabled = false;
+                closeWithdrawModal();
+                if (errorEl) {
+                    var msgs = err && err.errors ? Object.values(err.errors).flat() : [];
+                    errorEl.textContent = msgs[0] || (err && err.message) || '取り下げに失敗しました。時間をおいて再度お試しください。';
+                    errorEl.hidden = false;
+                }
+            });
+        });
+    }
 
     document.querySelectorAll('form.cast-identity-form').forEach(function (form) {
         var errorEl = form.querySelector('.cast-identity-error');

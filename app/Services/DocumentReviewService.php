@@ -164,6 +164,37 @@ class DocumentReviewService
         return $document->fresh();
     }
 
+    /**
+     * 本人確認書類の提出取り下げ（PENDING/APPROVED → DRAFT）。
+     * 「提出済み → 差し替えたい」の明示的なアクションで、これを実行すると
+     * DRAFT に戻り、キャストが再アップロード可能な状態になる。
+     * 承認済みからの取り下げも許可（差し替え時のパターン変更などに対応）。
+     */
+    public function withdrawCastIdentityReview(string $castId, string $category): CastIdentityDocument
+    {
+        $document = CastIdentityDocument::query()
+            ->where('cast_id', $castId)
+            ->where('category', $category)
+            ->firstOrFail();
+
+        if (!in_array((int) $document->status, [
+            CastIdentityDocument::STATUS_PENDING,
+            CastIdentityDocument::STATUS_APPROVED,
+        ], true)) {
+            throw new \RuntimeException('提出済みの書類のみ取り下げできます。');
+        }
+
+        $document->update([
+            'status' => CastIdentityDocument::STATUS_DRAFT,
+            'ng_reason' => null,
+            'approved_at' => null,
+        ]);
+
+        $this->syncCastLegacyStatus($castId);
+
+        return $document->fresh();
+    }
+
     public function getShopLicensePageData(string $shopId): array
     {
         $definitions = $this->shopLicenseDefinitions();
@@ -1163,9 +1194,27 @@ class DocumentReviewService
             'expired_at' => optional($document->expired_at)->format('Y-m-d'),
             'approved_at' => optional($document->approved_at)->format('Y-m-d H:i'),
             'updated_at_label' => optional($document->updated_at)->format('Y-m-d H:i'),
-            'front_url' => $this->castIdentityAdminFileUrl($document, 'front'),
-            'back_url' => $this->castIdentityAdminFileUrl($document, 'back'),
+            'has_front' => !empty($document->image_path_front),
+            'has_back' => !empty($document->image_path_back),
+            'front_is_pdf' => $this->pathIsPdf($document->image_path_front),
+            'back_is_pdf' => $this->pathIsPdf($document->image_path_back),
+            // マイページ（キャスト本人）から自分の書類を閲覧するための認証付きルート
+            'front_url' => !empty($document->image_path_front)
+                ? route('cast.mypage.identity.file', ['document' => $document->id, 'side' => 'front'])
+                : null,
+            'back_url' => !empty($document->image_path_back)
+                ? route('cast.mypage.identity.file', ['document' => $document->id, 'side' => 'back'])
+                : null,
         ];
+    }
+
+    /** Path が PDF か（拡張子ベース。private disk 上の暗号化パスにも安全にヒットする） */
+    private function pathIsPdf(?string $path): bool
+    {
+        if (empty($path)) {
+            return false;
+        }
+        return str_ends_with(strtolower($path), '.pdf');
     }
 
     public function castCategoryLabel(string $category): string

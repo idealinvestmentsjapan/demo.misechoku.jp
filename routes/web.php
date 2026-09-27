@@ -514,6 +514,7 @@ Route::get('/subscription', [SettingController::class, 'subscription'])->name('s
 // Premiumプラン：契約（入金待ち作成）→ 振込 → 運営の入金確認で有効化。請求書/領収書DL。
 Route::post('/subscription/contract', [SettingController::class, 'contractPlan'])->name('subscription.contract');
 Route::post('/subscription/cancel', [SettingController::class, 'cancelPlanContract'])->name('subscription.cancel');
+Route::post('/subscription/notify-payment', [SettingController::class, 'notifyPlanPayment'])->name('subscription.notify-payment');
 Route::get('/subscription/invoice', [SettingController::class, 'downloadPlanInvoice'])->name('subscription.invoice');
 Route::get('/subscription/receipt', [SettingController::class, 'downloadPlanReceipt'])->name('subscription.receipt');
 
@@ -739,6 +740,12 @@ Route::prefix('cast')->name('cast.')->middleware('member.auth')->group(function 
     Route::post('/mypage/identity/remind', [\App\Http\Controllers\Casts\IdentityController::class, 'identityRemind'])->name('mypage.identity.remind');
     Route::post('/mypage/identity/upload', [\App\Http\Controllers\Casts\IdentityController::class, 'upload'])->name('mypage.identity.upload');
     Route::post('/mypage/identity/submit', [\App\Http\Controllers\Casts\IdentityController::class, 'submitForReview'])->name('mypage.identity.submit');
+    Route::post('/mypage/identity/withdraw', [\App\Http\Controllers\Casts\IdentityController::class, 'withdraw'])->name('mypage.identity.withdraw');
+    // 自分の本人確認書類ファイル閲覧（private ディスクから認証＋所有権チェック済みで配信）
+    Route::get('/mypage/identity/{document}/file/{side}', [\App\Http\Controllers\Casts\IdentityController::class, 'viewFile'])
+        ->where('side', 'front|back')
+        ->whereNumber('document')
+        ->name('mypage.identity.file');
     Route::post('/mypage/images/upload', [CastMypage::class, 'uploadImage'])->name('mypage.images.upload');
     Route::post('/mypage/images/order', [CastMypage::class, 'updateImageOrder'])->name('mypage.images.order');
     Route::delete('/mypage/images/{id}', [CastMypage::class, 'deleteImage'])->name('mypage.images.delete');

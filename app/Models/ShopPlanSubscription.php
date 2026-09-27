@@ -30,6 +30,7 @@ class ShopPlanSubscription extends Model
         'status' => 'integer',
         'invoice_issued_at' => 'datetime',
         'payment_due_date' => 'date',
+        'shop_payment_reported_at' => 'datetime',
         'paid_confirmed_at' => 'datetime',
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',

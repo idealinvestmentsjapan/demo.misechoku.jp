@@ -8,6 +8,7 @@ use App\Models\ShopPlanSubscription;
 use App\Services\BillingManagementService;
 use App\Services\InvoiceTemplateSettingsService;
 use App\Services\NotificationPreferenceService;
+use App\Services\NotificationService;
 use App\Services\PdfService;
 use App\Services\PlanSubscriptionService;
 use Illuminate\Http\RedirectResponse;
@@ -414,6 +415,56 @@ class SettingController extends Controller
             return redirect()->route('subscription')->with('message', 'お申し込みをキャンセルしました。');
         }
         return redirect()->route('subscription');
+    }
+
+    /**
+     * 店舗から運営へ「Premiumプラン料金を振り込み済み」の通知を送る。
+     * 実際の入金確認は運営が銀行明細を目視で行うため、この通知はあくまで
+     * 運営の照合作業を早めるためのシグナル（ステータスは PENDING_PAYMENT のまま）。
+     */
+    public function notifyPlanPayment(Request $request, PlanSubscriptionService $planService, NotificationService $notifier): RedirectResponse
+    {
+        $shopId = $this->currentShopId();
+        if ($shopId === null) {
+            return redirect()->route('subscription')->withErrors(['店舗アカウントでログインしてください。']);
+        }
+        // お金の操作 → オーナー専用
+        $this->assertShopOwner();
+
+        $data = $request->validate([
+            'reference' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $pending = $planService->pendingFor($shopId);
+        if ($pending === null) {
+            return redirect()->route('subscription')->withErrors(['通知できる入金待ちのお申し込みがありません。']);
+        }
+
+        $sub = $planService->reportPayment($pending, $data['reference'] ?? null);
+
+        $shopName = (string) (DB::table('shop_profiles')->where('shop_id', $shopId)->value('shop_name') ?? $shopId);
+        $body = "店舗「{$shopName}」から Premiumプラン（{$sub->cycleLabel()}）の振込通知が届きました。"
+            . "\n請求番号: " . ($sub->invoice_number ?? '—')
+            . "\n金額: ¥" . number_format((int) $sub->amount)
+            . ($sub->shop_payment_reference ? "\n参照情報: {$sub->shop_payment_reference}" : '');
+        try {
+            $notifier->createForAllAdmins(
+                'plan.shop_payment_reported',
+                'Premiumプラン振込通知が届きました',
+                $body,
+                route('admin.deposits.confirmations'),
+                [
+                    'plan_id' => (int) $sub->id,
+                    'shop_id' => (string) $sub->shop_id,
+                    'invoice_number' => (string) ($sub->invoice_number ?? ''),
+                ]
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Plan shop payment notify failed: ' . $e->getMessage());
+        }
+
+        return redirect()->route('subscription')
+            ->with('message', '運営に振り込み済みの通知を送りました。銀行明細で確認が取れ次第、Premium機能が有効になります。');
     }
 
     /** 請求書ダウンロード（契約後いつでも） */

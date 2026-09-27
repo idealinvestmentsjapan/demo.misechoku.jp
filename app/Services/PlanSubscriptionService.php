@@ -153,6 +153,25 @@ class PlanSubscriptionService
     }
 
     /**
+     * 店舗からの「振り込み済み」通知を記録する。
+     * ステータスは PENDING_PAYMENT のまま（運営の目視確認で ACTIVE に進む）。
+     * 二重通知は上書き扱い（reported_at を最新化）。
+     */
+    public function reportPayment(ShopPlanSubscription $sub, ?string $reference = null): ShopPlanSubscription
+    {
+        if ((int) $sub->status !== ShopPlanSubscription::STATUS_PENDING_PAYMENT) {
+            return $sub;
+        }
+
+        $sub->update([
+            'shop_payment_reported_at' => now(),
+            'shop_payment_reference' => $reference !== null && $reference !== '' ? $reference : null,
+        ]);
+
+        return $sub->refresh();
+    }
+
+    /**
      * 運営の入金確認 → Premium 有効化 + 領収書番号採番。
      */
     public function confirmPayment(ShopPlanSubscription $sub, string $adminId): ShopPlanSubscription

@@ -28,8 +28,13 @@
                 <a href="{{ route('subscription.invoice') }}" class="plan-doc-link"><i class="fas fa-file-invoice"></i> 請求書をダウンロード</a>
             </div>
         @elseif($pendingSub)
-            <div class="plan-status-name"><i class="fas fa-hourglass-half"></i> Premiumプラン お振込待ち</div>
-            <div class="plan-status-meta">お振込の確認が取れ次第、Premium機能が有効になります。</div>
+            @if($pendingSub->shop_payment_reported_at)
+                <div class="plan-status-name"><i class="fas fa-paper-plane"></i> 振込通知を受け付けました</div>
+                <div class="plan-status-meta">運営の照合が完了次第、Premium機能が有効になります（{{ optional($pendingSub->shop_payment_reported_at)->format('Y年n月j日 H:i') }} 通知）。</div>
+            @else
+                <div class="plan-status-name"><i class="fas fa-hourglass-half"></i> Premiumプラン お振込待ち</div>
+                <div class="plan-status-meta">お振込後、下の「振り込み済みの通知」を押していただくと運営の確認がスムーズです。</div>
+            @endif
         @else
             <div class="plan-status-name">無料プラン</div>
             <div class="plan-status-meta">基本機能をご利用いただけます。</div>
@@ -66,6 +71,60 @@
                     @csrf
                     <button type="submit" class="plan-cancel-btn">キャンセル</button>
                 </form>
+            </div>
+
+            {{-- 振込通知（お振込済みを運営に伝える） --}}
+            <div class="plan-notify-box {{ $pendingSub->shop_payment_reported_at ? 'is-done' : '' }}">
+                @if($pendingSub->shop_payment_reported_at)
+                    <div class="plan-notify-box__head">
+                        <i class="fas fa-circle-check"></i>
+                        <div>
+                            <div class="plan-notify-box__title">振込通知を受け付けました</div>
+                            <div class="plan-notify-box__meta">
+                                通知日時: {{ optional($pendingSub->shop_payment_reported_at)->format('Y年n月j日 H:i') }}
+                                @if($pendingSub->shop_payment_reference)
+                                    ／ 振込人名義・参照: {{ $pendingSub->shop_payment_reference }}
+                                @endif
+                            </div>
+                            <div class="plan-notify-box__hint">運営が銀行明細と照合したのち Premium 機能が有効になります。</div>
+                        </div>
+                    </div>
+                    @if($isShop)
+                        <form method="POST" action="{{ route('subscription.notify-payment') }}"
+                              onsubmit="return confirm('振込通知を再送します。よろしいですか？');" class="plan-notify-form">
+                            @csrf
+                            <input type="text" name="reference" maxlength="255"
+                                   value="{{ old('reference', $pendingSub->shop_payment_reference) }}"
+                                   class="plan-notify-input"
+                                   placeholder="振込人名義・参照番号（任意）">
+                            <button type="submit" class="plan-notify-btn plan-notify-btn--secondary">
+                                <i class="fas fa-rotate"></i> 内容を更新して再通知
+                            </button>
+                        </form>
+                    @endif
+                @else
+                    <div class="plan-notify-box__head">
+                        <i class="fas fa-paper-plane"></i>
+                        <div>
+                            <div class="plan-notify-box__title">お振込が完了したら通知してください</div>
+                            <div class="plan-notify-box__hint">
+                                お振込済みの旨を運営に通知できます。銀行の反映タイミングによっては入金確認まで数営業日かかることがありますが、通知いただくと照合が早まります。
+                            </div>
+                        </div>
+                    </div>
+                    @if($isShop)
+                        <form method="POST" action="{{ route('subscription.notify-payment') }}"
+                              onsubmit="return confirm('振り込み済みの通知を運営に送ります。よろしいですか？');" class="plan-notify-form">
+                            @csrf
+                            <input type="text" name="reference" maxlength="255" value="{{ old('reference') }}"
+                                   class="plan-notify-input"
+                                   placeholder="振込人名義・参照番号（任意・照合が早まります）">
+                            <button type="submit" class="plan-notify-btn">
+                                <i class="fas fa-paper-plane"></i> 振り込み済みの通知を送る
+                            </button>
+                        </form>
+                    @endif
+                @endif
             </div>
         </section>
     @endif
@@ -208,6 +267,56 @@
 .plan-cancel-btn {
     font-size: 0.74rem; padding: 8px 14px; border-radius: 999px;
     background: transparent; border: 1px solid rgba(109, 102, 133, 0.4); color: #6d6685; cursor: pointer;
+}
+
+/* Payment notify box (shop → admin "I paid" signal) */
+.plan-notify-box {
+    margin-top: 14px;
+    background: linear-gradient(180deg, rgba(124, 58, 237, 0.06), #ffffff 60%);
+    border: 1px solid rgba(124, 58, 237, 0.28);
+    border-radius: 12px;
+    padding: 12px 14px;
+}
+.plan-notify-box.is-done {
+    background: linear-gradient(180deg, rgba(5, 150, 105, 0.08), #ffffff 60%);
+    border-color: rgba(5, 150, 105, 0.35);
+}
+.plan-notify-box__head {
+    display: flex; align-items: flex-start; gap: 10px;
+}
+.plan-notify-box__head > i {
+    color: #7c3aed; font-size: 1.05rem; margin-top: 2px; flex: 0 0 auto;
+}
+.plan-notify-box.is-done .plan-notify-box__head > i { color: #047857; }
+.plan-notify-box__title { font-size: 0.9rem; font-weight: 800; color: #241f33; }
+.plan-notify-box__meta { font-size: 0.75rem; color: #5f5876; margin-top: 3px; line-height: 1.6; }
+.plan-notify-box__hint { font-size: 0.74rem; color: #6d6685; margin-top: 4px; line-height: 1.6; }
+.plan-notify-form {
+    margin-top: 10px;
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+}
+.plan-notify-input {
+    flex: 1 1 200px; min-width: 0;
+    padding: 8px 12px; border-radius: 8px;
+    border: 1px solid rgba(124, 58, 237, 0.30);
+    background: #ffffff; font-size: 0.82rem; color: #241f33;
+}
+.plan-notify-input:focus {
+    outline: 2px solid rgba(124, 58, 237, 0.35); outline-offset: 1px;
+    border-color: rgba(124, 58, 237, 0.55);
+}
+.plan-notify-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 16px; border-radius: 999px; border: 0; cursor: pointer;
+    background: linear-gradient(135deg, #a78bfa, #7c3aed); color: #ffffff;
+    font-size: 0.82rem; font-weight: 800; letter-spacing: 0.02em;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.28);
+}
+.plan-notify-btn:hover { box-shadow: 0 6px 16px rgba(124, 58, 237, 0.34); }
+.plan-notify-btn--secondary {
+    background: #ffffff; color: #6d28d9;
+    border: 1px solid rgba(124, 58, 237, 0.35);
+    box-shadow: none;
 }
 
 /* ============================================================

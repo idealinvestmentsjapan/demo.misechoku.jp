@@ -22,7 +22,11 @@
         if ($kind === 'plan') {
             $isPending = $sc === BMS::STATUS_INVOICE_ISSUED;
             $overdue = !empty($deposit['plan_overdue']);
+            $shopReported = !empty($deposit['plan_shop_reported']);
             if ($isPending) {
+                if ($shopReported) {
+                    return ['cls' => 'is-admin', 'label' => '店舗から振込通知あり', 'icon' => 'fa-bell'];
+                }
                 return $overdue
                     ? ['cls' => 'is-danger', 'label' => '期限超過（未入金）', 'icon' => 'fa-triangle-exclamation']
                     : ['cls' => 'is-admin', 'label' => '入金確認待ち', 'icon' => 'fa-hourglass-half'];
@@ -195,6 +199,10 @@
                         <span class="deposit-row__days {{ $daysReported >= 3 ? 'is-soon' : '' }}">
                             <i class="fas fa-clock"></i> 報告から{{ $daysReported }}日
                         </span>
+                    @elseif($kind === 'plan' && $daysReported !== null && !empty($deposit['plan_shop_reported']))
+                        <span class="deposit-row__days {{ $daysReported >= 3 ? 'is-soon' : '' }}">
+                            <i class="fas fa-clock"></i> 通知から{{ $daysReported }}日
+                        </span>
                     @elseif($daysOverdue !== null && $daysOverdue > 0)
                         <span class="deposit-row__days is-soon">
                             <i class="fas fa-clock"></i> 期限超過{{ $daysOverdue }}日
@@ -257,6 +265,23 @@
                                     <dt>有効期限（確認後）</dt>
                                     <dd>{{ $deposit['plan_ends_at'] ?: '—' }}</dd>
                                 </div>
+                                <div class="ops-ref__row">
+                                    <dt>店舗の振込通知</dt>
+                                    <dd>
+                                        @if(!empty($deposit['shop_payment_reported_at']))
+                                            <i class="fas fa-bell" style="color:#b45309"></i>
+                                            {{ $deposit['shop_payment_reported_at'] }}
+                                        @else
+                                            未通知
+                                        @endif
+                                    </dd>
+                                </div>
+                                @if(!empty($deposit['shop_payment_reference']))
+                                    <div class="ops-ref__row">
+                                        <dt>店舗の参照情報</dt>
+                                        <dd>{{ $deposit['shop_payment_reference'] }}</dd>
+                                    </div>
+                                @endif
                             @else
                                 <div class="ops-ref__row">
                                     <dt>店舗入金報告日時</dt>
@@ -288,6 +313,14 @@
                                 <div class="ops-input__label">
                                     <i class="fas fa-pen-to-square"></i> 入金確認（ネットバンキング明細を目視確認）
                                 </div>
+                                @if(!empty($deposit['plan_shop_reported']))
+                                    <p class="admin-note" style="color:#b45309;">
+                                        <i class="fas fa-bell"></i>
+                                        店舗から振込通知が届いています（{{ $deposit['shop_payment_reported_at'] }}
+                                        @if(!empty($deposit['shop_payment_reference']))／ 参照: {{ $deposit['shop_payment_reference'] }}@endif
+                                        ）。銀行明細を照合してください。
+                                    </p>
+                                @endif
                                 <p class="admin-note">
                                     請求金額 <strong>¥{{ number_format((int) $deposit['invoice_amount']) }}</strong> の入金を銀行明細で確認したら、下のボタンを押してください。押した時点で Premium 機能が自動的に有効になります。
                                 </p>

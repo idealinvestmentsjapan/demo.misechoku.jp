@@ -169,7 +169,7 @@
             @if($isActionable)
                 <button type="button" class="case-card__action-item case-card__action-item--primary"
                         data-case-action="{{ $case['actionable'] }}"
-                        data-application-id="{{ $case['application_id'] }}"
+                        data-application-id="{{ $case['application_id'] ?? '' }}"
                         data-deposit-id="{{ $deposit['id'] ?? '' }}"
                         data-job-kind="{{ $deposit['job_kind'] ?? '' }}"
                         data-cast-id="{{ $case['cast_id'] ?? '' }}"

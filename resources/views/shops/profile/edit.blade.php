@@ -1,13 +1,14 @@
 @extends('layouts.app-v2')
 
-@section('title', 'プロフィール編集')
+@section('title', 'Profile Edit')
+@section('header_title', 'Profile Edit')
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('assets/css/mypage.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/css/form-enhance.css') }}">
 <style>
-    /* 店舗プロフィール編集：ライトテーマ（許可証・本人確認・キャスト編集と同じ doc トークン）
-       2026-08-01 Phase 2 リニューアル */
+    /* Shop Profile Edit: aligned with cast profile edit (2026-09-28)
+       Removed custom sub-header + sticky anchor nav to match cast UI (uses standard header only). */
     .shop-profile-edit {
         --spe-bg:            #f5f2fb;
         --spe-panel:         transparent;
@@ -19,11 +20,10 @@
         --spe-hint:          #8b84a1;
         --spe-ink:           #1e1a30;
         --spe-line:          rgba(124, 58, 237, 0.18);
-        --spe-subheader-h:   56px;
         background: var(--spe-bg);
         min-height: 100%;
         margin: 0 calc(-1 * var(--content-padding-x, 16px));
-        /* --footer-height に safe-area 込み。二重加算しない。 */
+        /* --footer-height contains safe-area; do not double-add. */
         padding-bottom: calc(var(--footer-height, 75px) + 88px);
     }
 
@@ -33,68 +33,11 @@
         min-height: 100%;
         background: var(--spe-panel);
         box-shadow: none;
-        padding-top: var(--spe-subheader-h, 56px);
+        padding-top: 12px;
     }
 
-    .shop-profile-edit__top {
-        position: fixed;
-        top: var(--header-height, 60px);
-        left: 50%;
-        transform: translateX(-50%);
-        width: 100%;
-        max-width: var(--max-content-width);
-        height: var(--spe-subheader-h, 56px);
-        box-sizing: border-box;
-        z-index: 1400;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 0 16px;
-        background: rgba(245, 242, 251, 0.92);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border-bottom: 1px solid var(--spe-line);
-    }
     .shop-profile-edit__form section {
-        scroll-margin-top: calc(var(--header-height, 60px) + var(--spe-subheader-h, 56px) + 12px);
-    }
-
-    .shop-profile-edit__back {
-        color: var(--spe-muted);
-        padding: 4px;
-        margin-left: -4px;
-        text-decoration: none;
-        font-size: 1.25rem;
-        line-height: 1;
-        transition: color 0.15s ease;
-    }
-    .shop-profile-edit__back:hover { color: var(--spe-gold); }
-
-    .shop-profile-edit__title-block {
-        text-align: center;
-        flex: 1;
-        min-width: 0;
-    }
-    .shop-profile-edit__title-en {
-        margin: 0;
-        font-size: 0.875rem;
-        font-weight: 800;
-        color: var(--spe-ink);
-        letter-spacing: 0.2em;
-        font-family: var(--font-sans);
-    }
-    .shop-profile-edit__title-sub {
-        margin: 2px 0 0;
-        font-size: 9px;
-        font-weight: 700;
-        color: var(--spe-gold);
-        letter-spacing: 0.06em;
-    }
-
-    .shop-profile-edit__spacer {
-        width: 2rem;
-        flex-shrink: 0;
+        scroll-margin-top: calc(var(--header-height, 60px) + 12px);
     }
 
     .shop-profile-edit__flash {
@@ -121,46 +64,6 @@
         margin: 6px 0 0 1.1em;
         padding: 0;
     }
-
-    /* セクションアンカーナビ：横スクロール chip 行 */
-    .shop-profile-edit__anchor-nav {
-        display: flex;
-        gap: 8px;
-        padding: 8px 16px 4px;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        background: rgba(245, 242, 251, 0.85);
-        backdrop-filter: blur(6px);
-        -webkit-backdrop-filter: blur(6px);
-        border-bottom: 1px solid var(--spe-line);
-        position: sticky;
-        top: calc(var(--header-height, 60px) + var(--spe-subheader-h, 56px));
-        z-index: 100;
-    }
-    .shop-profile-edit__anchor-nav::-webkit-scrollbar { display: none; }
-    .shop-profile-edit__anchor-nav a {
-        flex: 0 0 auto;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 7px 14px;
-        border-radius: 999px;
-        background: #ffffff;
-        border: 1px solid var(--spe-border);
-        color: var(--spe-muted);
-        font-size: 0.78rem;
-        font-weight: 700;
-        text-decoration: none;
-        white-space: nowrap;
-        transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
-    }
-    .shop-profile-edit__anchor-nav a:hover {
-        background: rgba(124, 58, 237, 0.06);
-        border-color: var(--spe-gold);
-        color: var(--spe-gold);
-    }
-    .shop-profile-edit__anchor-nav a i { font-size: 0.72rem; color: var(--spe-gold); }
 
     .shop-profile-edit__form {
         padding: 16px;
@@ -737,13 +640,6 @@ document.addEventListener('DOMContentLoaded', function () {
 @section('content')
 <div class="shop-profile-edit animate-fadeIn">
     <div class="shop-profile-edit__shell">
-        <header class="shop-profile-edit__top">
-            <div class="shop-profile-edit__title-block">
-                <h1 class="shop-profile-edit__title-en">EDIT PROFILE</h1>
-                <p class="shop-profile-edit__title-sub">Shop Information</p>
-            </div>
-        </header>
-
         @if(session('message'))
             <p class="shop-profile-edit__flash" role="status" data-flash-toast="success">{{ session('message') }}</p>
         @endif
@@ -758,15 +654,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 </ul>
             </div>
         @endif
-
-        {{-- セクションアンカーナビ（2026-08-01 Phase 3）：各セクションへ即ジャンプ --}}
-        <nav class="shop-profile-edit__anchor-nav" aria-label="セクション">
-            <a href="#spe-sec-basic" data-form-guard-bypass><i class="fas fa-info-circle"></i>基本</a>
-            <a href="#spe-sec-loc"   data-form-guard-bypass><i class="fas fa-map-marker-alt"></i>位置</a>
-            <a href="#spe-sec-hours" data-form-guard-bypass><i class="far fa-clock"></i>営業時間</a>
-            <a href="#spe-sec-st"    data-form-guard-bypass><i class="fas fa-train"></i>最寄り駅</a>
-            <a href="#spe-sec-tags"  data-form-guard-bypass><i class="fas fa-tags"></i>タグ</a>
-        </nav>
 
         <form id="shop-profile-edit-form" action="{{ route('shop.profile.update') }}" method="POST" class="h-adr shop-profile-edit__form"
               data-form-guard data-completion-meter>

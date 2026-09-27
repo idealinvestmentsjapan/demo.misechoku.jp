@@ -151,6 +151,7 @@ class DepositController extends Controller
                 'plan_starts_at' => $sub->starts_at?->format('Y-m-d'),
                 'plan_ends_at' => $sub->ends_at?->format('Y-m-d'),
                 'plan_overdue' => $isOverdue,
+                'plan_shop_reported' => $isPending && $sub->shop_payment_reported_at !== null,
                 'status_code' => $isPending
                     ? BillingManagementService::STATUS_INVOICE_ISSUED
                     : BillingManagementService::STATUS_SHOP_PAYMENT_CONFIRMED,
@@ -161,9 +162,9 @@ class DepositController extends Controller
                 'invoice_issued_at' => optional($sub->invoice_issued_at)->format('Y-m-d H:i'),
                 'invoice_due_date' => optional($sub->payment_due_date)->format('Y-m-d'),
                 'invoice_amount' => (int) $sub->amount,
-                'shop_payment_reported_at' => null,
+                'shop_payment_reported_at' => optional($sub->shop_payment_reported_at)->format('Y-m-d H:i'),
                 'shop_payment_reported_amount' => null,
-                'shop_payment_reference' => null,
+                'shop_payment_reference' => $sub->shop_payment_reference,
                 'shop_payment_confirmed_at' => optional($sub->paid_confirmed_at)->format('Y-m-d H:i'),
                 'shop_payment_evidence_path' => null,
                 'plan_receipt_available' => $isActive,
