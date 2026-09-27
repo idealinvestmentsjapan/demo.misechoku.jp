@@ -14,18 +14,31 @@ class SupportInquiryController extends Controller
 {
     public function index(Request $request): View
     {
-        // 未対応（要対応）のみ、発生日が古い順（＝経過日数が長い順）で表示。
-        // 対応済みや対応中を含む一覧・フリー検索は運用上不要のため撤去済み。
-        $inquiries = SupportInquiry::query()
-            ->where('status', SupportInquiry::STATUS_NEW)
-            ->orderBy('created_at', 'asc')
-            ->paginate(30);
+        $status = $request->query('status', SupportInquiry::STATUS_NEW);
+        $validStatuses = array_keys(SupportInquiry::STATUS_LABELS);
 
-        $pendingCount = SupportInquiry::query()
-            ->where('status', SupportInquiry::STATUS_NEW)
-            ->count();
+        $q = SupportInquiry::query();
+        if (in_array($status, $validStatuses, true)) {
+            $q->where('status', $status);
+            // 新着は古い順（経過日数の長い順）、対応中・完了は新しい順
+            $q->orderBy('created_at', $status === SupportInquiry::STATUS_NEW ? 'asc' : 'desc');
+        } elseif ($status === 'all') {
+            $q->orderByDesc('created_at');
+        } else {
+            $status = SupportInquiry::STATUS_NEW;
+            $q->where('status', $status)->orderBy('created_at', 'asc');
+        }
 
-        return view('admin.support-inquiries.index', compact('inquiries', 'pendingCount'));
+        $inquiries = $q->paginate(30)->withQueryString();
+
+        $counts = [
+            'all'         => SupportInquiry::count(),
+            'new'         => SupportInquiry::where('status', SupportInquiry::STATUS_NEW)->count(),
+            'in_progress' => SupportInquiry::where('status', SupportInquiry::STATUS_IN_PROGRESS)->count(),
+            'resolved'    => SupportInquiry::where('status', SupportInquiry::STATUS_RESOLVED)->count(),
+        ];
+
+        return view('admin.support-inquiries.index', compact('inquiries', 'counts', 'status'));
     }
 
     public function show(SupportInquiry $inquiry): View
@@ -54,9 +67,7 @@ class SupportInquiryController extends Controller
 
         $inquiry->update($update);
 
-        return redirect()
-            ->route('admin.support-inquiries.show', $inquiry->id)
-            ->with('status', '対応ステータスを更新しました。');
+        return $this->redirectAfterUpdate($request, $inquiry, '対応ステータスを更新しました。');
     }
 
     public function updateNote(Request $request, SupportInquiry $inquiry): RedirectResponse
@@ -67,8 +78,23 @@ class SupportInquiryController extends Controller
 
         $inquiry->update(['admin_note' => $validated['admin_note']]);
 
+        return $this->redirectAfterUpdate($request, $inquiry, 'メモを保存しました。');
+    }
+
+    /**
+     * 更新後のリダイレクト先を決定。redirect_to=index なら一覧に戻る。
+     */
+    private function redirectAfterUpdate(Request $request, SupportInquiry $inquiry, string $message): RedirectResponse
+    {
+        if ($request->input('redirect_to') === 'index') {
+            $returnTab = $request->input('return_tab', SupportInquiry::STATUS_NEW);
+            return redirect()
+                ->route('admin.support-inquiries.index', ['status' => $returnTab])
+                ->with('status', $message);
+        }
+
         return redirect()
             ->route('admin.support-inquiries.show', $inquiry->id)
-            ->with('status', 'メモを保存しました。');
+            ->with('status', $message);
     }
 }

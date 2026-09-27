@@ -5,6 +5,200 @@
  */
 
 /* ==========================================================================
+   書類 削除候補 バッチ運用画面（/admin/purge）
+   ========================================================================== */
+.purge-stepper {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+@media (min-width: 640px) {
+    .purge-stepper {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+    }
+}
+.purge-stepper__item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-line);
+    min-width: 0;
+}
+.purge-stepper__item.is-done {
+    background: var(--status-success-bg);
+    border-color: var(--status-success-bd);
+}
+.purge-stepper__item.is-current {
+    background: var(--admin-primary-soft);
+    border-color: var(--admin-primary-border);
+    box-shadow: 0 0 0 3px rgba(74, 18, 42, 0.08);
+}
+.purge-stepper__num {
+    width: 32px; height: 32px;
+    border-radius: 999px;
+    background: var(--admin-surface-alt);
+    color: var(--admin-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+.purge-stepper__item.is-done .purge-stepper__num {
+    background: var(--status-success-fg);
+    color: #fff;
+}
+.purge-stepper__item.is-current .purge-stepper__num {
+    background: var(--admin-primary);
+    color: var(--admin-ink);
+}
+.purge-stepper__label { min-width: 0; }
+.purge-stepper__title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--admin-text);
+    letter-spacing: 0.01em;
+}
+.purge-stepper__sub {
+    font-size: 0.72rem;
+    color: var(--admin-muted);
+    margin-top: 2px;
+    line-height: 1.4;
+}
+
+.purge-timestamps {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: var(--admin-surface-alt);
+    border-radius: 8px;
+}
+@media (min-width: 640px) {
+    .purge-timestamps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.purge-timestamps > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+.purge-timestamps > div span {
+    font-size: 0.68rem;
+    color: var(--admin-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+.purge-timestamps > div strong {
+    font-size: 0.85rem;
+    color: var(--admin-text);
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+}
+
+.purge-action-cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+@media (min-width: 960px) {
+    .purge-action-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+}
+.purge-action-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px;
+    border-radius: 10px;
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-line);
+    opacity: 0.55;
+    transition: opacity 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.purge-action-card.is-active { opacity: 1; border-color: var(--admin-primary-border); }
+.purge-action-card.is-done { opacity: 1; background: var(--status-success-bg); border-color: var(--status-success-bd); }
+.purge-action-card__head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+.purge-action-card__no {
+    font-size: 0.68rem;
+    color: var(--admin-muted);
+    letter-spacing: 0.08em;
+    font-weight: 700;
+}
+.purge-action-card__name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--admin-text);
+    letter-spacing: 0.01em;
+}
+.purge-action-card__desc {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--admin-sub);
+    line-height: 1.6;
+}
+.purge-action-card__form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+}
+.purge-action-card__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.75rem;
+    color: var(--admin-muted);
+}
+.purge-action-card__field input[type="text"] {
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--admin-line);
+    background: var(--admin-surface);
+    color: var(--admin-text);
+    font-size: 0.85rem;
+    font-family: inherit;
+    outline: none;
+}
+.purge-action-card__field input[type="text"]:focus {
+    border-color: var(--admin-primary);
+    box-shadow: 0 0 0 3px rgba(74, 18, 42, 0.12);
+}
+.purge-action-card__field input[type="text"]:disabled {
+    background: var(--admin-surface-alt);
+    color: var(--admin-muted);
+    cursor: not-allowed;
+}
+.purge-action-card__check {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 0.78rem;
+    color: var(--admin-sub);
+    line-height: 1.5;
+    cursor: pointer;
+}
+.purge-action-card__check input[type="checkbox"] {
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+.purge-action-card .btn-action[disabled] {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* ==========================================================================
    Cast/Shop 詳細ページ＋非公開情報ゲート
    ========================================================================== */
 

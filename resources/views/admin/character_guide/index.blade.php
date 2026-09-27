@@ -290,41 +290,41 @@
         font-size: 0.78rem;
         font-weight: 700;
         border-radius: 999px;
-        border: 1px solid var(--admin-line, rgba(168, 85, 247, 0.22));
+        border: 1px solid var(--admin-line);
         background: transparent;
-        color: var(--admin-sub, #a1a1aa);
+        color: var(--admin-sub);
         cursor: pointer;
     }
     .cg-filter-chip strong {
         font-weight: 800;
-        color: var(--admin-text, #f5f5f5);
+        color: var(--admin-text);
         font-variant-numeric: tabular-nums;
     }
     .cg-filter-chip.is-active {
-        background: var(--admin-primary-soft, rgba(168, 85, 247, 0.14));
-        color: #c4b5fd;
-        border-color: var(--admin-primary-border, rgba(168, 85, 247, 0.45));
+        background: var(--admin-primary-soft);
+        color: var(--admin-primary-hover);
+        border-color: var(--admin-primary-border);
     }
-    .cg-filter-chip.is-active strong { color: #c4b5fd; }
+    .cg-filter-chip.is-active strong { color: var(--admin-primary-hover); }
     .cg-filter-chip.is-warn {
-        border-color: rgba(251, 191, 36, 0.5);
-        color: #fbbf24;
+        border-color: var(--status-warning-bd);
+        color: var(--status-warning-fg);
     }
-    .cg-filter-chip.is-warn strong { color: #fbbf24; }
+    .cg-filter-chip.is-warn strong { color: var(--status-warning-fg); }
     .cg-filter-chip.is-warn.is-active {
-        background: rgba(251, 191, 36, 0.15);
+        background: var(--status-warning-bg);
     }
     .cg-mode-btn {
         padding: 6px 12px;
         font-size: 0.78rem;
         font-weight: 700;
         border-radius: 999px;
-        border: 1px solid var(--admin-line, rgba(168, 85, 247, 0.22));
+        border: 1px solid var(--admin-line);
         background: transparent;
-        color: var(--admin-sub, #a1a1aa);
+        color: var(--admin-sub);
         cursor: pointer;
     }
-    .cg-mode-btn:hover { color: var(--admin-text, #fff); border-color: var(--admin-primary-border, rgba(168, 85, 247, 0.45)); }
+    .cg-mode-btn:hover { color: var(--admin-text); border-color: var(--admin-primary-border); }
 
     /* ---- グループ見出し ---- */
     .cg-group[hidden] { display: none; }
@@ -332,7 +332,7 @@
         font-size: 0.78rem;
         font-weight: 800;
         letter-spacing: 0.06em;
-        color: var(--admin-sub, #a1a1aa);
+        color: var(--admin-sub);
         margin: 4px 0 6px;
         display: flex;
         align-items: baseline;
@@ -341,11 +341,11 @@
     .cg-group__count {
         font-size: 0.7rem;
         font-weight: 700;
-        color: var(--admin-muted, #8b6e77);
+        color: var(--admin-muted);
         padding: 1px 8px;
         border-radius: 999px;
-        border: 1px solid var(--admin-line, rgba(168, 85, 247, 0.20));
-        background: var(--admin-surface-alt, rgba(255, 255, 255, 0.04));
+        border: 1px solid var(--admin-line);
+        background: var(--admin-surface-alt);
     }
 
     /* ---- 一覧 ---- */
@@ -358,15 +358,15 @@
         gap: 4px;
     }
     .cg-item {
-        border: 1px solid var(--admin-line, rgba(168, 85, 247, 0.16));
+        border: 1px solid var(--admin-line);
         border-radius: 10px;
-        background: var(--admin-card, #1a1a1a);
-        color: var(--admin-text, #f5f5f5);
+        background: var(--admin-card);
+        color: var(--admin-text);
         overflow: hidden;
     }
     .cg-item.is-open {
-        border-color: var(--admin-primary-border, rgba(168, 85, 247, 0.55));
-        background: var(--admin-primary-soft, rgba(168, 85, 247, 0.10));
+        border-color: var(--admin-primary-border);
+        background: var(--admin-primary-soft);
     }
     .cg-item__row { display: flex; align-items: center; }
     .cg-item__label {
@@ -385,13 +385,13 @@
         cursor: pointer;
         transition: background 0.15s ease;
     }
-    .cg-item__label:hover { background: rgba(168, 85, 247, 0.08); }
+    .cg-item__label:hover { background: var(--admin-primary-soft); }
     .cg-item__name {
         flex: 1 1 auto;
         min-width: 0;
         font-size: 0.95rem;
         font-weight: 600;
-        color: var(--admin-text, #f5f5f5);
+        color: var(--admin-text);
         word-break: break-word;
     }
     .cg-item__badges {
@@ -407,27 +407,27 @@
         border: 1px solid;
         white-space: nowrap;
     }
-    .cg-badge.is-on { color: #6ee7b7; border-color: rgba(110, 231, 183, 0.4); background: rgba(110, 231, 183, 0.10); }
-    .cg-badge.is-off { color: #a1a1aa; border-color: rgba(161, 161, 170, 0.35); background: rgba(161, 161, 170, 0.08); }
-    .cg-badge.is-msg { color: #c4b5fd; border-color: rgba(168, 85, 247, 0.4); background: rgba(168, 85, 247, 0.10); }
-    .cg-badge.is-empty { color: #fbbf24; border-color: rgba(251, 191, 36, 0.4); background: rgba(251, 191, 36, 0.10); }
+    .cg-badge.is-on { color: var(--status-success-fg); border-color: var(--status-success-bd); background: var(--status-success-bg); }
+    .cg-badge.is-off { color: var(--status-neutral-fg); border-color: var(--status-neutral-bd); background: var(--status-neutral-bg); }
+    .cg-badge.is-msg { color: var(--status-info-fg); border-color: var(--status-info-bd); background: var(--status-info-bg); }
+    .cg-badge.is-empty { color: var(--status-warning-fg); border-color: var(--status-warning-bd); background: var(--status-warning-bg); }
 
     /* ---- 編集パネル ---- */
     .cg-item__panel {
-        border-top: 1px solid var(--admin-line, rgba(168, 85, 247, 0.16));
+        border-top: 1px solid var(--admin-line);
         padding: 14px;
         display: flex;
         flex-direction: column;
         gap: 12px;
-        background: rgba(0, 0, 0, 0.15);
+        background: var(--admin-bg);
     }
     .cg-item__panel[hidden] { display: none; }
     .cg-item__route code {
         display: inline-block;
         font-size: 0.7rem;
-        color: var(--admin-sub, #a1a1aa);
-        background: var(--admin-surface-alt, rgba(255, 255, 255, 0.05));
-        border: 1px solid var(--admin-line, rgba(255, 255, 255, 0.08));
+        color: var(--admin-sub);
+        background: var(--admin-surface-alt);
+        border: 1px solid var(--admin-line);
         padding: 2px 8px;
         border-radius: 6px;
     }
@@ -451,37 +451,39 @@
     .cg-item__toggle-track {
         width: 44px;
         height: 24px;
-        background: rgba(255,255,255,0.18);
+        background: var(--status-neutral-bg);
+        border: 1px solid var(--status-neutral-bd);
         border-radius: 999px;
         position: relative;
-        transition: background 0.2s ease;
+        transition: background 0.2s ease, border-color 0.2s ease;
         flex: 0 0 auto;
     }
     .cg-item__toggle-thumb {
         position: absolute;
         top: 2px;
         left: 2px;
-        width: 20px;
-        height: 20px;
+        width: 18px;
+        height: 18px;
         border-radius: 50%;
         background: #fff;
         box-shadow: 0 1px 3px rgba(0,0,0,0.25);
         transition: transform 0.2s ease;
     }
     .cg-item__toggle input[type="checkbox"]:checked ~ .cg-item__toggle-track {
-        background: #8b5cf6;
+        background: var(--admin-primary);
+        border-color: var(--admin-primary);
     }
     .cg-item__toggle input[type="checkbox"]:checked ~ .cg-item__toggle-track .cg-item__toggle-thumb {
         transform: translateX(20px);
     }
     .cg-item__toggle input[type="checkbox"]:focus-visible ~ .cg-item__toggle-track {
-        outline: 2px solid #a78bfa;
+        outline: 2px solid var(--admin-primary);
         outline-offset: 2px;
     }
     .cg-item__toggle-label {
         font-size: 0.82rem;
         font-weight: 700;
-        color: var(--admin-text, #f5f5f5);
+        color: var(--admin-text);
     }
 
     /* ---- セリフ入力 ---- */
@@ -493,17 +495,17 @@
     .cg-item__field-label {
         font-size: 0.72rem;
         font-weight: 700;
-        color: var(--admin-sub, #a1a1aa);
+        color: var(--admin-sub);
     }
     .cg-item__field textarea {
         width: 100%;
         min-height: 60px;
         padding: 10px 12px;
-        border: 1px solid var(--admin-line, rgba(168, 85, 247, 0.30));
+        border: 1px solid var(--admin-line);
         border-radius: 10px;
-        background: rgba(20, 14, 24, 0.6);
+        background: var(--admin-surface);
         font-size: 16px;
-        color: var(--admin-text, #f5f5f5);
+        color: var(--admin-text);
         resize: vertical;
         font-family: inherit;
         line-height: 1.5;
@@ -511,8 +513,8 @@
     }
     .cg-item__field textarea:focus {
         outline: none;
-        border-color: #a78bfa;
-        box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.18);
+        border-color: var(--admin-primary);
+        box-shadow: 0 0 0 3px var(--admin-primary-soft);
     }
 
     .cg-item__actions { display: flex; justify-content: flex-end; }
@@ -520,20 +522,20 @@
         min-height: 36px;
         padding: 6px 14px;
         border-radius: 8px;
-        border: 1px solid var(--admin-line, rgba(255, 255, 255, 0.18));
+        border: 1px solid var(--admin-line);
         background: transparent;
-        color: var(--admin-sub, #a1a1aa);
+        color: var(--admin-sub);
         font-size: 0.82rem;
         cursor: pointer;
     }
-    .cg-item__close:hover { color: #fff; border-color: rgba(255, 255, 255, 0.4); }
+    .cg-item__close:hover { color: var(--admin-text); border-color: var(--admin-primary-border); }
 
     .cg-list__empty {
         padding: 28px 12px;
         text-align: center;
-        color: var(--admin-sub, #a1a1aa);
+        color: var(--admin-sub);
         font-size: 0.85rem;
-        border: 1px dashed var(--admin-line, rgba(168, 85, 247, 0.22));
+        border: 1px dashed var(--admin-line);
         border-radius: 10px;
     }
 
@@ -541,30 +543,11 @@
     .cg-save-bar {
         position: sticky;
         bottom: 0;
-        background: linear-gradient(180deg, rgba(10,10,10,0), rgba(10,10,10,0.96) 35%);
+        background: linear-gradient(180deg, rgba(10,10,10,0), var(--admin-bg) 35%);
         padding: 16px 0 8px;
         margin-top: 8px;
         text-align: right;
         z-index: 5;
-    }
-
-    /* ---- ライトテーマ保険 ---- */
-    @media (prefers-color-scheme: light) {
-        .cg-item {
-            background: #ffffff;
-            color: #241f33;
-            border-color: rgba(76, 29, 149, 0.14);
-        }
-        .cg-item__name { color: #241f33; }
-        .cg-item__panel { background: #faf9fd; }
-        .cg-item__field textarea {
-            background: #ffffff;
-            color: #241f33;
-            border-color: rgba(76, 29, 149, 0.20);
-        }
-        .cg-filter-chip strong { color: #241f33; }
-        .cg-list__empty { color: #6b6478; }
-        .cg-save-bar { background: linear-gradient(180deg, rgba(255,255,255,0), rgba(250,249,253,0.96) 35%); }
     }
 
     /* ---- スマホ ---- */

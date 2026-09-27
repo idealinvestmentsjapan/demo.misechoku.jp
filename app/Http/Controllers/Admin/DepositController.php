@@ -86,6 +86,68 @@ class DepositController extends Controller
     }
 
     /**
+     * 請求書の内容修正フォームを表示（自動計算値の上書き用・基本は使わない例外パス）。
+     */
+    public function editInvoice(int $deposit)
+    {
+        $invoice = $this->billingManagementService->getInvoiceData($deposit);
+
+        abort_unless($invoice, 404);
+
+        if (empty($invoice['invoice_number'])) {
+            return redirect()
+                ->route('admin.invoices.index')
+                ->with('error', 'まだ請求書が発行されていません。先に発行してください。');
+        }
+
+        return view('admin.deposit.invoice-edit', [
+            'invoice' => $invoice,
+        ]);
+    }
+
+    /**
+     * 請求書の内容を手動で上書き保存。
+     */
+    public function updateInvoice(Request $request, int $deposit)
+    {
+        $payload = $request->validate([
+            'bonus_amount' => 'required|integer|min:0',
+            'system_fee_amount' => 'required|integer|min:0',
+            'invoice_amount' => 'required|integer|min:1',
+            'cast_transfer_amount' => 'required|integer|min:0',
+            'shop_name' => 'nullable|string|max:255',
+            'shop_address' => 'nullable|string|max:500',
+            'shop_email' => 'nullable|email|max:255',
+            'cast_name' => 'nullable|string|max:255',
+        ]);
+
+        $result = $this->billingManagementService->updateInvoiceContent($deposit, $payload);
+
+        if (!$result['success']) {
+            return redirect()
+                ->route('admin.deposits.invoice.edit', ['deposit' => $deposit])
+                ->withInput()
+                ->with('error', $result['message']);
+        }
+
+        return redirect()
+            ->route('admin.deposits.invoice.show', ['deposit' => $deposit])
+            ->with('status', $result['message']);
+    }
+
+    /**
+     * 請求書の内容を自動計算結果に戻す（手動上書きを解除）。
+     */
+    public function resetInvoice(Request $request, int $deposit)
+    {
+        $result = $this->billingManagementService->resetInvoiceContent($deposit);
+
+        return redirect()
+            ->route('admin.deposits.invoice.edit', ['deposit' => $deposit])
+            ->with($result['success'] ? 'status' : 'error', $result['message']);
+    }
+
+    /**
      * 運営側：発行済み請求書を店舗にアプリ内で送信する（NotificationService::createForShop）。
      * 通知作成後、各ユーザーの通知設定に従って Push / LINE も配信される。
      * すでに送信済みの場合も呼び出せば再送になる。

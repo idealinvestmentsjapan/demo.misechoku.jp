@@ -31,8 +31,12 @@ class AdminOperationalSummaryService
         $s = $dashboard['summary'];
         $v = $this->documentReviewService->getAdminVerificationData()['summary'];
 
+        // Badges must count ONLY items that require admin action right now.
+        // For invoices, that is SHOP_APPROVED (waiting for admin to issue). CAST_REQUESTED
+        // is "shop approval pending" and the invoice page itself labels those as
+        // "運営の対応は不要", so they must not inflate the "要対応" badge.
         return [
-            'admin.invoices.index' => (int) ($s['invoice_workflow_pending'] ?? 0),
+            'admin.invoices.index' => (int) ($s['invoice_pending'] ?? 0),
             'admin.deposits.index' => (int) $s['payment_confirmation_pending'] + (int) $s['cast_transfer_pending'],
             'admin.verification.index' => (int) $v['cast_pending'] + (int) $v['shop_pending'],
             'admin.support-inquiries.index' => $this->getPendingInquiryCount(),

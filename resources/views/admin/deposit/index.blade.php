@@ -19,6 +19,7 @@
         $depositList = $deposits ?? [];
         $catCounts = [
             'all' => count($depositList),
+            'todo'      => 0,   // 要対応（入金照合待ち + キャスト振込待ち）※サイドバー badge と一致
             'pay_check' => 0,   // 店舗入金照合待ち
             'transfer'  => 0,   // キャスト振込待ち
             'completed' => 0,   // 完了
@@ -28,20 +29,24 @@
             $sc = (int) ($d['status_code'] ?? 0);
             if ($sc === BMS::STATUS_SHOP_PAYMENT_REPORTED) $catCounts['pay_check']++;
             if ($sc === BMS::STATUS_SHOP_PAYMENT_CONFIRMED) $catCounts['transfer']++;
+            if ($sc === BMS::STATUS_SHOP_PAYMENT_REPORTED || $sc === BMS::STATUS_SHOP_PAYMENT_CONFIRMED) $catCounts['todo']++;
             if ($sc >= BMS::STATUS_COMPLETED) $catCounts['completed']++;
             $isAlert = $sc === BMS::STATUS_CAST_TRANSFERRED && !empty($d['cast_transferred_at'])
                 && \Carbon\Carbon::parse($d['cast_transferred_at'])->lt(now()->subDays(7));
             if ($isAlert) $catCounts['alert']++;
         }
         $filterChips = [
-            ['key' => 'all',       'label' => 'すべて'],
+            ['key' => 'todo',      'label' => '要対応'],
             ['key' => 'pay_check', 'label' => '入金照合待ち'],
             ['key' => 'transfer',  'label' => 'キャスト振込待ち'],
             ['key' => 'alert',     'label' => '要確認(7日)'],
             ['key' => 'completed', 'label' => '完了'],
+            ['key' => 'all',       'label' => 'すべて'],
         ];
 
-        // 案件のカテゴリ判定
+        // 案件のカテゴリ判定（1 レコードにつき、優先度の高いカテゴリを 1 つ返す）
+        // 「要対応」チップは pay_check / transfer を含む上位カテゴリとして
+        // JS 側で cat の in-list マッチさせる（下記 apply() 参照）。
         $resolveCat = function (int $sc, bool $isAlert): string {
             if ($isAlert) return 'alert';
             if ($sc === BMS::STATUS_SHOP_PAYMENT_REPORTED) return 'pay_check';
@@ -161,7 +166,7 @@
             <div class="admin-page-toolbar-filters" data-deposit-filters>
                 @foreach ($filterChips as $chip)
                     <button type="button"
-                        class="admin-filter-chip {{ $chip['key'] === 'all' ? 'is-active' : '' }} {{ $chip['key'] === 'alert' && ($catCounts['alert'] ?? 0) > 0 ? 'is-critical' : '' }}"
+                        class="admin-filter-chip {{ $chip['key'] === 'todo' ? 'is-active' : '' }} {{ $chip['key'] === 'alert' && ($catCounts['alert'] ?? 0) > 0 ? 'is-critical' : '' }} {{ $chip['key'] === 'todo' && ($catCounts['todo'] ?? 0) > 0 ? 'is-attention' : '' }}"
                         data-deposit-filter="{{ $chip['key'] }}">
                         <span>{{ $chip['label'] }}</span>
                         <strong>{{ $catCounts[$chip['key']] ?? 0 }}</strong>
@@ -685,15 +690,27 @@ document.addEventListener('DOMContentLoaded', function () {
     var rows = document.querySelectorAll('[data-deposit-row]');
     var searchInput = document.getElementById('deposit-search');
     var emptyHint = document.getElementById('deposit-empty-filter');
-    var currentFilter = 'all';
+    // Default = "要対応" so the visible list matches the sidebar/dashboard 要対応 badge.
+    var currentFilter = 'todo';
     var currentKeyword = '';
+
+    // "要対応" (todo) is a virtual bucket that combines pay_check + transfer,
+    // matching the sidebar badge (payment_confirmation_pending + cast_transfer_pending).
+    var TODO_CATS = ['pay_check', 'transfer'];
 
     function apply() {
         var visible = 0;
         rows.forEach(function (row) {
             var cat = row.getAttribute('data-deposit-cat') || '';
             var kw = row.getAttribute('data-keyword') || '';
-            var matchFilter = currentFilter === 'all' || cat === currentFilter;
+            var matchFilter;
+            if (currentFilter === 'all') {
+                matchFilter = true;
+            } else if (currentFilter === 'todo') {
+                matchFilter = TODO_CATS.indexOf(cat) !== -1;
+            } else {
+                matchFilter = cat === currentFilter;
+            }
             var matchKw = currentKeyword === '' || kw.indexOf(currentKeyword) !== -1;
             var show = matchFilter && matchKw;
             row.style.display = show ? '' : 'none';
@@ -722,6 +739,10 @@ document.addEventListener('DOMContentLoaded', function () {
             apply();
         });
     }
+
+    // Apply the default filter ("要対応") on load so the visible set matches
+    // the sidebar/dashboard badge without requiring a click.
+    apply();
 
     // ============== KPIクリック → フィルタ同期 ==============
     var kpiButtons = document.querySelectorAll('[data-deposit-kpis] [data-kpi-filter]');

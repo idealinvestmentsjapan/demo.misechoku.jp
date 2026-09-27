@@ -18,7 +18,16 @@
         foreach ($shopDocs as $d) {
             if (($d['expiry_filter_key'] ?? '') === 'expired') $shopExpiredCount++;
         }
-        $defaultTab = request('focus') === 'shop' ? 'shop' : 'cast';
+        // Landing tab: honor ?focus= when passed, otherwise show whichever side has
+        // more 要対応 items so the dashboard/sidebar "要対応" click never lands on an
+        // empty tab when the other side actually has pending reviews.
+        $castPending = (int) ($summary['cast_pending'] ?? 0);
+        $shopPending = (int) ($summary['shop_pending'] ?? 0);
+        if (request('focus') === 'shop' || request('focus') === 'cast') {
+            $defaultTab = request('focus');
+        } else {
+            $defaultTab = $shopPending > $castPending ? 'shop' : 'cast';
+        }
 
         // アクター判定: pending=運営対応 / rejected=ユーザー再提出待ち / approved=完了
         $resolveActor = function (string $statusKey, string $userType): array {
@@ -89,52 +98,13 @@
             </button>
         </section>
 
-        {{-- データ漏洩防止（保持期間ポリシー / 削除候補）ガイド --}}
-        @php
-            $retentionApprovedDays = \App\Services\DocumentReviewService::RETENTION_APPROVED_DAYS;
-            $retentionRejectedDays = \App\Services\DocumentReviewService::RETENTION_REJECTED_DAYS;
-            $retentionPendingDays  = \App\Services\DocumentReviewService::RETENTION_PENDING_DAYS;
-        @endphp
-        <details class="admin-accordion verification-purge-guide">
-            <summary class="admin-accordion-summary">
-                <span class="admin-accordion-title">
-                    <span class="admin-accordion-title-main"><i class="fas fa-shield-halved"></i> データ漏洩防止のための対応 —「削除候補」とは</span>
-                    <span class="admin-accordion-title-sub">保持期間を過ぎた本人確認・許可証の画像は、運営の手で完全削除します</span>
-                </span>
-            </summary>
-            <div class="admin-accordion-body">
-                <p class="verification-purge-guide__lead">
-                    本人確認書類・営業許可証は<strong>審査のためだけにお預かりする機密情報</strong>です。
-                    審査が終わった後も画像を保管し続けると、万一の不正アクセス時に漏洩する情報が増えてしまうため、
-                    保持期間ポリシーを過ぎた書類には
-                    <span class="verification-purge-guide__badge">削除候補</span>
-                    バッジが表示されます。<strong>自動では削除されません。</strong>運営が確認のうえ手動で削除してください。
-                </p>
-                <div class="verification-purge-guide__cols">
-                    <div>
-                        <h4><i class="fas fa-clock"></i> 削除候補になる基準</h4>
-                        <ul>
-                            <li><strong>承認済み</strong>：承認日時から <strong>{{ $retentionApprovedDays }}日</strong> 経過</li>
-                            <li><strong>差戻し（却下）</strong>：最終更新から <strong>{{ $retentionRejectedDays }}日</strong> 経過</li>
-                            <li><strong>未審査のまま放置</strong>：最終更新から <strong>{{ $retentionPendingDays }}日</strong> 経過</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4><i class="fas fa-list-check"></i> 対応手順</h4>
-                        <ol>
-                            <li>「削除候補」バッジの付いた行を確認する</li>
-                            <li>確認チェック2つにチェックを入れる</li>
-                            <li>「完全削除」を実行する（提出画像の実ファイルと書類レコードが削除されます）</li>
-                        </ol>
-                    </div>
-                </div>
-                <p class="verification-purge-guide__caution">
-                    <i class="fas fa-triangle-exclamation"></i>
-                    削除は<strong>復元できません</strong>。また削除後は提出状況が「未提出」扱いに戻るため、
-                    再度確認が必要になった場合は本人・店舗に再提出を依頼してください。
-                </p>
-            </div>
-        </details>
+        {{-- 削除候補は別画面（バッチ運用）へ誘導 --}}
+        <div class="admin-alert admin-alert-info admin-alert-thin">
+            <i class="fas fa-shield-halved"></i>
+            保持期間を過ぎた書類の<strong>削除候補</strong>は、
+            <a href="{{ route('admin.purge.index') }}"><strong>「書類 削除候補（バッチ）」画面</strong></a>
+            で定期的にまとめて処理してください（取得 → NAS移動 → サーバから削除）。
+        </div>
 
         {{-- タブ切替（キャスト / 店舗） --}}
         <div class="admin-tabs" role="tablist">

@@ -162,6 +162,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/deposits/{deposit}/invoice/pdf', [AdminDeposit::class, 'downloadInvoicePdf'])->name('deposits.invoice.pdf');
             Route::post('/deposits/{deposit}/invoice', [AdminDeposit::class, 'issueInvoice'])->name('deposits.invoice.issue');
             Route::post('/deposits/{deposit}/invoice/send', [AdminDeposit::class, 'sendInvoice'])->name('deposits.invoice.send');
+            Route::get('/deposits/{deposit}/invoice/edit', [AdminDeposit::class, 'editInvoice'])->name('deposits.invoice.edit');
+            Route::post('/deposits/{deposit}/invoice/edit', [AdminDeposit::class, 'updateInvoice'])->name('deposits.invoice.update');
+            Route::post('/deposits/{deposit}/invoice/reset', [AdminDeposit::class, 'resetInvoice'])->name('deposits.invoice.reset');
             Route::post('/deposits/{deposit}/confirm-shop-payment', [AdminDeposit::class, 'confirmShopPayment'])->name('deposits.shop-payment.confirm');
             Route::post('/deposits/{deposit}/transfer-start', [AdminDeposit::class, 'transferStart'])->name('deposits.transfer-start');
             Route::post('/deposits/{deposit}/transfer-complete', [AdminDeposit::class, 'transferComplete'])->name('deposits.transfer-complete');
@@ -323,6 +326,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('/verification/shopdoc/{document}/purge', [AdminVerification::class, 'purgeShopDocument'])
                 ->whereNumber('document')
                 ->name('verification.shopdoc.purge');
+
+            // 削除候補（バッチ運用）: 取得 → NAS移動 → 削除 の3ステップ
+            Route::get('/purge', [\App\Http\Controllers\Admin\PurgeController::class, 'index'])->name('purge.index');
+            Route::get('/purge/download', [\App\Http\Controllers\Admin\PurgeController::class, 'download'])->name('purge.download');
+            Route::post('/purge/mark-nas-moved', [\App\Http\Controllers\Admin\PurgeController::class, 'markNasMoved'])->name('purge.markNasMoved');
+            Route::post('/purge/execute', [\App\Http\Controllers\Admin\PurgeController::class, 'execute'])->name('purge.execute');
         });
 
         // 旧「問合せ対応」ルートは上の support-inquiries グループでリダイレクト定義済み。

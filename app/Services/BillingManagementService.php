@@ -546,6 +546,93 @@ class BillingManagementService
         ];
     }
 
+    /**
+     * 発行済み請求書の内容を手動で上書きする（例外ケース向け・基本は自動計算値を利用）。
+     * 金額（4項目）と表示名（4項目）を保存する。
+     */
+    public function updateInvoiceContent(int $depositId, array $payload): array
+    {
+        $deposit = $this->findDepositById($depositId);
+        if (!$deposit) {
+            return ['success' => false, 'message' => '対象データが見つかりません。'];
+        }
+        if (empty($deposit->invoice_number)) {
+            return ['success' => false, 'message' => 'まだ請求書が発行されていません。先に発行してから修正してください。'];
+        }
+
+        $bonus = (int) ($payload['bonus_amount'] ?? 0);
+        $systemFee = (int) ($payload['system_fee_amount'] ?? 0);
+        $invoice = (int) ($payload['invoice_amount'] ?? 0);
+        $castTransfer = (int) ($payload['cast_transfer_amount'] ?? 0);
+
+        if ($bonus < 0 || $systemFee < 0 || $castTransfer < 0 || $invoice < 1) {
+            return ['success' => false, 'message' => '金額は 0 以上、請求金額は 1 以上で入力してください。'];
+        }
+        if ($bonus + $systemFee !== $invoice) {
+            return ['success' => false, 'message' => 'ボーナス金 + 運営手数料 = 請求金額 となるように入力してください。'];
+        }
+
+        $shopName = trim((string) ($payload['shop_name'] ?? ''));
+        $shopAddress = trim((string) ($payload['shop_address'] ?? ''));
+        $shopEmail = trim((string) ($payload['shop_email'] ?? ''));
+        $castName = trim((string) ($payload['cast_name'] ?? ''));
+
+        DB::table('application_deposits')
+            ->where('id', $depositId)
+            ->update($this->filterExistingColumns('application_deposits', [
+                'bonus_amount' => $bonus,
+                'system_fee_amount' => $systemFee,
+                'invoice_amount' => $invoice,
+                'cast_transfer_amount' => $castTransfer,
+                'invoice_display_shop_name' => $shopName !== '' ? $shopName : null,
+                'invoice_display_shop_address' => $shopAddress !== '' ? $shopAddress : null,
+                'invoice_display_shop_email' => $shopEmail !== '' ? $shopEmail : null,
+                'invoice_display_cast_name' => $castName !== '' ? $castName : null,
+                'updated_at' => now(),
+            ]));
+
+        return ['success' => true, 'message' => '請求書の内容を手動で上書きしました。'];
+    }
+
+    /**
+     * 手動上書きを解除し、金額 4 項目と表示名 4 項目を自動計算値に戻す。
+     */
+    public function resetInvoiceContent(int $depositId): array
+    {
+        $deposit = $this->findDepositById($depositId);
+        if (!$deposit) {
+            return ['success' => false, 'message' => '対象データが見つかりません。'];
+        }
+        if (empty($deposit->invoice_number)) {
+            return ['success' => false, 'message' => 'まだ請求書が発行されていません。'];
+        }
+
+        // Recompute using the deposit row with amount overrides nulled so
+        // calculateAmounts falls back to the source-of-truth chain (bonus_reward etc).
+        $probe = clone $deposit;
+        $probe->bonus_amount = null;
+        $probe->system_fee_amount = null;
+        $probe->invoice_amount = null;
+        $probe->cast_transfer_amount = null;
+        $auto = $this->calculateAmounts($probe);
+
+        DB::table('application_deposits')
+            ->where('id', $depositId)
+            ->update($this->filterExistingColumns('application_deposits', [
+                'bonus_amount' => $auto['bonus_amount'],
+                'system_fee_amount' => $auto['system_fee_amount'],
+                'invoice_amount' => $auto['invoice_amount'],
+                'cast_transfer_amount' => $auto['cast_transfer_amount'],
+                'invoice_display_shop_name' => null,
+                'invoice_display_shop_address' => null,
+                'invoice_display_shop_email' => null,
+                'invoice_display_cast_name' => null,
+                'updated_at' => now(),
+            ]));
+
+        return ['success' => true, 'message' => '請求書の内容を自動計算結果に戻しました。'];
+    }
+
     public function reportShopPayment(string $shopId, array $payload): array
     {
         $deposit = $this->findLatestDepositForShop($shopId);

@@ -751,6 +751,150 @@ class DocumentReviewService
     }
 
     /**
+     * 削除候補の実データ（キャスト本人確認書類・店舗許可証）を返す。
+     * getPurgeCandidateTasks() は運営ダッシュボード用のタスク表示形式だが、
+     * こちらはバッチ処理（一括ダウンロード・一括削除）用に生モデルを返す。
+     *
+     * @return array{cast_docs: \Illuminate\Support\Collection, shop_docs: \Illuminate\Support\Collection}
+     */
+    public function getPurgeCandidateDocuments(): array
+    {
+        $now = now();
+        $approvedThreshold = $now->copy()->subDays(self::RETENTION_APPROVED_DAYS);
+        $rejectedThreshold = $now->copy()->subDays(self::RETENTION_REJECTED_DAYS);
+        $pendingThreshold  = $now->copy()->subDays(self::RETENTION_PENDING_DAYS);
+
+        $castDocs = collect();
+        if (Schema::hasTable('cast_identity_documents')) {
+            $castDocs = CastIdentityDocument::query()
+                ->leftJoin('cast_profiles', 'cast_identity_documents.cast_id', '=', 'cast_profiles.cast_id')
+                ->where(function ($q) use ($approvedThreshold, $rejectedThreshold, $pendingThreshold) {
+                    $q->where(function ($q2) use ($approvedThreshold) {
+                        $q2->where('cast_identity_documents.status', CastIdentityDocument::STATUS_APPROVED)
+                           ->whereNotNull('cast_identity_documents.approved_at')
+                           ->where('cast_identity_documents.approved_at', '<', $approvedThreshold)
+                           ->where(function ($q3) {
+                               $q3->whereNotNull('cast_identity_documents.image_path_front')
+                                  ->orWhereNotNull('cast_identity_documents.image_path_back');
+                           });
+                    })->orWhere(function ($q2) use ($rejectedThreshold) {
+                        $q2->where('cast_identity_documents.status', CastIdentityDocument::STATUS_REJECTED)
+                           ->where('cast_identity_documents.updated_at', '<', $rejectedThreshold)
+                           ->where(function ($q3) {
+                               $q3->whereNotNull('cast_identity_documents.image_path_front')
+                                  ->orWhereNotNull('cast_identity_documents.image_path_back');
+                           });
+                    })->orWhere(function ($q2) use ($pendingThreshold) {
+                        $q2->where('cast_identity_documents.status', CastIdentityDocument::STATUS_PENDING)
+                           ->where('cast_identity_documents.updated_at', '<', $pendingThreshold)
+                           ->where(function ($q3) {
+                               $q3->whereNotNull('cast_identity_documents.image_path_front')
+                                  ->orWhereNotNull('cast_identity_documents.image_path_back');
+                           });
+                    });
+                })
+                ->select(
+                    'cast_identity_documents.*',
+                    'cast_profiles.nickname',
+                    'cast_profiles.name as profile_name'
+                )
+                ->orderBy('cast_identity_documents.updated_at')
+                ->get();
+        }
+
+        $shopDocs = collect();
+        if (Schema::hasTable('shop_license_documents')) {
+            $shopDocs = ShopLicenseDocument::query()
+                ->leftJoin('shop_profiles', 'shop_license_documents.shop_id', '=', 'shop_profiles.shop_id')
+                ->where(function ($q) use ($approvedThreshold, $rejectedThreshold, $pendingThreshold) {
+                    $q->where(function ($q2) use ($approvedThreshold) {
+                        $q2->where('shop_license_documents.status', ShopLicenseDocument::STATUS_APPROVED)
+                           ->whereNotNull('shop_license_documents.approved_at')
+                           ->where('shop_license_documents.approved_at', '<', $approvedThreshold)
+                           ->whereNotNull('shop_license_documents.image_path');
+                    })->orWhere(function ($q2) use ($rejectedThreshold) {
+                        $q2->where('shop_license_documents.status', ShopLicenseDocument::STATUS_REJECTED)
+                           ->where('shop_license_documents.updated_at', '<', $rejectedThreshold)
+                           ->whereNotNull('shop_license_documents.image_path');
+                    })->orWhere(function ($q2) use ($pendingThreshold) {
+                        $q2->where('shop_license_documents.status', ShopLicenseDocument::STATUS_PENDING)
+                           ->where('shop_license_documents.updated_at', '<', $pendingThreshold)
+                           ->whereNotNull('shop_license_documents.image_path');
+                    });
+                })
+                ->select(
+                    'shop_license_documents.*',
+                    'shop_profiles.shop_name'
+                )
+                ->orderBy('shop_license_documents.updated_at')
+                ->get();
+        }
+
+        return ['cast_docs' => $castDocs, 'shop_docs' => $shopDocs];
+    }
+
+    /**
+     * 削除候補の全書類をサーバから完全削除する（バッチ運用）。
+     * 個別ファイル削除の purgeCastDocument / purgeShopDocument をラップして
+     * まとめて呼び出し、削除件数を返す。
+     *
+     * @return array{cast_deleted: int, shop_deleted: int, failed: int}
+     */
+    public function purgeAllCandidates(): array
+    {
+        $candidates = $this->getPurgeCandidateDocuments();
+        $castDeleted = 0;
+        $shopDeleted = 0;
+        $failed = 0;
+
+        foreach ($candidates['cast_docs'] as $doc) {
+            try {
+                $this->purgeCastDocument((int) $doc->id);
+                $castDeleted++;
+            } catch (\Throwable $e) {
+                $failed++;
+                \Illuminate\Support\Facades\Log::warning('Batch purge failed for cast doc: ' . $e->getMessage(), [
+                    'document_id' => $doc->id,
+                ]);
+            }
+        }
+
+        foreach ($candidates['shop_docs'] as $doc) {
+            try {
+                $this->purgeShopDocument((int) $doc->id);
+                $shopDeleted++;
+            } catch (\Throwable $e) {
+                $failed++;
+                \Illuminate\Support\Facades\Log::warning('Batch purge failed for shop doc: ' . $e->getMessage(), [
+                    'document_id' => $doc->id,
+                ]);
+            }
+        }
+
+        return ['cast_deleted' => $castDeleted, 'shop_deleted' => $shopDeleted, 'failed' => $failed];
+    }
+
+    /**
+     * 保持期間の閾値を返す（画面表示用）。
+     */
+    public function getRetentionPolicy(): array
+    {
+        return [
+            'approved_days' => self::RETENTION_APPROVED_DAYS,
+            'rejected_days' => self::RETENTION_REJECTED_DAYS,
+            'pending_days'  => self::RETENTION_PENDING_DAYS,
+        ];
+    }
+
+    /**
+     * 削除候補の理由ラベル（画面表示用の公開ヘルパー）。
+     */
+    public function labelForPurgeReason(int $statusCode): string
+    {
+        return $this->purgeReasonLabel($statusCode);
+    }
+
+    /**
      * 指定の書類が「保持期間ポリシーを超えて削除候補に該当する」かを判定する。
      * 承認は approved_at、それ以外は updated_at を起算点にする。
      */

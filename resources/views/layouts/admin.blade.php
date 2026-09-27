@@ -16,7 +16,9 @@
                 ['label' => '入金確認・振込', 'route' => 'admin.deposits.index', 'icon' => 'fa-money-bill-wave', 'badge' => null, 'badge_class' => '', 'permission' => 'operations.deposits'],
                 ['label' => 'プラン入金管理', 'route' => 'admin.plans.index', 'icon' => 'fa-crown', 'badge' => null, 'badge_class' => '', 'permission' => 'operations.deposits'],
                 ['label' => '身分証・書類審査', 'route' => 'admin.verification.index', 'icon' => 'fa-id-card', 'badge' => null, 'badge_class' => '', 'permission' => 'operations.verification'],
+                ['label' => '書類 削除候補（バッチ）', 'route' => 'admin.purge.index', 'icon' => 'fa-trash-can', 'badge' => null, 'badge_class' => '', 'permission' => 'operations.verification'],
                 ['label' => '問合せ対応', 'route' => 'admin.support-inquiries.index', 'icon' => 'fa-envelope-open-text', 'badge' => null, 'badge_class' => '', 'permission' => 'operations.inquiries'],
+                ['label' => 'ユーザー通報', 'route' => 'admin.user_reports.index', 'icon' => 'fa-flag', 'badge' => null, 'badge_class' => '', 'permission' => 'content.notices'],
             ],
         ],
         [
@@ -24,7 +26,6 @@
             'items' => [
                 ['label' => 'お知らせ管理', 'route' => 'admin.notices.index', 'icon' => 'fa-bell', 'badge' => null, 'badge_class' => '', 'permission' => 'content.notices'],
                 ['label' => 'コラム管理', 'route' => 'admin.columns.index', 'icon' => 'fa-pen-nib', 'badge' => null, 'badge_class' => '', 'permission' => 'content.columns'],
-                ['label' => 'ユーザー通報', 'route' => 'admin.user_reports.index', 'icon' => 'fa-flag', 'badge' => null, 'badge_class' => '', 'permission' => 'content.notices'],
             ],
         ],
         [
@@ -89,8 +90,10 @@
         'admin.deposits.*' => 'オペレーション',
         'admin.plans.*' => 'オペレーション',
         'admin.verification.*' => 'オペレーション',
+        'admin.purge.*' => 'オペレーション',
         'admin.tasks.*' => 'オペレーション',
         'admin.support-inquiries.*' => 'オペレーション',
+        'admin.user_reports.*' => 'オペレーション',
         'admin.notices.*' => 'コンテンツ',
         'admin.columns.*' => 'コンテンツ',
         'admin.ngwords.*' => 'マスタ設定',
@@ -126,9 +129,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     {{-- メインアプリと同じ Noto Sans JP + Montserrat（DESIGN.md §3 と統一） --}}
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800;900&family=Montserrat:wght@400;600;700;800&display=swap">
-    <link rel="stylesheet" href="{{ asset('assets/css/admin.css') }}?v=20260927-quiet-v9">
+    <link rel="stylesheet" href="{{ asset('assets/css/admin.css') }}?v=20260927-quiet-v10">
     {{-- Detail-page + role-UI styles (extracted 2026-08-02); load AFTER admin.css --}}
-    <link rel="stylesheet" href="{{ asset('assets/css/admin-detail.css') }}?v=20260927-quiet-v9">
+    <link rel="stylesheet" href="{{ asset('assets/css/admin-detail.css') }}?v=20260927-quiet-v10">
     {{-- モバイル最適化（admin.css の後に読み込んで上書き） --}}
     <link rel="stylesheet" href="{{ asset('assets/css/admin-mobile.css') }}?v=20260927-quiet-v3">
     @stack('admin-styles')

@@ -52,16 +52,16 @@
             }
         @endphp
         <section class="dashboard-kpi-grid invoice-filter-kpis" data-invoice-filter-host>
-            <button type="button" class="dashboard-kpi-card dashboard-kpi-card--link is-active" data-filter="all" aria-pressed="true">
+            <button type="button" class="dashboard-kpi-card dashboard-kpi-card--link is-active {{ $issueWaitingCount > 0 ? 'is-attention' : '' }}" data-filter="issue_wait" aria-pressed="true">
                 <div class="dashboard-kpi-head">
-                    <div class="dashboard-kpi-title">未処理（合計）</div>
-                    <i class="fas fa-clipboard-list"></i>
+                    <div class="dashboard-kpi-title">要対応（発行待ち）</div>
+                    <i class="fas fa-file-invoice"></i>
                 </div>
                 <div class="dashboard-kpi-main">
-                    <span class="dashboard-kpi-value">{{ number_format(count($pending ?? [])) }}</span>
+                    <span class="dashboard-kpi-value">{{ number_format($issueWaitingCount) }}</span>
                     <span class="dashboard-kpi-unit">件</span>
                 </div>
-                <div class="dashboard-kpi-trend">クリックですべて表示</div>
+                <div class="dashboard-kpi-trend is-up">運営が今すぐ発行可</div>
             </button>
             <button type="button" class="dashboard-kpi-card dashboard-kpi-card--link" data-filter="cast_request" aria-pressed="false">
                 <div class="dashboard-kpi-head">
@@ -74,16 +74,16 @@
                 </div>
                 <div class="dashboard-kpi-trend">運営の対応は不要</div>
             </button>
-            <button type="button" class="dashboard-kpi-card dashboard-kpi-card--link" data-filter="issue_wait" aria-pressed="false">
+            <button type="button" class="dashboard-kpi-card dashboard-kpi-card--link" data-filter="all" aria-pressed="false">
                 <div class="dashboard-kpi-head">
-                    <div class="dashboard-kpi-title">発行待ち</div>
-                    <i class="fas fa-file-invoice"></i>
+                    <div class="dashboard-kpi-title">未処理（合計）</div>
+                    <i class="fas fa-clipboard-list"></i>
                 </div>
                 <div class="dashboard-kpi-main">
-                    <span class="dashboard-kpi-value">{{ number_format($issueWaitingCount) }}</span>
+                    <span class="dashboard-kpi-value">{{ number_format(count($pending ?? [])) }}</span>
                     <span class="dashboard-kpi-unit">件</span>
                 </div>
-                <div class="dashboard-kpi-trend is-up">運営が今すぐ発行可</div>
+                <div class="dashboard-kpi-trend">クリックですべて表示</div>
             </button>
             <button type="button" class="dashboard-kpi-card dashboard-kpi-card--link {{ $overdueCount > 0 ? 'is-critical' : '' }}" data-filter="overdue" aria-pressed="false">
                 <div class="dashboard-kpi-head">
@@ -178,9 +178,15 @@
                                 @if($isCastRequestOnly)
                                     <span class="admin-note">店舗承認後に発行できます</span>
                                 @elseif($adminBank)
-                                    <a href="{{ route('admin.deposits.invoice.show', $deposit['id']) }}" class="btn-action manage">
-                                        <i class="fas fa-file-invoice"></i> プレビュー・発行
-                                    </a>
+                                    <form method="POST" action="{{ route('admin.deposits.invoice.issue', ['deposit' => $deposit['id']]) }}" style="margin:0;"
+                                          onsubmit="return confirm('この案件で請求書を発行しますか？発行後はプレビュー画面で内容確認 → 「店舗へ送信」の順に進みます。');">
+                                        @csrf
+                                        <input type="hidden" name="confirm_shop_approved" value="1">
+                                        <input type="hidden" name="confirm_admin_bank_ready" value="1">
+                                        <button type="submit" class="btn-action manage">
+                                            <i class="fas fa-file-invoice"></i> 発行する
+                                        </button>
+                                    </form>
                                 @else
                                     <a href="{{ route('admin.bank.index') }}" class="btn-action manage" title="請求書プレビューには運営口座の登録が必要です">
                                         <i class="fas fa-university"></i> 口座登録へ
@@ -384,7 +390,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var emptyEl = document.querySelector('[data-invoice-empty]');
     var cards = Array.prototype.slice.call(list.querySelectorAll('[data-invoice-card]'));
 
-    var state = { filter: 'all', search: '', sort: 'age_desc' };
+    var state = { filter: 'issue_wait', search: '', sort: 'age_desc' };
 
     function applySort() {
         var sorted = cards.slice().sort(function (a, b) {

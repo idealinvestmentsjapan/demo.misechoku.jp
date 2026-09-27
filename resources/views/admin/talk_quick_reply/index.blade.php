@@ -396,33 +396,33 @@
         font-size: 0.78rem;
         font-weight: 700;
         border-radius: 999px;
-        border: 1px solid var(--admin-line, rgba(168, 85, 247, 0.22));
+        border: 1px solid var(--admin-line);
         background: transparent;
-        color: var(--admin-sub, #a1a1aa);
+        color: var(--admin-sub);
         cursor: pointer;
     }
     .tqr-filter-chip strong {
         font-weight: 800;
-        color: var(--admin-text, #f5f5f5);
+        color: var(--admin-text);
         font-variant-numeric: tabular-nums;
     }
     .tqr-filter-chip.is-active {
-        background: var(--admin-primary-soft, rgba(168, 85, 247, 0.14));
-        color: #c4b5fd;
-        border-color: var(--admin-primary-border, rgba(168, 85, 247, 0.45));
+        background: var(--admin-primary-soft);
+        color: var(--admin-primary-hover);
+        border-color: var(--admin-primary-border);
     }
-    .tqr-filter-chip.is-active strong { color: #c4b5fd; }
+    .tqr-filter-chip.is-active strong { color: var(--admin-primary-hover); }
     .tqr-mode-btn {
         padding: 6px 12px;
         font-size: 0.78rem;
         font-weight: 700;
         border-radius: 999px;
-        border: 1px solid var(--admin-line, rgba(168, 85, 247, 0.22));
+        border: 1px solid var(--admin-line);
         background: transparent;
-        color: var(--admin-sub, #a1a1aa);
+        color: var(--admin-sub);
         cursor: pointer;
     }
-    .tqr-mode-btn:hover { color: var(--admin-text, #fff); border-color: var(--admin-primary-border, rgba(168, 85, 247, 0.45)); }
+    .tqr-mode-btn:hover { color: var(--admin-text); border-color: var(--admin-primary-border); }
 
     /* ---- グループ見出し ---- */
     .tqr-group[hidden] { display: none; }
@@ -430,7 +430,7 @@
         font-size: 0.78rem;
         font-weight: 800;
         letter-spacing: 0.06em;
-        color: var(--admin-sub, #a1a1aa);
+        color: var(--admin-sub);
         margin: 4px 0 6px;
         display: flex;
         align-items: center;
@@ -444,29 +444,32 @@
         font-size: 0.72rem;
         font-weight: 700;
         letter-spacing: 0.02em;
+        border: 1px solid var(--admin-line);
+        background: var(--admin-surface-alt);
+        color: var(--admin-sub);
     }
-    .tqr-group__owner--cast { background: rgba(214, 112, 162, 0.20); color: #f0a6c4; border: 1px solid rgba(214, 112, 162, 0.40); }
-    .tqr-group__owner--shop { background: rgba(139, 92, 246, 0.20); color: #c4b5fd; border: 1px solid rgba(139, 92, 246, 0.40); }
+    .tqr-group__owner--cast { background: var(--admin-surface-alt); color: var(--admin-sub); border-color: var(--admin-line); }
+    .tqr-group__owner--shop { background: var(--admin-primary-soft); color: var(--admin-primary-hover); border-color: var(--admin-primary-border); }
     .tqr-group__status {
-        color: var(--admin-text, #f5f5f5);
+        color: var(--admin-text);
         font-weight: 700;
     }
     .tqr-group__count {
         font-size: 0.7rem;
         font-weight: 700;
-        color: var(--admin-muted, #8b6e77);
+        color: var(--admin-muted);
         padding: 1px 8px;
         border-radius: 999px;
-        border: 1px solid var(--admin-line, rgba(168, 85, 247, 0.20));
-        background: var(--admin-surface-alt, rgba(255, 255, 255, 0.04));
+        border: 1px solid var(--admin-line);
+        background: var(--admin-surface-alt);
     }
     .tqr-group__default-flag {
         font-size: 0.7rem;
-        color: #fbbf24;
+        color: var(--status-warning-fg);
         padding: 1px 8px;
         border-radius: 999px;
-        border: 1px solid rgba(251, 191, 36, 0.4);
-        background: rgba(251, 191, 36, 0.10);
+        border: 1px solid var(--status-warning-bd);
+        background: var(--status-warning-bg);
     }
     .tqr-group__actions {
         margin-left: auto;
@@ -485,17 +488,17 @@
         cursor: pointer;
     }
     .tqr-add-btn {
-        border: 1px solid rgba(168, 85, 247, 0.45);
-        background: rgba(168, 85, 247, 0.10);
-        color: #c4b5fd;
+        border: 1px solid var(--admin-primary-border);
+        background: var(--admin-primary-soft);
+        color: var(--admin-primary-hover);
     }
-    .tqr-add-btn:hover { background: rgba(168, 85, 247, 0.22); }
+    .tqr-add-btn:hover { background: var(--admin-primary-soft-hover); }
     .tqr-reset-btn {
-        border: 1px solid rgba(255, 255, 255, 0.12);
+        border: 1px solid var(--admin-line);
         background: transparent;
-        color: #a1a1aa;
+        color: var(--admin-sub);
     }
-    .tqr-reset-btn:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
+    .tqr-reset-btn:hover { background: var(--admin-surface-alt); color: var(--admin-text); }
 
     /* ---- 一覧 ---- */
     .tqr-list {
@@ -507,19 +510,19 @@
         gap: 4px;
     }
     .tqr-item {
-        border: 1px solid var(--admin-line, rgba(168, 85, 247, 0.16));
+        border: 1px solid var(--admin-line);
         border-radius: 10px;
-        background: var(--admin-card, #1a1a1a);
-        color: var(--admin-text, #f5f5f5);
+        background: var(--admin-card);
+        color: var(--admin-text);
         overflow: hidden;
     }
     .tqr-item.is-open {
-        border-color: var(--admin-primary-border, rgba(168, 85, 247, 0.55));
-        background: var(--admin-primary-soft, rgba(168, 85, 247, 0.10));
+        border-color: var(--admin-primary-border);
+        background: var(--admin-primary-soft);
     }
     .tqr-item.is-marked-delete {
         opacity: 0.55;
-        border-color: rgba(239, 68, 68, 0.5);
+        border-color: var(--status-danger-bd);
     }
     .tqr-item.is-marked-delete .tqr-item__preview { text-decoration: line-through; }
 
@@ -540,7 +543,7 @@
         cursor: pointer;
         transition: background 0.15s ease;
     }
-    .tqr-item__label:hover { background: rgba(168, 85, 247, 0.08); }
+    .tqr-item__label:hover { background: var(--admin-primary-soft); }
 
     .tqr-item__idx {
         flex: 0 0 auto;
@@ -550,8 +553,8 @@
         width: 24px;
         height: 24px;
         border-radius: 999px;
-        background: rgba(139, 92, 246, 0.20);
-        color: #c4b5fd;
+        background: var(--admin-primary-soft);
+        color: var(--admin-primary-hover);
         font-size: 0.72rem;
         font-weight: 800;
         font-variant-numeric: tabular-nums;
@@ -560,22 +563,22 @@
         flex: 0 0 auto;
         font-size: 0.7rem;
         font-weight: 700;
-        color: #c4b5fd;
+        color: var(--status-info-fg);
         padding: 2px 8px;
         border-radius: 999px;
-        border: 1px solid rgba(168, 85, 247, 0.35);
-        background: rgba(168, 85, 247, 0.10);
+        border: 1px solid var(--status-info-bd);
+        background: var(--status-info-bg);
     }
     .tqr-item__preview {
         flex: 1 1 auto;
         min-width: 0;
         font-size: 0.88rem;
-        color: var(--admin-text, #f5f5f5);
+        color: var(--admin-text);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
-    .tqr-item__preview.is-empty { color: var(--admin-muted, #8b6e77); font-style: italic; }
+    .tqr-item__preview.is-empty { color: var(--admin-muted); font-style: italic; }
     .tqr-item__mark {
         flex: 0 0 auto;
         font-size: 0.68rem;
@@ -585,19 +588,19 @@
         border: 1px solid;
     }
     .tqr-item__mark--delete {
-        color: #fca5a5;
-        border-color: rgba(239, 68, 68, 0.4);
-        background: rgba(239, 68, 68, 0.10);
+        color: var(--status-danger-fg);
+        border-color: var(--status-danger-bd);
+        background: var(--status-danger-bg);
     }
 
     /* ---- 編集パネル ---- */
     .tqr-item__panel {
-        border-top: 1px solid var(--admin-line, rgba(168, 85, 247, 0.16));
+        border-top: 1px solid var(--admin-line);
         padding: 14px;
         display: flex;
         flex-direction: column;
         gap: 12px;
-        background: rgba(0, 0, 0, 0.15);
+        background: var(--admin-bg);
     }
     .tqr-item__panel[hidden] { display: none; }
     .tqr-item__field {
@@ -608,13 +611,13 @@
     .tqr-item__field-label {
         font-size: 0.72rem;
         font-weight: 700;
-        color: var(--admin-sub, #a1a1aa);
+        color: var(--admin-sub);
     }
     .tqr-item__category {
         padding: 8px 10px;
-        border: 1px solid var(--admin-line, rgba(168, 85, 247, 0.30));
-        background: rgba(20, 14, 24, 0.6);
-        color: var(--admin-text, #f5f5f5);
+        border: 1px solid var(--admin-line);
+        background: var(--admin-surface);
+        color: var(--admin-text);
         border-radius: 8px;
         font-size: 0.9rem;
         max-width: 260px;
@@ -623,11 +626,11 @@
         width: 100%;
         min-height: 68px;
         padding: 10px 12px;
-        border: 1px solid var(--admin-line, rgba(168, 85, 247, 0.30));
+        border: 1px solid var(--admin-line);
         border-radius: 10px;
-        background: rgba(20, 14, 24, 0.6);
+        background: var(--admin-surface);
         font-size: 16px;
-        color: var(--admin-text, #f5f5f5);
+        color: var(--admin-text);
         resize: vertical;
         font-family: inherit;
         line-height: 1.5;
@@ -636,15 +639,15 @@
     .tqr-item__field textarea:focus,
     .tqr-item__category:focus {
         outline: none;
-        border-color: #a78bfa;
-        box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.18);
+        border-color: var(--admin-primary);
+        box-shadow: 0 0 0 3px var(--admin-primary-soft);
     }
     .tqr-item__delete {
         display: inline-flex;
         align-items: center;
         gap: 8px;
         font-size: 0.82rem;
-        color: var(--admin-sub, #a1a1aa);
+        color: var(--admin-sub);
         cursor: pointer;
     }
     .tqr-item__delete input[type="checkbox"] { cursor: pointer; width: 18px; height: 18px; }
@@ -654,20 +657,20 @@
         min-height: 36px;
         padding: 6px 14px;
         border-radius: 8px;
-        border: 1px solid var(--admin-line, rgba(255, 255, 255, 0.18));
+        border: 1px solid var(--admin-line);
         background: transparent;
-        color: var(--admin-sub, #a1a1aa);
+        color: var(--admin-sub);
         font-size: 0.82rem;
         cursor: pointer;
     }
-    .tqr-item__close:hover { color: #fff; border-color: rgba(255, 255, 255, 0.4); }
+    .tqr-item__close:hover { color: var(--admin-text); border-color: var(--admin-primary-border); }
 
     .tqr-list__empty {
         padding: 28px 12px;
         text-align: center;
-        color: var(--admin-sub, #a1a1aa);
+        color: var(--admin-sub);
         font-size: 0.85rem;
-        border: 1px dashed var(--admin-line, rgba(168, 85, 247, 0.22));
+        border: 1px dashed var(--admin-line);
         border-radius: 10px;
     }
 
@@ -675,32 +678,11 @@
     .tqr-save-bar {
         position: sticky;
         bottom: 0;
-        background: linear-gradient(180deg, rgba(10,10,10,0), rgba(10,10,10,0.96) 35%);
+        background: linear-gradient(180deg, rgba(10,10,10,0), var(--admin-bg) 35%);
         padding: 16px 0 8px;
         margin-top: 8px;
         text-align: right;
         z-index: 5;
-    }
-
-    /* ---- ライトテーマ保険 ---- */
-    @media (prefers-color-scheme: light) {
-        .tqr-item {
-            background: #ffffff;
-            color: #241f33;
-            border-color: rgba(76, 29, 149, 0.14);
-        }
-        .tqr-item__preview { color: #241f33; }
-        .tqr-item__panel { background: #faf9fd; }
-        .tqr-item__field textarea,
-        .tqr-item__category {
-            background: #ffffff;
-            color: #241f33;
-            border-color: rgba(76, 29, 149, 0.20);
-        }
-        .tqr-filter-chip strong { color: #241f33; }
-        .tqr-group__status { color: #241f33; }
-        .tqr-list__empty { color: #6b6478; }
-        .tqr-save-bar { background: linear-gradient(180deg, rgba(255,255,255,0), rgba(250,249,253,0.96) 35%); }
     }
 
     /* ---- スマホ ---- */
