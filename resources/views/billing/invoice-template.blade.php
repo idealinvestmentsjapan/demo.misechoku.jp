@@ -9,9 +9,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@if(!empty($invoice['template_only']))請求書 帳票テンプレート@else請求書 {{ $invoice['invoice_number'] }}@endif</title>
     <style>
-        /* ipaexg is registered by `php artisan pdf:install-japanese-font`. Without it,
-           dompdf falls back to DejaVu Sans and Japanese renders as garbled boxes. */
-        body { margin: 0; padding: 0; color: #111827; font-family: "ipaexg", "Noto Sans JP", "Hiragino Sans", "Meiryo", sans-serif; font-size: 11pt; }
+        /* mPDF bundles sun-exta / sun-extb (CJK). autoLangToFont is enabled in
+           App\Services\PdfService, so Japanese runs will auto-pick sun-exta even
+           if font-family below is not resolved. */
+        body { margin: 0; padding: 0; color: #111827; font-family: "sun-exta", sans-serif; font-size: 11pt; }
         .invoice-wrap { max-width: 210mm; margin: 0 auto; padding: 16mm; box-sizing: border-box; }
         .invoice-header { border-bottom: 2px solid #111827; padding-bottom: 12pt; margin-bottom: 16pt; }
         .invoice-title { font-size: 22pt; font-weight: 800; letter-spacing: 0.12em; margin: 0 0 8pt; }

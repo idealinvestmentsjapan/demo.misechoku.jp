@@ -109,7 +109,7 @@
 - 履歴は `application_deposit_histories`
 - 支払タスク（未了フォロー）は `payment_tasks`
 - 口座名義バリデーションは `KouzaMeig` ルール（全角カナ）、口座番号 7〜8 桁、銀行 4 桁 / 支店 3 桁
-- 請求書 / 領収書は dompdf、未導入環境では `$printMode = true` で印刷用 HTML にフォールバック
+- 請求書 / 領収書は mPDF（`App\Services\PdfService`）、未導入環境では `$printMode = true` で印刷用 HTML にフォールバック
 
 ### 2.5 Premium プラン
 

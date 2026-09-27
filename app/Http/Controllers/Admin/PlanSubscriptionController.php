@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Common\SettingController;
 use App\Models\ShopPlanSubscription;
 use App\Services\BillingManagementService;
+use App\Services\PdfService;
 use App\Services\PlanSubscriptionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -89,13 +90,10 @@ class PlanSubscriptionController extends Controller
         $view = $type === 'receipt' ? 'billing.plan-receipt' : 'billing.plan-invoice';
         $filename = ($type === 'receipt' ? '領収書_' : '請求書_') . $doc['number'] . '.pdf';
 
-        if (!class_exists(\Barryvdh\DomPDF\Facade\Pdf::class)) {
+        if (!class_exists(\Mpdf\Mpdf::class)) {
             return view($view, ['doc' => $doc, 'printMode' => true]);
         }
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView($view, ['doc' => $doc, 'printMode' => false]);
-        $pdf->setPaper('a4', 'portrait');
-
-        return $pdf->download($filename);
+        return PdfService::download($view, ['doc' => $doc, 'printMode' => false], $filename);
     }
 }

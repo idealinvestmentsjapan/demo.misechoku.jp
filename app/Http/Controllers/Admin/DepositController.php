@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Services\BillingManagementService;
+use App\Services\PdfService;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -92,6 +93,7 @@ class DepositController extends Controller
 
     /**
      * 運営側：店舗からの入金照合
+     * ネットバンキング画面のスクリーンショットを証跡として必須化。
      */
     public function confirmShopPayment(Request $request, int $deposit)
     {
@@ -100,9 +102,20 @@ class DepositController extends Controller
             'confirm_amount_checked' => 'required|accepted',
             'confirm_report_checked' => 'required|accepted',
             'confirm_bank_checked' => 'required|accepted',
+            'evidence_screenshot' => 'required|file|image|max:10240',
+        ], [
+            'evidence_screenshot.required' => 'ネットバンキングの入金画面スクリーンショットをアップロードしてください。',
+            'evidence_screenshot.image' => '画像ファイル（JPEG/PNG等）を指定してください。',
+            'evidence_screenshot.max' => '画像ファイルは 10MB 以内にしてください。',
         ]);
 
-        $result = $this->billingManagementService->confirmShopPayment($deposit, $payload);
+        $path = $request->file('evidence_screenshot')->store('payment_evidence', 'public');
+
+        $result = $this->billingManagementService->confirmShopPayment($deposit, $payload, $path);
+
+        if (!$result['success']) {
+            Storage::disk('public')->delete($path);
+        }
 
         return redirect()
             ->route('admin.deposits.index')
@@ -260,7 +273,7 @@ class DepositController extends Controller
 
     /**
      * 店舗向け：署名付きURLで請求書をPDFダウンロード
-     * Dompdf 未導入時はHTMLを表示し、ブラウザの印刷でPDF保存を案内する。
+     * mPDF 未導入時はHTMLを表示し、ブラウザの印刷でPDF保存を案内する。
      */
     public function showSignedInvoicePdf(int $deposit)
     {
@@ -268,7 +281,7 @@ class DepositController extends Controller
 
         abort_unless($invoice, 404);
 
-        if (!class_exists(\Barryvdh\DomPDF\Facade\Pdf::class)) {
+        if (!class_exists(\Mpdf\Mpdf::class)) {
             return view('admin.deposit.invoice', [
                 'invoice' => $invoice,
                 'printMode' => true,
@@ -282,13 +295,13 @@ class DepositController extends Controller
 
     /**
      * 請求書帳票テンプレートをサンプルデータでPDFダウンロード（運営管理画面用）
-     * DomPDF 未導入時は印刷用HTMLプレビューを返し、別タブで同じ画面が開く問題を避ける。
+     * mPDF 未導入時は印刷用HTMLプレビューを返し、別タブで同じ画面が開く問題を避ける。
      */
     public function downloadInvoiceTemplate(): Response|\Illuminate\Contracts\View\View
     {
         $invoice = $this->billingManagementService->getInvoiceTemplateShellData();
 
-        if (!class_exists(\Barryvdh\DomPDF\Facade\Pdf::class)) {
+        if (!class_exists(\Mpdf\Mpdf::class)) {
             return view('admin.deposit.invoice-template-preview', ['invoice' => $invoice]);
         }
 
@@ -297,42 +310,22 @@ class DepositController extends Controller
 
     /**
      * 請求書データを帳票テンプレートでPDF化してレスポンスを返す。
-     * barryvdh/laravel-dompdf 未導入 or 日本語フォント未設置時は印刷用HTMLへ誘導。
+     * mpdf/mpdf 未導入時は印刷用HTMLへ誘導（composer install が済んでいない環境向けフォールバック）。
      */
     private function invoiceToPdfResponse(array $invoice, string $filename): Response
     {
-        if (!class_exists(\Barryvdh\DomPDF\Facade\Pdf::class)) {
+        if (!class_exists(\Mpdf\Mpdf::class)) {
             if ($invoice['deposit_id'] > 0) {
                 return redirect()
                     ->route('admin.deposits.invoice.show', ['deposit' => $invoice['deposit_id']])
-                    ->with('status', 'PDF生成には barryvdh/laravel-dompdf のインストールが必要です。画面の「印刷」から「PDFに保存」を選択してください。');
+                    ->with('status', 'PDF生成には mpdf/mpdf のインストールが必要です。サーバで `composer install` を実行してください。画面の「印刷」から「PDFに保存」でも対応できます。');
             }
             return redirect()
                 ->route('admin.invoices.index')
-                ->with('status', 'PDF生成には barryvdh/laravel-dompdf のインストールが必要です。テンプレートは「帳票テンプレートをダウンロード」で開いた画面の印刷からPDFに保存できます。');
+                ->with('status', 'PDF生成には mpdf/mpdf のインストールが必要です。サーバで `composer install` を実行してください。テンプレートは「帳票テンプレートをダウンロード」の画面の印刷からPDFに保存できます。');
         }
 
-        // Japanese font must exist or dompdf will render JP text as garbled boxes.
-        // The pdf:install-japanese-font command drops ipaexg.ttf into storage/fonts.
-        $fontPath = storage_path('fonts/ipaexg.ttf');
-        if (!is_file($fontPath)) {
-            $msg = 'PDFの日本語フォントが未インストールのため、印刷プレビュー表示に切り替えました。'
-                . 'サーバ側で `php artisan pdf:install-japanese-font` を一度実行するとPDFダウンロードが有効化されます。'
-                . '（当面は「印刷 / 別名でPDF保存」ボタンでダウンロード可能です）';
-            if ($invoice['deposit_id'] > 0) {
-                return redirect()
-                    ->route('admin.deposits.invoice.show', ['deposit' => $invoice['deposit_id']])
-                    ->with('status', $msg);
-            }
-            return redirect()
-                ->route('admin.invoices.index')
-                ->with('status', $msg);
-        }
-
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('billing.invoice-template', ['invoice' => $invoice]);
-        $pdf->setPaper('a4', 'portrait');
-
-        return $pdf->download($filename);
+        return PdfService::download('billing.invoice-template', ['invoice' => $invoice], $filename);
     }
 }
 

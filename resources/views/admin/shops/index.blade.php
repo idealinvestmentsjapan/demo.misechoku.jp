@@ -4,19 +4,18 @@
 
 @section('content')
     @php
-        // KPI 集計
+        // 集計（フィルタチップ用）
         $shopList = $shops ?? collect();
         $totalCount = $shopList->count();
         $activeCount = 0;
         $suspendedCount = 0;
-        $pendingCount = 0;
         $docUnverifiedCount = 0;
         $inactiveLoginCount = 0;
+        $premiumCount = 0;
         foreach ($shopList as $sh) {
             $st = (int) ($sh['account_status'] ?? 0);
             if ($st === 1) $activeCount++;
             elseif ($st === 2) $suspendedCount++;
-            else $pendingCount++;
 
             if (($sh['document_status'] ?? '') !== '確認済み') $docUnverifiedCount++;
 
@@ -26,6 +25,9 @@
             } else {
                 $inactiveLoginCount++;
             }
+
+            $p = $sh['plan_info'] ?? null;
+            if ($p && (int) ($p['status'] ?? 0) === 2) $premiumCount++;
         }
     @endphp
 
@@ -37,7 +39,7 @@
                 <ul>
                     <li>登録店舗アカウントの一覧を表示します</li>
                     <li><strong>行をタップ</strong>で詳細画面に移動</li>
-                    <li>書類確認状況・最終ログイン・状態（有効／停止中）を確認</li>
+                    <li>プラン・書類確認・最終ログイン・状態を確認</li>
                     <li>停止操作・運用実績・非公開情報の確認は<strong>詳細画面</strong>から</li>
                 </ul>
             ',
@@ -47,67 +49,28 @@
             <div class="admin-alert admin-alert-success">{{ session('status') }}</div>
         @endif
 
-        {{-- KPI（クリックでフィルタ） --}}
-        <section class="dashboard-kpi-grid shop-kpi-grid" data-shop-kpis>
-            <button type="button" class="dashboard-kpi-card dashboard-kpi-card--link is-active" data-shop-filter="all" aria-pressed="true">
-                <div class="dashboard-kpi-head">
-                    <div class="dashboard-kpi-title">登録店舗（合計）</div>
-                    <i class="fas fa-building"></i>
-                </div>
-                <div class="dashboard-kpi-main">
-                    <span class="dashboard-kpi-value">{{ number_format($totalCount) }}</span>
-                    <span class="dashboard-kpi-unit">店</span>
-                </div>
-                <div class="dashboard-kpi-trend">すべて表示</div>
-            </button>
-            <button type="button" class="dashboard-kpi-card dashboard-kpi-card--link" data-shop-filter="active" aria-pressed="false">
-                <div class="dashboard-kpi-head">
-                    <div class="dashboard-kpi-title">有効</div>
-                    <i class="fas fa-circle-check"></i>
-                </div>
-                <div class="dashboard-kpi-main">
-                    <span class="dashboard-kpi-value">{{ number_format($activeCount) }}</span>
-                    <span class="dashboard-kpi-unit">店</span>
-                </div>
-                <div class="dashboard-kpi-trend is-up">稼働中</div>
-            </button>
-            <button type="button" class="dashboard-kpi-card dashboard-kpi-card--link {{ $suspendedCount > 0 ? 'is-critical' : '' }}" data-shop-filter="suspended" aria-pressed="false">
-                <div class="dashboard-kpi-head">
-                    <div class="dashboard-kpi-title">停止中</div>
-                    <i class="fas fa-ban"></i>
-                </div>
-                <div class="dashboard-kpi-main">
-                    <span class="dashboard-kpi-value">{{ number_format($suspendedCount) }}</span>
-                    <span class="dashboard-kpi-unit">店</span>
-                </div>
-                <div class="dashboard-kpi-trend is-down">対応要</div>
-            </button>
-            <button type="button" class="dashboard-kpi-card dashboard-kpi-card--link {{ $docUnverifiedCount > 0 ? 'is-attention' : '' }}" data-shop-filter="doc_pending" aria-pressed="false">
-                <div class="dashboard-kpi-head">
-                    <div class="dashboard-kpi-title">書類未確認</div>
-                    <i class="fas fa-folder-open"></i>
-                </div>
-                <div class="dashboard-kpi-main">
-                    <span class="dashboard-kpi-value">{{ number_format($docUnverifiedCount) }}</span>
-                    <span class="dashboard-kpi-unit">店</span>
-                </div>
-                <div class="dashboard-kpi-trend">審査未了</div>
-            </button>
-            <button type="button" class="dashboard-kpi-card dashboard-kpi-card--link {{ $inactiveLoginCount > 0 ? 'is-attention' : '' }}" data-shop-filter="dormant" aria-pressed="false">
-                <div class="dashboard-kpi-head">
-                    <div class="dashboard-kpi-title">30日以上 未ログイン</div>
-                    <i class="fas fa-moon"></i>
-                </div>
-                <div class="dashboard-kpi-main">
-                    <span class="dashboard-kpi-value">{{ number_format($inactiveLoginCount) }}</span>
-                    <span class="dashboard-kpi-unit">店</span>
-                </div>
-                <div class="dashboard-kpi-trend">休眠候補</div>
-            </button>
-        </section>
-
-        {{-- 並び替え --}}
+        {{-- 絞り込み（軽量チップ）＋ 並び替え --}}
         <div class="admin-page-toolbar">
+            <div class="admin-page-toolbar-filters" data-shop-filters>
+                <button type="button" class="admin-filter-chip is-active" data-shop-filter="all">
+                    <span>すべて</span><strong>{{ $totalCount }}</strong>
+                </button>
+                <button type="button" class="admin-filter-chip" data-shop-filter="active">
+                    <span>有効</span><strong>{{ $activeCount }}</strong>
+                </button>
+                <button type="button" class="admin-filter-chip" data-shop-filter="premium">
+                    <span>Premium</span><strong>{{ $premiumCount }}</strong>
+                </button>
+                <button type="button" class="admin-filter-chip {{ $suspendedCount > 0 ? 'is-critical' : '' }}" data-shop-filter="suspended">
+                    <span>停止中</span><strong>{{ $suspendedCount }}</strong>
+                </button>
+                <button type="button" class="admin-filter-chip" data-shop-filter="doc_pending">
+                    <span>書類未確認</span><strong>{{ $docUnverifiedCount }}</strong>
+                </button>
+                <button type="button" class="admin-filter-chip" data-shop-filter="dormant">
+                    <span>30日以上未ログイン</span><strong>{{ $inactiveLoginCount }}</strong>
+                </button>
+            </div>
             <div class="admin-page-toolbar-row">
                 <label class="invoice-toolbar__sort">
                     <span><i class="fas fa-arrow-down-wide-short"></i> 並び順</span>
@@ -119,7 +82,6 @@
                         <option value="name_asc">店舗名（あいうえお順）</option>
                     </select>
                 </label>
-                <div class="invoice-toolbar__hits" id="shop-hits" aria-live="polite"></div>
             </div>
         </div>
 
@@ -127,11 +89,11 @@
             <table class="admin-table admin-table-clickable admin-table--stack">
                 <thead>
                     <tr>
-                        <th>店舗（ID）</th>
-                        <th>登録日</th>
+                        <th>店舗（ID / 登録日）</th>
+                        <th>プラン / 契約期間</th>
                         <th>最終ログイン</th>
-                        <th>書類提出</th>
-                        <th>求人公開</th>
+                        <th>書類</th>
+                        <th>求人</th>
                         <th>状態</th>
                     </tr>
                 </thead>
@@ -140,7 +102,6 @@
                         @php
                             $isSuspended = (int) ($shop['account_status'] ?? 0) === 2;
                             $isActive = (int) ($shop['account_status'] ?? 0) === 1;
-                            $isPending = !$isSuspended && !$isActive;
                             $isDocVerified = ($shop['document_status'] ?? '') === '確認済み';
 
                             $loginAt = !empty($shop['last_login_at']) ? \Illuminate\Support\Carbon::parse($shop['last_login_at']) : null;
@@ -151,9 +112,11 @@
                                 : ($loginDays >= 90 ? 'critical' : ($loginDays >= 30 ? 'warning' : 'normal'));
 
                             $regAt = !empty($shop['registered_at']) ? \Illuminate\Support\Carbon::parse($shop['registered_at']) : null;
-
-                            // 状態キー（フィルタ用）
                             $statusKey = $isSuspended ? 'suspended' : ($isActive ? 'active' : 'pending');
+
+                            $p = $shop['plan_info'] ?? null;
+                            $isPremium = $p && (int) ($p['status'] ?? 0) === 2;
+                            $planKey = $isPremium ? 'premium' : 'none';
 
                             $detailUrl = route('admin.shops.show', $shop['id']);
                             $searchKey = mb_strtolower($shop['name'] . ' ' . $shop['id']);
@@ -164,6 +127,7 @@
                             data-status="{{ $statusKey }}"
                             data-doc="{{ $isDocVerified ? 'verified' : 'pending' }}"
                             data-dormant="{{ $isDormant ? '1' : '0' }}"
+                            data-plan="{{ $planKey }}"
                             data-search="{{ $searchKey }}"
                             data-last-login="{{ $loginAt ? $loginAt->getTimestamp() : 0 }}"
                             data-registered="{{ $regAt ? $regAt->getTimestamp() : 0 }}"
@@ -173,9 +137,34 @@
                             aria-label="店舗詳細：{{ $shop['name'] }}">
                             <td>
                                 <a href="{{ $detailUrl }}" class="admin-row-clickable__link">{{ $shop['name'] }}</a>
-                                <div class="admin-table-sub"><code>{{ $shop['id'] }}</code></div>
+                                <div class="admin-table-sub">
+                                    <code>{{ $shop['id'] }}</code>
+                                    @if($regAt)
+                                        <span class="admin-table-sub__sep">・</span>登録 {{ $regAt->format('Y-m-d') }}
+                                    @endif
+                                </div>
                             </td>
-                            <td data-label="登録日" class="text-sm">{{ $regAt ? $regAt->format('Y-m-d') : '—' }}</td>
+                            <td data-label="プラン" class="shop-plan-cell">
+                                @if($isPremium)
+                                    <span class="admin-status-badge is-premium"><i class="fas fa-crown"></i> {{ $p['label'] }}</span>
+                                    <div class="shop-plan-period">
+                                        {{ $p['starts_at'] ? \Illuminate\Support\Carbon::parse($p['starts_at'])->format('Y-m-d') : '—' }}
+                                        <span class="shop-plan-period__sep">〜</span>
+                                        {{ $p['ends_at'] ? \Illuminate\Support\Carbon::parse($p['ends_at'])->format('Y-m-d') : '—' }}
+                                    </div>
+                                    @if(!empty($p['paid_at']))
+                                        <div class="shop-plan-paid">入金 {{ \Illuminate\Support\Carbon::parse($p['paid_at'])->format('Y-m-d') }}</div>
+                                    @endif
+                                @elseif($p && (int) ($p['status'] ?? 0) === 1)
+                                    <span class="admin-status-badge is-warning"><i class="fas fa-hourglass-half"></i> 入金待ち</span>
+                                @elseif($p && (int) ($p['status'] ?? 0) === 3)
+                                    <span class="admin-status-badge is-inactive">期間満了</span>
+                                @elseif($p && (int) ($p['status'] ?? 0) === 4)
+                                    <span class="admin-status-badge is-inactive">キャンセル</span>
+                                @else
+                                    <span class="text-muted">未加入</span>
+                                @endif
+                            </td>
                             <td data-label="最終ログイン" class="shop-login shop-login--{{ $loginTone }}">
                                 @if($loginAt)
                                     <span class="shop-login__date">{{ $loginAt->format('Y-m-d H:i') }}</span>
@@ -194,7 +183,7 @@
                                     <span class="admin-status-badge is-warning"><i class="fas fa-hourglass-half"></i> 未確認</span>
                                 @endif
                             </td>
-                            <td data-label="求人公開">
+                            <td data-label="求人">
                                 <span class="admin-status-badge {{ ($shop['job_status_key'] ?? 'inactive') === 'active' ? 'is-success' : 'is-inactive' }}">
                                     {{ $shop['job_status'] ?? '未設定' }}
                                 </span>
@@ -228,26 +217,20 @@
 document.addEventListener('DOMContentLoaded', function () {
     var rows = Array.prototype.slice.call(document.querySelectorAll('[data-shop-row]'));
     var tbody = document.getElementById('shop-table-body');
-    var kpis = document.querySelectorAll('[data-shop-kpis] [data-shop-filter]');
-    var searchInput = document.getElementById('shop-search');
+    var chips = document.querySelectorAll('[data-shop-filters] [data-shop-filter]');
     var sortSelect = document.getElementById('shop-sort');
-    var hitsEl = document.getElementById('shop-hits');
     var emptyRow = document.getElementById('shop-empty-row');
 
-    var state = { filter: 'all', search: '', sort: 'last_login_desc' };
+    var state = { filter: 'all', sort: 'last_login_desc' };
 
     function matches(row) {
-        if (state.filter !== 'all') {
-            switch (state.filter) {
-                case 'active':      if (row.dataset.status !== 'active') return false; break;
-                case 'suspended':   if (row.dataset.status !== 'suspended') return false; break;
-                case 'doc_pending': if (row.dataset.doc !== 'pending') return false; break;
-                case 'dormant':     if (row.dataset.dormant !== '1') return false; break;
-            }
-        }
-        if (state.search) {
-            var q = state.search.toLowerCase();
-            if ((row.dataset.search || '').indexOf(q) === -1) return false;
+        switch (state.filter) {
+            case 'all': return true;
+            case 'active':      return row.dataset.status === 'active';
+            case 'suspended':   return row.dataset.status === 'suspended';
+            case 'premium':     return row.dataset.plan === 'premium';
+            case 'doc_pending': return row.dataset.doc === 'pending';
+            case 'dormant':     return row.dataset.dormant === '1';
         }
         return true;
     }
@@ -264,7 +247,6 @@ document.addEventListener('DOMContentLoaded', function () {
             return 0;
         });
         sorted.forEach(function (r) { tbody.appendChild(r); });
-        // 空行は末尾
         if (emptyRow) tbody.appendChild(emptyRow);
     }
 
@@ -275,27 +257,18 @@ document.addEventListener('DOMContentLoaded', function () {
             row.hidden = !show;
             if (show) visible++;
         });
-        if (hitsEl) hitsEl.textContent = visible + ' 店表示中';
         if (emptyRow) emptyRow.hidden = visible !== 0 || rows.length === 0;
     }
 
-    kpis.forEach(function (kpi) {
-        kpi.addEventListener('click', function () {
-            state.filter = kpi.getAttribute('data-shop-filter') || 'all';
-            kpis.forEach(function (k) {
-                var on = k === kpi;
-                k.classList.toggle('is-active', on);
-                k.setAttribute('aria-pressed', on ? 'true' : 'false');
+    chips.forEach(function (chip) {
+        chip.addEventListener('click', function () {
+            state.filter = chip.getAttribute('data-shop-filter') || 'all';
+            chips.forEach(function (c) {
+                c.classList.toggle('is-active', c === chip);
             });
             refresh();
         });
     });
-    if (searchInput) {
-        searchInput.addEventListener('input', function () {
-            state.search = searchInput.value.trim();
-            refresh();
-        });
-    }
     if (sortSelect) {
         sortSelect.addEventListener('change', function () {
             state.sort = sortSelect.value;

@@ -145,7 +145,7 @@
 | `GET /subscription` | 店舗ログイン時に活性/入金待ち/未加入で表示が変わる |
 | `POST /subscription/contract` | `billing_cycle` を保存、リダイレクト + `session('message')` |
 | `POST /subscription/cancel` | 入金待ちのみキャンセル可 |
-| `GET /subscription/invoice` | 契約がある場合のみ PDF/HTML 応答（dompdf 有無で分岐） |
+| `GET /subscription/invoice` | 契約がある場合のみ PDF/HTML 応答（mPDF 有無で分岐） |
 | `GET /subscription/receipt` | 入金確認後のみ発行、`paid_confirmed_at` が null なら 302 でエラー |
 | `GET /admin/plans` | 契約一覧、入金待ちを先頭に、`admin.permission:operations.deposits` 必須 |
 | `POST /admin/plans/{sub}/confirm` | 入金待ちのみ confirmPayment、それ以外は `session('error')` |
@@ -215,7 +215,7 @@ php artisan test --group=premium
 - 外部API（銀行検索など）は本番APIを叩かないよう Mock / Http::fake() を使用する
 - 金額・日付の境界値テストは必ず含める
 - Premium プランの `ends_at` 計算は `Carbon::addMonth()` / `addYear()` を使用するため、閏月・閏年の境界も確認する
-- dompdf 未導入環境では PDF ではなく HTML ビュー（`$printMode = true`）が返るため、テストは両パターン想定
+- mPDF 未導入環境では PDF ではなく HTML ビュー（`$printMode = true`）が返るため、テストは両パターン想定
 
 ---
 

@@ -39,16 +39,6 @@
             <div class="admin-alert admin-alert-error">{{ session('error') }}</div>
         @endif
 
-        @if(isset($pdfFontInstalled) && !$pdfFontInstalled)
-            <div class="admin-alert admin-alert-warning">
-                <strong>PDFの日本語フォントが未インストールです。</strong>
-                このままPDFをダウンロードすると本文が文字化けするため、サーバで
-                <code>php artisan pdf:install-japanese-font</code>
-                を1度だけ実行してください。実行後、通常のPDFダウンロードが有効になります。
-                （それまでは請求書プレビュー画面の「印刷 / 別名でPDF保存」でダウンロードできます）
-            </div>
-        @endif
-
         {{-- KPI: ボタンとして機能（クリックで下の一覧をフィルタ） --}}
         @php
             $overdueCount = 0;

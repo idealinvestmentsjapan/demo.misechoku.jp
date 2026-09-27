@@ -8,6 +8,7 @@ use App\Models\ShopPlanSubscription;
 use App\Services\BillingManagementService;
 use App\Services\InvoiceTemplateSettingsService;
 use App\Services\NotificationPreferenceService;
+use App\Services\PdfService;
 use App\Services\PlanSubscriptionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -447,7 +448,7 @@ class SettingController extends Controller
     }
 
     /**
-     * プラン請求書/領収書のPDFレスポンス（dompdf未導入時は印刷用HTML）。
+     * プラン請求書/領収書のPDFレスポンス（mPDF未導入時は印刷用HTML）。
      * 管理画面からも同じビュー・データ構造で発行する。
      */
     public static function buildPlanDocData(string $type, ShopPlanSubscription $sub, BillingManagementService $billing): array
@@ -497,15 +498,12 @@ class SettingController extends Controller
         $view = $type === 'receipt' ? 'billing.plan-receipt' : 'billing.plan-invoice';
         $filename = ($type === 'receipt' ? '領収書_' : '請求書_') . $doc['number'] . '.pdf';
 
-        if (!class_exists(\Barryvdh\DomPDF\Facade\Pdf::class)) {
-            // 印刷用HTML（ブラウザの印刷 → PDF保存）
+        if (!class_exists(\Mpdf\Mpdf::class)) {
+            // Print-friendly HTML fallback (browser print -> save as PDF)
             return view($view, ['doc' => $doc, 'printMode' => true]);
         }
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView($view, ['doc' => $doc, 'printMode' => false]);
-        $pdf->setPaper('a4', 'portrait');
-
-        return $pdf->download($filename);
+        return PdfService::download($view, ['doc' => $doc, 'printMode' => false], $filename);
     }
 
     private function currentShopId(): ?string

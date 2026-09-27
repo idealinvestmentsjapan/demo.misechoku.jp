@@ -404,11 +404,17 @@
                             @if($sc === BMS::STATUS_SHOP_PAYMENT_REPORTED)
                                 <div class="billing-action-box">
                                     <h3 class="billing-action-title">店舗入金照合</h3>
-                                    <form method="POST" action="{{ route('admin.deposits.shop-payment.confirm', $deposit['id']) }}" class="billing-inline-form">
+                                    <p class="admin-note">ネットバンキングの入金明細画面のスクリーンショットを証跡として添付してください（監査ログとして保管されます）。</p>
+                                    <form method="POST" action="{{ route('admin.deposits.shop-payment.confirm', $deposit['id']) }}" class="billing-inline-form" enctype="multipart/form-data" data-confirm-shop-payment-form>
                                         @csrf
                                         <div class="admin-form-row" style="margin-bottom:0;">
                                             <label class="admin-label">確認済み金額</label>
                                             <input type="number" name="confirmed_amount" class="admin-input" value="{{ $deposit['invoice_amount'] }}" min="1" required>
+                                        </div>
+                                        <div class="admin-form-row" style="margin-bottom:0;">
+                                            <label class="admin-label">ネットバンキングのスクリーンショット <span class="required">必須</span></label>
+                                            <input type="file" name="evidence_screenshot" accept="image/*" class="admin-input" data-shop-evidence-file required>
+                                            <small class="admin-note">JPEG / PNG など画像ファイル（10MB 以内）。入金金額・振込元・日時が写った画面を推奨。</small>
                                         </div>
                                         <div class="billing-check-grid" data-check-group>
                                             <label class="billing-check-item"><input type="checkbox" name="confirm_amount_checked" value="1" data-check-item> 金額を照合した</label>
@@ -416,11 +422,26 @@
                                             <label class="billing-check-item"><input type="checkbox" name="confirm_bank_checked" value="1" data-check-item> 銀行口座の着金を確認した</label>
                                         </div>
                                         <div class="management-actions">
-                                            <button type="submit" class="btn-action manage" data-check-submit disabled>
+                                            <button type="submit" class="btn-action manage" data-check-submit data-shop-payment-submit disabled>
                                                 <i class="fas fa-check"></i> 店舗入金を確認済みにする
                                             </button>
                                         </div>
                                     </form>
+                                </div>
+                            @endif
+
+                            @if(!empty($deposit['shop_payment_evidence_path']))
+                                <div class="billing-action-box">
+                                    <h3 class="billing-action-title">店舗入金 証跡</h3>
+                                    <p class="admin-note">
+                                        {{ $deposit['shop_payment_confirmed_at'] ?: '' }} に照合済み
+                                        @if(!empty($deposit['shop_payment_reference']))
+                                            ／ 参照番号 {{ $deposit['shop_payment_reference'] }}
+                                        @endif
+                                    </p>
+                                    <a href="{{ asset('storage/' . ltrim($deposit['shop_payment_evidence_path'], '/')) }}" target="_blank" rel="noopener" class="btn-action btn-action-secondary">
+                                        <i class="fas fa-image"></i> 証跡画像を開く
+                                    </a>
                                 </div>
                             @endif
 
@@ -618,6 +639,23 @@ document.addEventListener('DOMContentLoaded', function () {
             if (fileInput) fileInput.addEventListener('change', syncComplete);
             if (dateInput) dateInput.addEventListener('change', syncComplete);
             syncComplete();
+        }
+    });
+
+    // ============== 店舗入金照合フォーム：証跡画像＋3チェック ==============
+    document.querySelectorAll('[data-confirm-shop-payment-form]').forEach(function (form) {
+        var submit = form.querySelector('[data-shop-payment-submit]');
+        var checks = form.querySelectorAll('[data-check-item]');
+        var fileInput = form.querySelector('[data-shop-evidence-file]');
+        function syncShopConfirm() {
+            var checksOk = checks.length && Array.from(checks).every(function (c) { return c.checked; });
+            var hasFile = fileInput && fileInput.files && fileInput.files.length > 0;
+            submit.disabled = !(checksOk && hasFile);
+        }
+        if (submit) {
+            checks.forEach(function (c) { c.addEventListener('change', syncShopConfirm); });
+            if (fileInput) fileInput.addEventListener('change', syncShopConfirm);
+            syncShopConfirm();
         }
     });
 

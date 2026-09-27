@@ -11,7 +11,7 @@
 - **フロントエンド**: Vanilla JS（一部 jQuery）、Tailwind CSS v4（CSS-first config / @tailwindcss/cli）
 - **ビルド**: Tailwind は CLI で `public/assets/css/tailwind.css` に直接出力（Vite はバイパス運用中）
 - **DB**: MySQL 8.0（テストは SQLite）
-- **PDF**: `barryvdh/laravel-dompdf`（未導入環境では印刷用 HTML にフォールバック）
+- **PDF**: `mpdf/mpdf`（`App\Services\PdfService` でラップ。CJK フォント同梱のためサーバ側フォント配置は不要。未導入環境では印刷用 HTML にフォールバック）
 - **Push**: `minishlink/web-push`（VAPID / Web Push API）
 - **外部連携**: LINE Login + Messaging API Webhook、ジオコーディング API
 - **デプロイ先**: Plesk サーバ
@@ -405,7 +405,7 @@ body クラス:
 - `.env` は絶対にコミットしない
 - マイグレーション済みのカラム変更は新しいマイグレーションで対応
 - Plesk デプロイ後は `php artisan cache:clear` が必要
-- dompdf 未導入環境では帳票（請求書・領収書）は印刷用 HTML にフォールバック（`$printMode = true`）
+- mPDF 未導入環境（`composer install` 未実行）では帳票（請求書・領収書）は印刷用 HTML にフォールバック（`$printMode = true`）。PDF 生成は `App\Services\PdfService::download($view, $data, $filename)` を経由し、CJK フォント `sun-exta` を default とする（autoLangToFont 有効で日本語自動選択）
 - グローバルトースト `window.appToast(msg, variant)` はライト / ダーク共通の濃色パネル（`light-theme.css §14`）
 - PWA アイコンは `php artisan pwa:icons` で `public/assets/images/pwa/icon-{192,512}.png` を生成（インストール判定に必要）
 - Push 通知 VAPID キーは `php artisan push:vapid` で生成し `.env` に登録

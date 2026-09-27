@@ -602,7 +602,7 @@ class BillingManagementService
         return ['success' => true, 'message' => '入金報告を受け付けました。運営による着金照合をお待ちください。'];
     }
 
-    public function confirmShopPayment(int $depositId, array $payload): array
+    public function confirmShopPayment(int $depositId, array $payload, ?string $evidenceFilePath = null): array
     {
         $deposit = $this->findDepositById($depositId);
 
@@ -622,6 +622,13 @@ class BillingManagementService
             return ['success' => false, 'message' => '店舗入金照合前の確認項目を完了してください。'];
         }
 
+        // Evidence screenshot required to defend against unverified confirmations.
+        // Symmetry: cast transfer already requires an evidence image; the counterpart
+        // (shop payment matching) needs the same audit trail for internet banking.
+        if (!$evidenceFilePath) {
+            return ['success' => false, 'message' => 'ネットバンキングの入金画面スクリーンショット（証跡画像）をアップロードしてください。'];
+        }
+
         $confirmedAmount = (int) $payload['confirmed_amount'];
         $expectedAmount = (int) ($deposit->invoice_amount ?? 0);
         $reportedAmount = (int) ($deposit->shop_payment_reported_amount ?? 0);
@@ -635,6 +642,7 @@ class BillingManagementService
             ->update($this->filterExistingColumns('application_deposits', [
                 'status' => self::STATUS_SHOP_PAYMENT_CONFIRMED,
                 'shop_payment_confirmed_at' => now(),
+                'shop_payment_evidence_path' => $evidenceFilePath,
                 'updated_at' => now(),
             ]));
 
@@ -1945,6 +1953,7 @@ class BillingManagementService
             'shop_payment_reported_amount' => (int) ($row->shop_payment_reported_amount ?? 0),
             'shop_payment_reference' => $row->shop_payment_reference,
             'shop_payment_confirmed_at' => $this->formatDateTime($row->shop_payment_confirmed_at),
+            'shop_payment_evidence_path' => $row->shop_payment_evidence_path ?? null,
             'cast_transferred_at' => $this->formatDateTime($row->cast_transferred_at),
             'cast_transfer_reference' => $row->cast_transfer_reference,
             'cast_transfer_note' => $row->cast_transfer_note,
@@ -2377,6 +2386,7 @@ class BillingManagementService
             'shop_payment_reported_amount',
             'shop_payment_reference',
             'shop_payment_confirmed_at',
+            'shop_payment_evidence_path',
             'cast_transferred_at',
             'cast_transfer_reference',
             'cast_transfer_note',

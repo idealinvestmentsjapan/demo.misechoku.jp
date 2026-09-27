@@ -1020,6 +1020,41 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
 .admin-status-badge.is-danger,
 .admin-status-badge.is-error { background: var(--status-danger-bg); color: var(--status-danger-fg); border-color: var(--status-danger-bd); }
 .admin-status-badge.is-info { background: var(--status-info-bg); color: var(--status-info-fg); border-color: var(--status-info-bd); }
+.admin-status-badge.is-premium {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(168, 85, 247, 0.05));
+    color: var(--admin-primary);
+    border-color: var(--admin-primary-border);
+}
+
+/* 店舗プラン列（プラン名 + 契約期間 + 入金日を縦積み） */
+.shop-plan-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    align-items: flex-start;
+    line-height: 1.35;
+}
+.shop-plan-period {
+    font-size: 0.75rem;
+    color: var(--admin-sub);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+}
+.shop-plan-period__sep {
+    margin: 0 4px;
+    opacity: 0.55;
+}
+.shop-plan-paid {
+    font-size: 0.72rem;
+    color: var(--admin-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+/* 「ID・登録日」を1行の補助情報として並べるセパレータ */
+.admin-table-sub__sep {
+    margin: 0 6px;
+    opacity: 0.4;
+}
 
 .admin-toggle-button {
     display: inline-flex;
@@ -2900,6 +2935,16 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
     background: rgba(255, 255, 255, 0.22);
     color: var(--admin-ink);
 }
+.admin-filter-chip.is-critical {
+    color: var(--status-danger-fg);
+    border-color: var(--status-danger-bd);
+}
+.admin-filter-chip.is-critical:hover,
+.admin-filter-chip.is-critical.is-active {
+    background: var(--status-danger-bg);
+    border-color: var(--status-danger-bd);
+    color: var(--status-danger-fg);
+}
 
 /* アコーディオン（details要素ベース） */
 .admin-accordion {
@@ -3104,12 +3149,18 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
     border-bottom: 1px solid var(--admin-line-soft);
     margin-bottom: 12px;
 }
+/* 見出し行はグリッドで [タイトル塊] [アクション塊] の 2 カラム固定。
+   flex-wrap: wrap + justify-content: space-between だと広幅で中央に空白ができる */
 .deposit-card-head-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-    justify-content: space-between;
-    gap: 10px;
+    gap: 12px;
+}
+.deposit-card-head-row > *:first-child { min-width: 0; }
+.deposit-card-head-row .management-actions {
     flex-wrap: wrap;
+    justify-content: flex-end;
 }
 .deposit-card-head-id {
     font-size: 0.74rem;
@@ -3148,7 +3199,7 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
 .deposit-summary-content {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     flex-wrap: wrap;
     padding: 4px 0;
 }
@@ -3158,21 +3209,27 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
     font-weight: 600;
     flex-shrink: 0;
 }
+/* 名前は必要以上に伸ばさず、pill/chip/progress と自然に並ぶようにする。
+   `flex: 1` にすると広幅で右側とのあいだに大きな空白ができるので撤去 */
 .deposit-summary-name {
     font-size: 0.92rem;
     font-weight: 700;
     color: var(--admin-text);
-    flex: 1;
+    flex: 0 1 auto;
     min-width: 0;
+    max-width: min(100%, 32ch);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+/* 金額のみ右端に固定（残り要素は左詰めで自然に並ぶ） */
 .deposit-summary-amount {
     font-size: 0.92rem;
     font-weight: 700;
     color: var(--admin-text);
     flex-shrink: 0;
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
 }
 
 /* タスクカード urgency band（左側カラー帯） */
@@ -3310,17 +3367,26 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
     }
     .invoice-issue-hero-actions .btn-action,
     .invoice-issue-hero-actions .invoice-template-dl { width: auto; }
+    /* 案件カードは 3 カラムグリッド：[情報 (可変)] [金額 (右寄せ)] [アクション]
+       flex-wrap による予測不能な折返しを避け、広幅でも要素が重なったり間延びしないようにする */
     .invoice-pending-card {
-        flex-direction: row;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
         align-items: center;
-        justify-content: space-between;
+        gap: 16px;
         padding: 14px 18px;
     }
-    .invoice-pending-card-info { flex: 1; }
+    .invoice-pending-card-info { min-width: 0; flex: initial; }
+    .invoice-pending-card-amount {
+        justify-self: end;
+        text-align: right;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+    }
     .invoice-pending-card-actions {
         flex-direction: row;
         width: auto;
+        flex-shrink: 0;
     }
     .invoice-pending-card-actions .btn-action { width: auto; }
     .invoice-link-deposits { width: auto; }
@@ -3418,18 +3484,20 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
         grid-template-columns: minmax(0, 1.4fr) minmax(320px, 1fr);
         gap: 18px;
     }
+    /* デスクトップは 3 列固定。auto-fit だと 5〜6 列に増えて各セルの中身がスカスカになる */
     .billing-meta-list,
     .billing-amount-list {
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
     .invoice-admin-bank .billing-meta-list {
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
+    /* auto-fit だと 5+ 列に増え、各セルの文字が中央でスカスカに。3〜4 列で止める */
     .task-card-grid {
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
     .detail-row {
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 
     /* テーブル: 通常のテーブル表示（カード化を解除） */

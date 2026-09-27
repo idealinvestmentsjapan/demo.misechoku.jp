@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ShopPlanSubscription;
 use App\Services\AdminOperationLogService;
 use App\Services\AdminPrivateAccessService;
 use App\Services\BillingManagementService;
@@ -87,10 +88,29 @@ class ShopController extends Controller
                 });
         }
 
+        // プラン契約状況：店舗ごとに最も関連度の高い1件を選ぶ（有効 > 入金待ち > 期間満了 > キャンセル）
+        $subsByShop = [];
+        if (Schema::hasTable('shop_plan_subscriptions')) {
+            $priority = [
+                ShopPlanSubscription::STATUS_ACTIVE          => 0,
+                ShopPlanSubscription::STATUS_PENDING_PAYMENT => 1,
+                ShopPlanSubscription::STATUS_EXPIRED         => 2,
+                ShopPlanSubscription::STATUS_CANCELED        => 3,
+            ];
+            foreach (DB::table('shop_plan_subscriptions')->get() as $r) {
+                $key = (string) $r->shop_id;
+                $newP = $priority[(int) $r->status] ?? 99;
+                $curP = isset($subsByShop[$key]) ? ($priority[(int) $subsByShop[$key]->status] ?? 99) : 99;
+                if (!isset($subsByShop[$key]) || $newP < $curP) {
+                    $subsByShop[$key] = $r;
+                }
+            }
+        }
+
         $shops = $query
             ->orderByDesc('shops.created_at')
             ->get()
-            ->map(function ($shop) use ($operationSummaries, $horizontal, $hasApprovalColumn, $licenseApprovedByShop) {
+            ->map(function ($shop) use ($operationSummaries, $horizontal, $hasApprovalColumn, $licenseApprovedByShop, $subsByShop) {
                 $shopId = (string) $shop->id;
 
                 if ($horizontal) {
@@ -132,6 +152,22 @@ class ShopController extends Controller
                     ];
                 }
 
+                $sub = $subsByShop[$shopId] ?? null;
+                $planInfo = null;
+                if ($sub) {
+                    $cycleLabel = ($sub->billing_cycle ?? '') === ShopPlanSubscription::CYCLE_YEARLY ? '年払い' : '月払い';
+                    $planName = strtoupper((string) ($sub->plan ?? 'premium'));
+                    $planInfo = [
+                        'status'     => (int) $sub->status,
+                        'plan'       => $sub->plan,
+                        'cycle'      => $sub->billing_cycle,
+                        'label'      => $planName . '（' . $cycleLabel . '）',
+                        'starts_at'  => $sub->starts_at,
+                        'ends_at'    => $sub->ends_at,
+                        'paid_at'    => $sub->paid_confirmed_at,
+                    ];
+                }
+
                 return [
                     'id' => $shop->id,
                     'name' => $shop->shop_name ?: '未設定',
@@ -151,6 +187,7 @@ class ShopController extends Controller
                     'recruit_schema_horizontal' => $horizontal,
                     'admin_recruit_toggles' => $adminRecruitToggles,
                     'operation_summary' => $operationSummaries[$shopId] ?? null,
+                    'plan_info' => $planInfo,
                 ];
             });
 

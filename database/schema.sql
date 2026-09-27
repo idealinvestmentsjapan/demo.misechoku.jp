@@ -452,6 +452,7 @@ CREATE TABLE IF NOT EXISTS `application_deposits` (
   `shop_payment_reported_amount` int DEFAULT NULL,
   `shop_payment_reference` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `shop_payment_confirmed_at` timestamp NULL DEFAULT NULL,
+  `shop_payment_evidence_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '店舗入金照合の証跡画像パス（public disk・ネットバンキングのスクショ）',
   `cast_transferred_at` timestamp NULL DEFAULT NULL,
   `cast_transfer_reference` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `cast_transfer_note` text COLLATE utf8mb4_unicode_ci,

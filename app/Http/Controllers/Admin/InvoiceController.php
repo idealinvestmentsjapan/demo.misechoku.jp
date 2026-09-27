@@ -54,7 +54,6 @@ class InvoiceController extends Controller
 
         $summary = $dashboard['summary'];
         $adminBank = $this->billingManagementService->getAdminBankAccount();
-        $pdfFontInstalled = is_file(storage_path('fonts/ipaexg.ttf'));
 
         return view('admin.invoices.index', [
             'pending' => $pending,
@@ -63,7 +62,6 @@ class InvoiceController extends Controller
             'deliverySummary' => $deliverySummary,
             'summary' => $summary,
             'adminBank' => $adminBank,
-            'pdfFontInstalled' => $pdfFontInstalled,
         ]);
     }
 
