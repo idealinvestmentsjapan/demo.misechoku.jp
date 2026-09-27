@@ -203,10 +203,6 @@ class TalkController extends Controller
                     self::APPLICATION_STATUS_CHATTING,
                     self::APPLICATION_STATUS_INTERVIEW_PENDING,
                 ], true),
-            'canRequestFulltime' => $isCastPortal
-                && !$blockState['is_blocked']
-                && $currentApplicationStatus === self::APPLICATION_STATUS_HIRED
-                && $selectedTalkJobKind === 'trial',
             'quickTemplates' => $this->messageTemplateService->getQuickTemplateSlots(
                 $isCastPortal ? 'cast' : 'shop',
                 $isCastPortal ? $this->currentCastId() : $this->currentShopId()
@@ -400,14 +396,6 @@ class TalkController extends Controller
         $castId = $isCastPortal ? $this->currentCastId() : $partnerId;
         $shopId = $isCastPortal ? $partnerId : $this->currentShopId();
         $currentApplicationStatus = $this->getCurrentApplicationStatus($castId, $shopId);
-        if ($actionType === 'fulltime_request') {
-            abort_if(!$isCastPortal, 403);
-            abort_if(
-                !($currentApplicationStatus === self::APPLICATION_STATUS_HIRED && $this->getSelectedTalkJobKind($castId, $shopId) === 'trial'),
-                422,
-                '本入店リクエストは体験採用後のみ送信できます。'
-            );
-        }
         $bonusMeta = in_array($actionType, ['interview_offer', 'interview_confirm'], true)
             ? $this->buildJobBonusMetaForConversation($castId, $shopId)
             : null;
@@ -573,10 +561,6 @@ class TalkController extends Controller
             'cancel_status' => [
                 self::MESSAGE_TYPE_TEXT,
                 '【自動送信】面談ステータスをキャンセルし、やり取り中に戻しました。必要に応じて面談候補日を再設定してください。',
-            ],
-            'fulltime_request' => [
-                self::MESSAGE_TYPE_TEXT,
-                '【自動送信】本入店を希望します。ご確認をお願いします。',
             ],
             'work_complete_report' => [
                 self::MESSAGE_TYPE_TEXT,
@@ -755,14 +739,6 @@ class TalkController extends Controller
                         ->where('sender_type', '!=', $mySenderType)
                         ->where('is_read', false)
                         ->count(),
-                    'fulltime_request_unread_count' => (!$isCastPortal)
-                        ? $messages
-                            ->where('sender_type', '!=', $mySenderType)
-                            ->where('is_read', false)
-                            ->where('type', self::MESSAGE_TYPE_TEXT)
-                            ->where('content', '本入店を希望します。ご確認をお願いします。')
-                            ->count()
-                        : 0,
                     'reply_count' => $messages
                         ->where('sender_type', $mySenderType)
                         ->count(),
@@ -774,13 +750,6 @@ class TalkController extends Controller
                         ? ($blockState['blocked_by_me'] ? 'ブロック中' : '相手がブロック中')
                         : $this->statusLabel($statusCode, $jobKindForLabel, $applicationStatus),
                     'talk_job_kind' => $jobKindForLabel,
-                    'has_fulltime_request_badge' => (!$isCastPortal)
-                        && $messages
-                            ->where('sender_type', '!=', $mySenderType)
-                            ->where('is_read', false)
-                            ->where('type', self::MESSAGE_TYPE_TEXT)
-                            ->where('content', '本入店を希望します。ご確認をお願いします。')
-                            ->count() > 0,
                     'pinned' => false,
                 ];
             })
@@ -1765,9 +1734,6 @@ class TalkController extends Controller
             $body = $isCastPortal
                 ? '面談日程がキャンセルされました。再提案をお願いします。'
                 : '面談日程が再調整になりました。トークをご確認ください。';
-        } elseif ($actionType === 'fulltime_request') {
-            $title = '本入店リクエスト';
-            $body = 'キャストから本入店リクエストが届きました。';
         } elseif ($actionType === 'work_complete_report') {
             $title = '勤務完了報告';
             $body = 'キャストから勤務完了報告が届きました。';

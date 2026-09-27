@@ -62,7 +62,7 @@ class NotificationSpecService
              'default_enabled' => true],
 
             ['key' => 'talk.status_changed', 'group' => 'トーク', 'label' => '選考・勤務ステータス更新',
-             'condition' => '面談キャンセル依頼／承諾、日程再調整、本入店リクエスト、勤務完了報告、ボーナス達成報告などのトークアクションが実行された時',
+             'condition' => '面談キャンセル依頼／承諾、日程再調整、勤務完了報告、ボーナス達成報告などのトークアクションが実行された時',
              'default_title' => 'トーク更新',
              'default_body' => 'トーク内容が更新されました。トーク画面でご確認ください。',
              'default_enabled' => true],

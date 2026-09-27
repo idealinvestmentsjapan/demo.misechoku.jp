@@ -74,14 +74,11 @@ CREATE TABLE IF NOT EXISTS `cast_profiles` (
   `personality_type` varchar(4) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `latitude` decimal(10,7) DEFAULT NULL,
   `longitude` decimal(10,7) DEFAULT NULL,
-  `available_until` timestamp NULL DEFAULT NULL COMMENT '「今すぐ入れる」宣言の有効期限。NULL または過去なら宣言なし',
-  `available_declared_at` timestamp NULL DEFAULT NULL COMMENT '直近の available_until を宣言した時刻（同時刻タイブレーク用）',
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `cast_profiles_cast_id_foreign` (`cast_id`),
-  KEY `fk_cast_profiles_industry` (`industry_id`),
-  KEY `idx_cast_profiles_available_until` (`available_until`)
+  KEY `fk_cast_profiles_industry` (`industry_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------------
@@ -248,14 +245,11 @@ CREATE TABLE IF NOT EXISTS `shop_profiles` (
   `close_time` time DEFAULT NULL COMMENT '閉店時刻',
   `latitude` decimal(10,7) DEFAULT NULL,
   `longitude` decimal(10,7) DEFAULT NULL,
-  `available_until` timestamp NULL DEFAULT NULL COMMENT '「本日すぐ入れます」宣言の有効期限。NULL または過去なら宣言なし',
-  `available_declared_at` timestamp NULL DEFAULT NULL COMMENT '直近の available_until を宣言した時刻',
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_shop_profiles_shop_id` (`shop_id`),
-  KEY `fk_shop_profiles_industry` (`industry_id`),
-  KEY `idx_shop_profiles_available_until` (`available_until`)
+  KEY `fk_shop_profiles_industry` (`industry_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------------
@@ -957,19 +951,6 @@ CREATE TABLE IF NOT EXISTS `admin_role_permissions` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `admin_role_permissions_role_permission_unique` (`role`, `permission`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- -----------------------------------------------------------------------------
--- line_messages
--- -----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `line_messages` (
-  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
-  `line_user_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `line_message_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `text` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------------

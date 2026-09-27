@@ -294,7 +294,7 @@ database/
 - **ヘルプ採用の請求**（`talk_job_kind = 'help'`）: ボーナス金なし。代わりに **ヘルプ時給1時間分の135%** を店舗へ請求し、**時給の50%** をキャストへ振込（運営の取り分は85%分）。システム手数料10%は上乗せしない。時給はヘルプ時給スナップショット（`applied_help_hourly_wage` → `shop_jobs.help_hourly_wage` の順で解決）。体験入店（trial）は対象外（従来どおりボーナス金のみ）。定数は `BillingManagementService::HELP_INVOICE_RATE` / `HELP_CAST_BACK_RATE`。
 - **トークアクション**: `App\Support\TalkActionRegistry` に権限マトリクスを集約。`TalkController@action` の
   `action_type` は以下:
-  - キャストのみ: `interview_confirm` / `interview_cancel_accept` / `fulltime_request` / `work_complete_report` / `bonus_achievement_report`
+  - キャストのみ: `interview_confirm` / `interview_cancel_accept` / `work_complete_report` / `bonus_achievement_report`
   - 店舗のみ: `interview_offer` / `interview_cancel_request` / `hired` / `rejected` / `cancel_status`
   - 両側: `set_job_kind`
   - 未定義の action_type は Rule::in で 422 拒否

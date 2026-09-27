@@ -93,7 +93,6 @@ TRUNCATE TABLE `shops`;
 TRUNCATE TABLE `shop_plan_subscriptions`;
 TRUNCATE TABLE `user_talk_templates`;
 TRUNCATE TABLE `support_inquiries`;
-TRUNCATE TABLE `line_messages`;
 TRUNCATE TABLE `admin_operation_logs`;
 TRUNCATE TABLE `admin_role_permissions`;
 TRUNCATE TABLE `user_reports`;
@@ -163,57 +162,57 @@ INSERT INTO `casts` (`id`, `email`, `email_verified_at`, `password`, `status`, `
 -- Phase 3: cast_profiles（50 人分）
 -- =============================================================================
 
-INSERT INTO `cast_profiles` (`id`, `industry_id`, `cast_id`, `nickname`, `name`, `birthday`, `pref`, `city`, `latitude`, `longitude`, `available_until`, `available_declared_at`, `pr`, `exp`, `profession`, `personality_type`, `created_at`, `updated_at`) VALUES
-(1, 1, 'c00000001', 'みさき', '桜井美咲', '2001-05-15', '東京都', '中央区', 35.6826780, 139.7807160, DATE_ADD(NOW(), INTERVAL 2 HOUR), NOW(), '経験1年です！素敵なお店で頑張りたいです。', 1, '大学生', 'LCOH', NOW(), NOW()),
-(2, 1, 'c00000002', 'ゆい', '田中結衣', '1994-04-24', '東京都', '渋谷区', 35.6580000, 139.7016000, DATE_ADD(NOW(), INTERVAL 4 HOUR), NOW(), 'よろしくお願いします！', 1, 'モデル', 'LDMV', NOW(), NOW()),
-(3, 1, 'c00000003', 'マリ', '田端麻里奈', '1999-10-15', '東京都', '江戸川区', 35.7062820, 139.8683050, NULL, NULL, '面談まちです', 0, '学生', 'HXOL', NOW(), NOW()),
-(4, 1, 'c00000004', '政子', '田所政子', '2005-05-10', '東京都', '品川区', 35.6058540, 139.7325590, NULL, NULL, '初めてです、優しく教えてください。', 0, 'アルバイト', 'PXTQ', NOW(), NOW()),
-(5, 1, 'c00000005', 'のりりん', '間瀬紀子', '1998-05-10', '東京都', '港区', 35.6598140, 139.7290560, NULL, NULL, '5年経験あります。', 1, '会社員', 'LDOH', NOW(), NOW()),
-(6, NULL, 'c00000006', 'あや', '藤原彩', '2000-08-20', '東京都', '練馬区', NULL, NULL, NULL, NULL, 'よろしく', 0, NULL, NULL, NOW(), NOW()),
-(7, 1, 'c00000007', 'さくら', '桜庭さくら', '1996-03-14', '大阪府', '大阪市中央区', 34.6873000, 135.5259000, NULL, NULL, '関西です！東京進出予定！', 1, 'キャバ嬢', 'PDOH', NOW(), NOW()),
-(8, 1, 'c00000008', 'みほ', '田村美帆', '2003-11-05', '東京都', '中野区', NULL, NULL, DATE_ADD(NOW(), INTERVAL 8 HOUR), NOW(), '長時間対応できます', 0, 'アルバイト', NULL, NOW(), NOW()),
-(9, 1, 'c00000009', 'えりか', '安倍絵里加', '1997-01-25', '東京都', '中央区', 35.6812780, 139.7671250, NULL, NULL, 'よろしくお願いします', 1, 'OL', 'LDOV', NOW(), NOW()),
-(10, 1, 'c00000010', 'かな', '木村奏', '1995-12-08', '東京都', '中央区', 35.6712780, 139.7501250, NULL, NULL, '毎日出勤できます', 1, 'フリーター', 'LXOH', NOW(), NOW()),
-(11, 2, 'c00000011', 'りな', '林梨奈', '2000-07-01', '東京都', '新宿区', 35.6938340, 139.7034540, DATE_ADD(NOW(), INTERVAL 3 HOUR), NOW(), '銀座のお店希望です', 1, 'モデル', 'LDMH', NOW(), NOW()),
-(12, 2, 'c00000012', 'まゆ', '松田真由', '1998-11-11', '東京都', '港区', 35.6595050, 139.7295060, DATE_ADD(NOW(), INTERVAL 5 HOUR), NOW(), '週3で入れます', 1, '大学生', 'LCOV', NOW(), NOW()),
-(13, 3, 'c00000013', 'あかね', '赤木あかね', '2001-02-14', '東京都', '中央区', 35.6702730, 139.7726300, DATE_ADD(NOW(), INTERVAL 6 HOUR), NOW(), 'ラウンジ経験あり', 1, '会社員', 'LDOH', NOW(), NOW()),
-(14, 1, 'c00000014', 'ひなの', '日野ひなの', '2003-08-22', '東京都', '渋谷区', 35.6580000, 139.7016000, DATE_ADD(NOW(), INTERVAL 2 HOUR), NOW(), '未経験ですが頑張ります', 0, '学生', 'PCOV', NOW(), NOW()),
-(15, 2, 'c00000015', 'ちさと', '千葉千聡', '1995-03-30', '東京都', '中央区', 35.6712780, 139.7601250, DATE_ADD(NOW(), INTERVAL 4 HOUR), NOW(), '銀座で5年です', 1, 'キャバ嬢', 'LDMV', NOW(), NOW()),
-(16, 1, 'c00000016', 'ゆうな', '佐々木優奈', '1999-12-05', '東京都', '目黒区', 35.6337690, 139.7156960, DATE_ADD(NOW(), INTERVAL 3 HOUR), NOW(), '接客大好きです', 1, 'アルバイト', 'LCOH', NOW(), NOW()),
-(17, 4, 'c00000017', 'のあ', '野田乃愛', '2002-05-08', '東京都', '世田谷区', 35.6465170, 139.6532930, DATE_ADD(NOW(), INTERVAL 5 HOUR), NOW(), 'ガールズバー経験あり', 0, '大学生', 'PCOL', NOW(), NOW()),
-(18, 1, 'c00000018', 'まりん', '小林麻鈴', '2004-09-19', '東京都', '豊島区', 35.7295030, 139.7141470, NULL, NULL, '週末のみ出勤希望', 0, '学生', 'HCOH', NOW(), NOW()),
-(19, 3, 'c00000019', 'るか', '伊藤瑠花', '1997-06-25', '東京都', '港区', 35.6641820, 139.7301560, NULL, NULL, '池袋周辺希望です', 1, 'OL', 'LDOV', NOW(), NOW()),
-(20, 2, 'c00000020', 'みく', '三村美空', '2000-11-02', '東京都', '中央区', 35.6712780, 139.7601250, DATE_ADD(NOW(), INTERVAL 7 HOUR), NOW(), 'クラブで働きたいです', 1, 'フリーター', 'LDMH', NOW(), NOW()),
-(21, 1, 'c00000021', 'ここみ', '石田心美', '1996-04-17', '東京都', '新宿区', 35.6919760, 139.7031560, NULL, NULL, '新宿希望です', 1, 'キャバ嬢', 'LDOV', NOW(), NOW()),
-(22, 5, 'c00000022', 'なつき', '夏木菜月', '2002-08-08', '東京都', '渋谷区', 35.6595050, 139.7005460, DATE_ADD(NOW(), INTERVAL 4 HOUR), NOW(), 'コンカフェ経験あり', 0, '大学生', 'PCOL', NOW(), NOW()),
-(23, 1, 'c00000023', 'れいな', '田中礼奈', '1998-01-13', '神奈川県', '横浜市中区', 35.4478280, 139.6425160, NULL, NULL, '横浜からでも通えます', 1, 'モデル', 'LDMV', NOW(), NOW()),
-(24, 2, 'c00000024', 'ひまり', '中村陽向', '2001-06-06', '東京都', '中央区', 35.6702730, 139.7726300, DATE_ADD(NOW(), INTERVAL 3 HOUR), NOW(), 'クラブで長く続けたいです', 1, 'フリーター', 'LDOH', NOW(), NOW()),
-(25, 3, 'c00000025', 'きらり', '吉川きらり', '1999-10-21', '東京都', '港区', 35.6641820, 139.7301560, DATE_ADD(NOW(), INTERVAL 6 HOUR), NOW(), '六本木のラウンジで働きたい', 1, 'OL', 'LDMV', NOW(), NOW()),
-(26, 1, 'c00000026', 'かえで', '楓', '2003-03-03', '東京都', '文京区', 35.7080370, 139.7523090, NULL, NULL, '初心者ですが頑張ります', 0, '大学生', 'PCOH', NOW(), NOW()),
-(27, 6, 'c00000027', 'いちか', '市川一花', '1997-07-27', '東京都', '中野区', 35.7079240, 139.6633330, DATE_ADD(NOW(), INTERVAL 5 HOUR), NOW(), 'スナックで週3〜', 1, 'アルバイト', 'LDOH', NOW(), NOW()),
-(28, 1, 'c00000028', 'みゆ', '深津みゆ', '2000-12-15', '大阪府', '大阪市北区', 34.7024540, 135.4959370, NULL, NULL, '大阪でも東京でも', 0, 'フリーター', 'PCOV', NOW(), NOW()),
-(29, 2, 'c00000029', 'まなみ', '真波', '1998-09-09', '東京都', '中央区', 35.6712780, 139.7601250, NULL, NULL, '銀座メインで', 1, 'キャバ嬢', 'LDMV', NOW(), NOW()),
-(30, 1, 'c00000030', 'あんな', '安藤杏那', '2001-05-30', '東京都', '渋谷区', 35.6580000, 139.7016000, NULL, NULL, '渋谷 or 六本木', 1, '大学生', 'LCOH', NOW(), NOW()),
-(31, 1, 'c00000031', 'のぞみ', '望月希', '1996-02-11', '東京都', '中央区', 35.6702730, 139.7726300, NULL, NULL, '銀座希望です', 1, 'モデル', 'LDMV', NOW(), NOW()),
-(32, 3, 'c00000032', 'らん', '中西蘭', '2002-04-04', '東京都', '港区', 35.6641820, 139.7301560, NULL, NULL, '六本木のラウンジ', 0, '学生', 'PCOL', NOW(), NOW()),
-(33, 4, 'c00000033', 'えみり', '江藤絵美里', '1999-08-18', '東京都', '渋谷区', 35.6595050, 139.7005460, NULL, NULL, 'ガールズバー経験', 1, 'フリーター', 'LDOH', NOW(), NOW()),
-(34, 1, 'c00000034', 'なな', '奈々', '2000-11-23', '東京都', '中央区', 35.6812780, 139.7671250, NULL, NULL, '接客経験3年', 1, 'キャバ嬢', 'LDMV', NOW(), NOW()),
-(35, 6, 'c00000035', 'みお', '澪', '2003-06-18', '愛知県', '名古屋市中区', 35.1815090, 136.9066160, NULL, NULL, '名古屋でスナック希望', 0, '大学生', 'PCOV', NOW(), NOW()),
-(36, 2, 'c00000036', 'ふうか', '福井風香', '1997-12-01', '東京都', '中央区', 35.6712780, 139.7601250, NULL, NULL, '銀座クラブ経験', 1, 'モデル', 'LDMV', NOW(), NOW()),
-(37, 5, 'c00000037', 'ももか', '百花', '2002-01-25', '東京都', '渋谷区', 35.6595050, 139.7005460, NULL, NULL, 'コンカフェ大好き', 0, '大学生', 'PCOH', NOW(), NOW()),
-(38, 1, 'c00000038', 'さやか', '清川さやか', '1998-10-10', '東京都', '港区', 35.6598140, 139.7290560, NULL, NULL, '港区周辺希望', 1, 'OL', 'LDOV', NOW(), NOW()),
-(39, 1, 'c00000039', 'あき', '秋田亜紀', '1995-05-05', '東京都', '中央区', 35.6812780, 139.7671250, NULL, NULL, 'ベテランです', 1, 'キャバ嬢', 'LDMV', NOW(), NOW()),
-(40, 3, 'c00000040', 'みおん', '三上澪音', '2001-09-12', '東京都', '豊島区', 35.7295030, 139.7141470, NULL, NULL, '池袋ラウンジ希望', 1, 'アルバイト', 'LDOH', NOW(), NOW()),
-(41, 1, 'c00000041', 'るり', '瑠璃', '2000-03-20', '東京都', '中央区', 35.6702730, 139.7726300, DATE_ADD(NOW(), INTERVAL 4 HOUR), NOW(), '銀座で長く', 1, 'モデル', 'LDMV', NOW(), NOW()),
-(42, 1, 'c00000042', 'ひな', '雛', '2003-07-07', '東京都', '渋谷区', 35.6580000, 139.7016000, DATE_ADD(NOW(), INTERVAL 6 HOUR), NOW(), '未経験でも頑張ります', 0, '学生', 'PCOV', NOW(), NOW()),
-(43, 2, 'c00000043', 'かのん', '加納カノン', '1998-12-30', '東京都', '中央区', 35.6712780, 139.7601250, DATE_ADD(NOW(), INTERVAL 3 HOUR), NOW(), '週2〜5希望', 1, 'フリーター', 'LDOH', NOW(), NOW()),
-(44, 1, 'c00000044', 'みか', '三上美佳', '1996-11-11', '東京都', '港区', 35.6598140, 139.7290560, DATE_ADD(NOW(), INTERVAL 5 HOUR), NOW(), '高収入希望', 1, 'キャバ嬢', 'LDMV', NOW(), NOW()),
-(45, 4, 'c00000045', 'あゆ', '歩', '2002-06-13', '東京都', '新宿区', 35.6919760, 139.7031560, NULL, NULL, 'ガールズバー経験3年', 0, 'アルバイト', 'PCOL', NOW(), NOW()),
-(46, 3, 'c00000046', 'めい', '芽衣', '1999-04-22', '東京都', '中央区', 35.6702730, 139.7726300, DATE_ADD(NOW(), INTERVAL 7 HOUR), NOW(), 'ラウンジ経験2年', 1, 'OL', 'LDOV', NOW(), NOW()),
-(47, 5, 'c00000047', 'ゆず', '柚', '2004-02-02', '東京都', '渋谷区', 35.6595050, 139.7005460, DATE_ADD(NOW(), INTERVAL 4 HOUR), NOW(), 'メイド経験あり', 0, '大学生', 'PCOH', NOW(), NOW()),
-(48, 1, 'c00000048', 'とわ', '十和', '2000-08-08', '福岡県', '福岡市中央区', 33.5822010, 130.4067020, DATE_ADD(NOW(), INTERVAL 3 HOUR), NOW(), '福岡でキャバクラ', 1, 'モデル', 'LDMV', NOW(), NOW()),
-(49, 2, 'c00000049', 'ここ', '心', '2001-11-19', '東京都', '中央区', 35.6712780, 139.7601250, DATE_ADD(NOW(), INTERVAL 5 HOUR), NOW(), 'クラブ長期希望', 1, 'キャバ嬢', 'LDMV', NOW(), NOW()),
-(50, 3, 'c00000050', 'みさ', '美紗', '1998-05-25', '東京都', '港区', 35.6641820, 139.7301560, DATE_ADD(NOW(), INTERVAL 6 HOUR), NOW(), 'ラウンジで安定', 1, 'OL', 'LDOH', NOW(), NOW());
+INSERT INTO `cast_profiles` (`id`, `industry_id`, `cast_id`, `nickname`, `name`, `birthday`, `pref`, `city`, `latitude`, `longitude`, `pr`, `exp`, `profession`, `personality_type`, `created_at`, `updated_at`) VALUES
+(1, 1, 'c00000001', 'みさき', '桜井美咲', '2001-05-15', '東京都', '中央区', 35.6826780, 139.7807160, '経験1年です！素敵なお店で頑張りたいです。', 1, '大学生', 'LCOH', NOW(), NOW()),
+(2, 1, 'c00000002', 'ゆい', '田中結衣', '1994-04-24', '東京都', '渋谷区', 35.6580000, 139.7016000, 'よろしくお願いします！', 1, 'モデル', 'LDMV', NOW(), NOW()),
+(3, 1, 'c00000003', 'マリ', '田端麻里奈', '1999-10-15', '東京都', '江戸川区', 35.7062820, 139.8683050, '面談まちです', 0, '学生', 'HXOL', NOW(), NOW()),
+(4, 1, 'c00000004', '政子', '田所政子', '2005-05-10', '東京都', '品川区', 35.6058540, 139.7325590, '初めてです、優しく教えてください。', 0, 'アルバイト', 'PXTQ', NOW(), NOW()),
+(5, 1, 'c00000005', 'のりりん', '間瀬紀子', '1998-05-10', '東京都', '港区', 35.6598140, 139.7290560, '5年経験あります。', 1, '会社員', 'LDOH', NOW(), NOW()),
+(6, NULL, 'c00000006', 'あや', '藤原彩', '2000-08-20', '東京都', '練馬区', NULL, NULL, 'よろしく', 0, NULL, NULL, NOW(), NOW()),
+(7, 1, 'c00000007', 'さくら', '桜庭さくら', '1996-03-14', '大阪府', '大阪市中央区', 34.6873000, 135.5259000, '関西です！東京進出予定！', 1, 'キャバ嬢', 'PDOH', NOW(), NOW()),
+(8, 1, 'c00000008', 'みほ', '田村美帆', '2003-11-05', '東京都', '中野区', NULL, NULL, '長時間対応できます', 0, 'アルバイト', NULL, NOW(), NOW()),
+(9, 1, 'c00000009', 'えりか', '安倍絵里加', '1997-01-25', '東京都', '中央区', 35.6812780, 139.7671250, 'よろしくお願いします', 1, 'OL', 'LDOV', NOW(), NOW()),
+(10, 1, 'c00000010', 'かな', '木村奏', '1995-12-08', '東京都', '中央区', 35.6712780, 139.7501250, '毎日出勤できます', 1, 'フリーター', 'LXOH', NOW(), NOW()),
+(11, 2, 'c00000011', 'りな', '林梨奈', '2000-07-01', '東京都', '新宿区', 35.6938340, 139.7034540, '銀座のお店希望です', 1, 'モデル', 'LDMH', NOW(), NOW()),
+(12, 2, 'c00000012', 'まゆ', '松田真由', '1998-11-11', '東京都', '港区', 35.6595050, 139.7295060, '週3で入れます', 1, '大学生', 'LCOV', NOW(), NOW()),
+(13, 3, 'c00000013', 'あかね', '赤木あかね', '2001-02-14', '東京都', '中央区', 35.6702730, 139.7726300, 'ラウンジ経験あり', 1, '会社員', 'LDOH', NOW(), NOW()),
+(14, 1, 'c00000014', 'ひなの', '日野ひなの', '2003-08-22', '東京都', '渋谷区', 35.6580000, 139.7016000, '未経験ですが頑張ります', 0, '学生', 'PCOV', NOW(), NOW()),
+(15, 2, 'c00000015', 'ちさと', '千葉千聡', '1995-03-30', '東京都', '中央区', 35.6712780, 139.7601250, '銀座で5年です', 1, 'キャバ嬢', 'LDMV', NOW(), NOW()),
+(16, 1, 'c00000016', 'ゆうな', '佐々木優奈', '1999-12-05', '東京都', '目黒区', 35.6337690, 139.7156960, '接客大好きです', 1, 'アルバイト', 'LCOH', NOW(), NOW()),
+(17, 4, 'c00000017', 'のあ', '野田乃愛', '2002-05-08', '東京都', '世田谷区', 35.6465170, 139.6532930, 'ガールズバー経験あり', 0, '大学生', 'PCOL', NOW(), NOW()),
+(18, 1, 'c00000018', 'まりん', '小林麻鈴', '2004-09-19', '東京都', '豊島区', 35.7295030, 139.7141470, '週末のみ出勤希望', 0, '学生', 'HCOH', NOW(), NOW()),
+(19, 3, 'c00000019', 'るか', '伊藤瑠花', '1997-06-25', '東京都', '港区', 35.6641820, 139.7301560, '池袋周辺希望です', 1, 'OL', 'LDOV', NOW(), NOW()),
+(20, 2, 'c00000020', 'みく', '三村美空', '2000-11-02', '東京都', '中央区', 35.6712780, 139.7601250, 'クラブで働きたいです', 1, 'フリーター', 'LDMH', NOW(), NOW()),
+(21, 1, 'c00000021', 'ここみ', '石田心美', '1996-04-17', '東京都', '新宿区', 35.6919760, 139.7031560, '新宿希望です', 1, 'キャバ嬢', 'LDOV', NOW(), NOW()),
+(22, 5, 'c00000022', 'なつき', '夏木菜月', '2002-08-08', '東京都', '渋谷区', 35.6595050, 139.7005460, 'コンカフェ経験あり', 0, '大学生', 'PCOL', NOW(), NOW()),
+(23, 1, 'c00000023', 'れいな', '田中礼奈', '1998-01-13', '神奈川県', '横浜市中区', 35.4478280, 139.6425160, '横浜からでも通えます', 1, 'モデル', 'LDMV', NOW(), NOW()),
+(24, 2, 'c00000024', 'ひまり', '中村陽向', '2001-06-06', '東京都', '中央区', 35.6702730, 139.7726300, 'クラブで長く続けたいです', 1, 'フリーター', 'LDOH', NOW(), NOW()),
+(25, 3, 'c00000025', 'きらり', '吉川きらり', '1999-10-21', '東京都', '港区', 35.6641820, 139.7301560, '六本木のラウンジで働きたい', 1, 'OL', 'LDMV', NOW(), NOW()),
+(26, 1, 'c00000026', 'かえで', '楓', '2003-03-03', '東京都', '文京区', 35.7080370, 139.7523090, '初心者ですが頑張ります', 0, '大学生', 'PCOH', NOW(), NOW()),
+(27, 6, 'c00000027', 'いちか', '市川一花', '1997-07-27', '東京都', '中野区', 35.7079240, 139.6633330, 'スナックで週3〜', 1, 'アルバイト', 'LDOH', NOW(), NOW()),
+(28, 1, 'c00000028', 'みゆ', '深津みゆ', '2000-12-15', '大阪府', '大阪市北区', 34.7024540, 135.4959370, '大阪でも東京でも', 0, 'フリーター', 'PCOV', NOW(), NOW()),
+(29, 2, 'c00000029', 'まなみ', '真波', '1998-09-09', '東京都', '中央区', 35.6712780, 139.7601250, '銀座メインで', 1, 'キャバ嬢', 'LDMV', NOW(), NOW()),
+(30, 1, 'c00000030', 'あんな', '安藤杏那', '2001-05-30', '東京都', '渋谷区', 35.6580000, 139.7016000, '渋谷 or 六本木', 1, '大学生', 'LCOH', NOW(), NOW()),
+(31, 1, 'c00000031', 'のぞみ', '望月希', '1996-02-11', '東京都', '中央区', 35.6702730, 139.7726300, '銀座希望です', 1, 'モデル', 'LDMV', NOW(), NOW()),
+(32, 3, 'c00000032', 'らん', '中西蘭', '2002-04-04', '東京都', '港区', 35.6641820, 139.7301560, '六本木のラウンジ', 0, '学生', 'PCOL', NOW(), NOW()),
+(33, 4, 'c00000033', 'えみり', '江藤絵美里', '1999-08-18', '東京都', '渋谷区', 35.6595050, 139.7005460, 'ガールズバー経験', 1, 'フリーター', 'LDOH', NOW(), NOW()),
+(34, 1, 'c00000034', 'なな', '奈々', '2000-11-23', '東京都', '中央区', 35.6812780, 139.7671250, '接客経験3年', 1, 'キャバ嬢', 'LDMV', NOW(), NOW()),
+(35, 6, 'c00000035', 'みお', '澪', '2003-06-18', '愛知県', '名古屋市中区', 35.1815090, 136.9066160, '名古屋でスナック希望', 0, '大学生', 'PCOV', NOW(), NOW()),
+(36, 2, 'c00000036', 'ふうか', '福井風香', '1997-12-01', '東京都', '中央区', 35.6712780, 139.7601250, '銀座クラブ経験', 1, 'モデル', 'LDMV', NOW(), NOW()),
+(37, 5, 'c00000037', 'ももか', '百花', '2002-01-25', '東京都', '渋谷区', 35.6595050, 139.7005460, 'コンカフェ大好き', 0, '大学生', 'PCOH', NOW(), NOW()),
+(38, 1, 'c00000038', 'さやか', '清川さやか', '1998-10-10', '東京都', '港区', 35.6598140, 139.7290560, '港区周辺希望', 1, 'OL', 'LDOV', NOW(), NOW()),
+(39, 1, 'c00000039', 'あき', '秋田亜紀', '1995-05-05', '東京都', '中央区', 35.6812780, 139.7671250, 'ベテランです', 1, 'キャバ嬢', 'LDMV', NOW(), NOW()),
+(40, 3, 'c00000040', 'みおん', '三上澪音', '2001-09-12', '東京都', '豊島区', 35.7295030, 139.7141470, '池袋ラウンジ希望', 1, 'アルバイト', 'LDOH', NOW(), NOW()),
+(41, 1, 'c00000041', 'るり', '瑠璃', '2000-03-20', '東京都', '中央区', 35.6702730, 139.7726300, '銀座で長く', 1, 'モデル', 'LDMV', NOW(), NOW()),
+(42, 1, 'c00000042', 'ひな', '雛', '2003-07-07', '東京都', '渋谷区', 35.6580000, 139.7016000, '未経験でも頑張ります', 0, '学生', 'PCOV', NOW(), NOW()),
+(43, 2, 'c00000043', 'かのん', '加納カノン', '1998-12-30', '東京都', '中央区', 35.6712780, 139.7601250, '週2〜5希望', 1, 'フリーター', 'LDOH', NOW(), NOW()),
+(44, 1, 'c00000044', 'みか', '三上美佳', '1996-11-11', '東京都', '港区', 35.6598140, 139.7290560, '高収入希望', 1, 'キャバ嬢', 'LDMV', NOW(), NOW()),
+(45, 4, 'c00000045', 'あゆ', '歩', '2002-06-13', '東京都', '新宿区', 35.6919760, 139.7031560, 'ガールズバー経験3年', 0, 'アルバイト', 'PCOL', NOW(), NOW()),
+(46, 3, 'c00000046', 'めい', '芽衣', '1999-04-22', '東京都', '中央区', 35.6702730, 139.7726300, 'ラウンジ経験2年', 1, 'OL', 'LDOV', NOW(), NOW()),
+(47, 5, 'c00000047', 'ゆず', '柚', '2004-02-02', '東京都', '渋谷区', 35.6595050, 139.7005460, 'メイド経験あり', 0, '大学生', 'PCOH', NOW(), NOW()),
+(48, 1, 'c00000048', 'とわ', '十和', '2000-08-08', '福岡県', '福岡市中央区', 33.5822010, 130.4067020, '福岡でキャバクラ', 1, 'モデル', 'LDMV', NOW(), NOW()),
+(49, 2, 'c00000049', 'ここ', '心', '2001-11-19', '東京都', '中央区', 35.6712780, 139.7601250, 'クラブ長期希望', 1, 'キャバ嬢', 'LDMV', NOW(), NOW()),
+(50, 3, 'c00000050', 'みさ', '美紗', '1998-05-25', '東京都', '港区', 35.6641820, 139.7301560, 'ラウンジで安定', 1, 'OL', 'LDOH', NOW(), NOW());
 
 -- =============================================================================
 -- Phase 3b: availability_dates（候補日宣言）
@@ -476,7 +475,7 @@ INSERT INTO `shop_license_documents` (`id`, `shop_id`, `type`, `image_path`, `st
 INSERT INTO `shop_plan_subscriptions` (`shop_id`, `plan`, `billing_cycle`, `amount`, `status`, `invoice_number`, `invoice_issued_at`, `payment_due_date`, `paid_confirmed_at`, `confirmed_by`, `receipt_number`, `starts_at`, `ends_at`, `created_at`, `updated_at`) VALUES
 -- 旧シナリオ
 ('s00000001', 'premium', 'monthly', 29000, 2, 'PLN-202608-0001', DATE_SUB(NOW(), INTERVAL 15 DAY), DATE_ADD(DATE_SUB(NOW(), INTERVAL 15 DAY), INTERVAL 7 DAY), DATE_SUB(NOW(), INTERVAL 10 DAY), '1', 'RCT-202608-0001', DATE_SUB(NOW(), INTERVAL 10 DAY), DATE_ADD(NOW(), INTERVAL 20 DAY), DATE_SUB(NOW(), INTERVAL 15 DAY), DATE_SUB(NOW(), INTERVAL 10 DAY)),
-('s00000004', 'premium', 'monthly', 29000, 1, 'PLN-202608-0002', DATE_SUB(NOW(), INTERVAL 3 DAY), DATE_ADD(NOW(), INTERVAL 4 DAY), NULL, NULL, NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 3 DAY), DATE_SUB(NOW(), INTERVAL 3 DAY)),
+('s00000004', 'premium', 'monthly', 29000, 1, 'PLN-202608-0002', DATE_SUB(NOW(), INTERVAL 3 DAY), DATE_ADD(NOW(), INTERVAL 4 DAY), NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 3 DAY), DATE_SUB(NOW(), INTERVAL 3 DAY)),
 ('s00000005', 'premium', 'monthly', 29000, 3, 'PLN-202605-0001', '2026-05-01 10:00:00', '2026-05-08', '2026-05-05 10:00:00', '1', 'RCT-202605-0001', '2026-05-05 10:00:00', '2026-06-05 10:00:00', '2026-05-01 10:00:00', '2026-06-06 00:00:00'),
 -- 新規: 有効な Premium 店舗（AIレコメンド優先表示テスト用）
 ('s00000006', 'premium', 'yearly', 290000, 2, 'PLN-202604-0001', '2026-04-01 10:00:00', '2026-04-08', '2026-04-05 10:00:00', '1', 'RCT-202604-0001', '2026-04-05 10:00:00', '2027-04-05 10:00:00', '2026-04-01 10:00:00', '2026-04-05 10:00:00'),
@@ -486,8 +485,8 @@ INSERT INTO `shop_plan_subscriptions` (`shop_id`, `plan`, `billing_cycle`, `amou
 ('s00000018', 'premium', 'monthly', 29000, 2, 'PLN-202608-0005', DATE_SUB(NOW(), INTERVAL 6 DAY), DATE_ADD(DATE_SUB(NOW(), INTERVAL 6 DAY), INTERVAL 7 DAY), DATE_SUB(NOW(), INTERVAL 3 DAY), '1', 'RCT-202608-0005', DATE_SUB(NOW(), INTERVAL 3 DAY), DATE_ADD(NOW(), INTERVAL 27 DAY), DATE_SUB(NOW(), INTERVAL 6 DAY), DATE_SUB(NOW(), INTERVAL 3 DAY)),
 ('s00000024', 'premium', 'monthly', 29000, 2, 'PLN-202608-0006', DATE_SUB(NOW(), INTERVAL 4 DAY), DATE_ADD(DATE_SUB(NOW(), INTERVAL 4 DAY), INTERVAL 7 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY), '1', 'RCT-202608-0006', DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_ADD(NOW(), INTERVAL 28 DAY), DATE_SUB(NOW(), INTERVAL 4 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY)),
 -- 入金待ちが更に 2 件
-('s00000015', 'premium', 'monthly', 29000, 1, 'PLN-202608-0007', DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_ADD(NOW(), INTERVAL 5 DAY), NULL, NULL, NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY)),
-('s00000023', 'premium', 'monthly', 29000, 1, 'PLN-202608-0008', DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_ADD(NOW(), INTERVAL 6 DAY), NULL, NULL, NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY));
+('s00000015', 'premium', 'monthly', 29000, 1, 'PLN-202608-0007', DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_ADD(NOW(), INTERVAL 5 DAY), NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY)),
+('s00000023', 'premium', 'monthly', 29000, 1, 'PLN-202608-0008', DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_ADD(NOW(), INTERVAL 6 DAY), NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY));
 
 -- =============================================================================
 -- Phase 9: shop_job_applications（35 件）
@@ -497,11 +496,11 @@ INSERT INTO `shop_plan_subscriptions` (`shop_id`, `plan`, `billing_cycle`, `amou
 INSERT INTO `shop_job_applications` (`id`, `cast_id`, `shop_job_id`, `status`, `hired_bonus_amount`, `talk_job_kind`, `result_date`, `real_start_date`, `hourly_wage_regular`, `created_at`, `updated_at`) VALUES
 -- 旧シナリオ
 (1, 'c00000003', 2, 2, NULL, 'trial', NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 3 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY)),
-(2, 'c00000004', 1, 1, NULL, NULL, NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY)),
+(2, 'c00000004', 1, 1, NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY)),
 (3, 'c00000009', 1, 4, 150000, 'trial', DATE_SUB(CURDATE(), INTERVAL 3 DAY), DATE_SUB(CURDATE(), INTERVAL 3 DAY), '6000', DATE_SUB(NOW(), INTERVAL 15 DAY), DATE_SUB(NOW(), INTERVAL 3 DAY)),
 (4, 'c00000010', 1, 6, 150000, 'fulltime', DATE_SUB(CURDATE(), INTERVAL 30 DAY), DATE_SUB(CURDATE(), INTERVAL 25 DAY), '6000', DATE_SUB(NOW(), INTERVAL 40 DAY), DATE_SUB(NOW(), INTERVAL 20 DAY)),
 (5, 'c00000002', 1, 3, NULL, 'trial', DATE_ADD(CURDATE(), INTERVAL 3 DAY), NULL, NULL, DATE_SUB(NOW(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY)),
-(6, 'c00000001', 2, 1, NULL, NULL, NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 1 DAY), NOW()),
+(6, 'c00000001', 2, 1, NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 1 DAY), NOW()),
 (7, 'c00000007', 5, 5, NULL, 'trial', DATE_SUB(CURDATE(), INTERVAL 10 DAY), NULL, NULL, DATE_SUB(NOW(), INTERVAL 30 DAY), DATE_SUB(NOW(), INTERVAL 10 DAY)),
 -- 新規シナリオ（c011-c050 の絡み）
 (8, 'c00000011', 6, 6, 200000, 'fulltime', DATE_SUB(CURDATE(), INTERVAL 20 DAY), DATE_SUB(CURDATE(), INTERVAL 15 DAY), '7000', DATE_SUB(NOW(), INTERVAL 35 DAY), DATE_SUB(NOW(), INTERVAL 15 DAY)),
@@ -509,16 +508,16 @@ INSERT INTO `shop_job_applications` (`id`, `cast_id`, `shop_job_id`, `status`, `
 (10, 'c00000013', 14, 4, 100000, 'trial', DATE_SUB(CURDATE(), INTERVAL 2 DAY), DATE_SUB(CURDATE(), INTERVAL 2 DAY), '5500', DATE_SUB(NOW(), INTERVAL 8 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY)),
 (11, 'c00000014', 8, 3, NULL, 'trial', DATE_ADD(CURDATE(), INTERVAL 2 DAY), NULL, NULL, DATE_SUB(NOW(), INTERVAL 6 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY)),
 (12, 'c00000015', 6, 6, 200000, 'fulltime', DATE_SUB(CURDATE(), INTERVAL 40 DAY), DATE_SUB(CURDATE(), INTERVAL 35 DAY), '7000', DATE_SUB(NOW(), INTERVAL 50 DAY), DATE_SUB(NOW(), INTERVAL 35 DAY)),
-(13, 'c00000016', 7, 1, NULL, NULL, NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY)),
+(13, 'c00000016', 7, 1, NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY)),
 (14, 'c00000017', 25, 4, 50000, 'trial', DATE_SUB(CURDATE(), INTERVAL 4 DAY), DATE_SUB(CURDATE(), INTERVAL 4 DAY), '4500', DATE_SUB(NOW(), INTERVAL 10 DAY), DATE_SUB(NOW(), INTERVAL 4 DAY)),
 (15, 'c00000018', 9, 2, NULL, 'trial', NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 4 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY)),
 (16, 'c00000019', 14, 3, NULL, 'trial', DATE_ADD(CURDATE(), INTERVAL 1 DAY), NULL, NULL, DATE_SUB(NOW(), INTERVAL 3 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY)),
-(17, 'c00000020', 1, 1, NULL, NULL, NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 6 HOUR), NOW()),
+(17, 'c00000020', 1, 1, NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 6 HOUR), NOW()),
 (18, 'c00000021', 4, 4, 50000, 'trial', DATE_SUB(CURDATE(), INTERVAL 1 DAY), DATE_SUB(CURDATE(), INTERVAL 1 DAY), '4000', DATE_SUB(NOW(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY)),
-(19, 'c00000022', 5, 1, NULL, NULL, NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 12 HOUR), DATE_SUB(NOW(), INTERVAL 2 HOUR)),
+(19, 'c00000022', 5, 1, NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 12 HOUR), DATE_SUB(NOW(), INTERVAL 2 HOUR)),
 (20, 'c00000023', 23, 3, NULL, 'trial', DATE_ADD(CURDATE(), INTERVAL 5 DAY), NULL, NULL, DATE_SUB(NOW(), INTERVAL 4 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY)),
 (21, 'c00000024', 24, 4, 150000, 'trial', DATE_SUB(CURDATE(), INTERVAL 6 DAY), DATE_SUB(CURDATE(), INTERVAL 6 DAY), '6500', DATE_SUB(NOW(), INTERVAL 14 DAY), DATE_SUB(NOW(), INTERVAL 6 DAY)),
-(22, 'c00000025', 14, 1, NULL, NULL, NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 6 HOUR)),
+(22, 'c00000025', 14, 1, NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 6 HOUR)),
 (23, 'c00000027', 12, 4, 30000, 'trial', DATE_SUB(CURDATE(), INTERVAL 2 DAY), DATE_SUB(CURDATE(), INTERVAL 2 DAY), '3800', DATE_SUB(NOW(), INTERVAL 8 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY)),
 (24, 'c00000028', 17, 5, NULL, 'trial', DATE_SUB(CURDATE(), INTERVAL 8 DAY), NULL, NULL, DATE_SUB(NOW(), INTERVAL 20 DAY), DATE_SUB(NOW(), INTERVAL 8 DAY)),
 (25, 'c00000029', 1, 6, 150000, 'fulltime', DATE_SUB(CURDATE(), INTERVAL 50 DAY), DATE_SUB(CURDATE(), INTERVAL 45 DAY), '6000', DATE_SUB(NOW(), INTERVAL 60 DAY), DATE_SUB(NOW(), INTERVAL 45 DAY)),
@@ -527,11 +526,11 @@ INSERT INTO `shop_job_applications` (`id`, `cast_id`, `shop_job_id`, `status`, `
 (28, 'c00000033', 4, 7, NULL, 'fulltime', DATE_SUB(CURDATE(), INTERVAL 15 DAY), NULL, NULL, DATE_SUB(NOW(), INTERVAL 25 DAY), DATE_SUB(NOW(), INTERVAL 15 DAY)),
 (29, 'c00000034', 15, 6, 90000, 'fulltime', DATE_SUB(CURDATE(), INTERVAL 30 DAY), DATE_SUB(CURDATE(), INTERVAL 25 DAY), '5000', DATE_SUB(NOW(), INTERVAL 40 DAY), DATE_SUB(NOW(), INTERVAL 25 DAY)),
 (30, 'c00000036', 24, 3, NULL, 'trial', DATE_ADD(CURDATE(), INTERVAL 4 DAY), NULL, NULL, DATE_SUB(NOW(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY)),
-(31, 'c00000041', 6, 1, NULL, NULL, NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 6 HOUR), DATE_SUB(NOW(), INTERVAL 1 HOUR)),
+(31, 'c00000041', 6, 1, NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 6 HOUR), DATE_SUB(NOW(), INTERVAL 1 HOUR)),
 (32, 'c00000043', 7, 4, 120000, 'trial', DATE_SUB(CURDATE(), INTERVAL 1 DAY), DATE_SUB(CURDATE(), INTERVAL 1 DAY), '6500', DATE_SUB(NOW(), INTERVAL 8 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY)),
 (33, 'c00000044', 24, 2, NULL, 'trial', NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 3 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY)),
 (34, 'c00000046', 15, 3, NULL, 'trial', DATE_ADD(CURDATE(), INTERVAL 2 DAY), NULL, NULL, DATE_SUB(NOW(), INTERVAL 4 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY)),
-(35, 'c00000048', 22, 1, NULL, NULL, NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 8 HOUR), DATE_SUB(NOW(), INTERVAL 3 HOUR));
+(35, 'c00000048', 22, 1, NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 8 HOUR), DATE_SUB(NOW(), INTERVAL 3 HOUR));
 
 -- =============================================================================
 -- Phase 10: application_deposits + histories（15 件）
@@ -545,7 +544,7 @@ INSERT INTO `application_deposits` (`id`, `shop_job_application_id`, `status`, `
 -- 旧シナリオ
 (1, 3, 1, 0, 'INV-202608-0001', 150000, 15000, 165000, 135000, DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_ADD(CURDATE(), INTERVAL 5 DAY), NULL, NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY)),
 (2, 4, 5, 1, 'INV-202607-0001', 150000, 15000, 165000, 135000, DATE_SUB(NOW(), INTERVAL 20 DAY), DATE_SUB(CURDATE(), INTERVAL 13 DAY), DATE_SUB(NOW(), INTERVAL 20 DAY), DATE_SUB(NOW(), INTERVAL 15 DAY), DATE_SUB(NOW(), INTERVAL 10 DAY), DATE_SUB(NOW(), INTERVAL 10 DAY), DATE_SUB(NOW(), INTERVAL 20 DAY), DATE_SUB(NOW(), INTERVAL 10 DAY)),
-(3, 7, 1, 1, 'INV-202607-0002', NULL, NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 15 DAY), NULL, NULL, NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 15 DAY), DATE_SUB(NOW(), INTERVAL 10 DAY)),
+(3, 7, 1, 1, 'INV-202607-0002', NULL, NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 15 DAY), NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 15 DAY), DATE_SUB(NOW(), INTERVAL 10 DAY)),
 -- 新規: application ID 8, 9, 10, 12, 14, 18, 21, 23, 25, 27, 29, 32 の採用系
 (4, 8, 5, 1, 'INV-202606-0001', 200000, 20000, 220000, 180000, '2026-07-25 10:00:00', '2026-08-01', '2026-07-25 12:00:00', '2026-07-27 10:00:00', '2026-07-30 10:00:00', '2026-07-30 10:00:00', '2026-07-25 10:00:00', '2026-07-30 10:00:00'),
 (5, 9, 3, 0, 'INV-202608-0003', 200000, 20000, 220000, 180000, DATE_SUB(NOW(), INTERVAL 5 DAY), DATE_ADD(CURDATE(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY), NULL, NULL, DATE_SUB(NOW(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY)),

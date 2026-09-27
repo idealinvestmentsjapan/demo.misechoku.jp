@@ -79,7 +79,7 @@
 | アクション | 実行可 |
 |---|---|
 | `interview_offer` / `interview_cancel_request` / `hired` / `rejected` / `cancel_status` | 店舗のみ |
-| `interview_confirm` / `interview_cancel_accept` / `fulltime_request` / `work_complete_report` / `bonus_achievement_report` | キャストのみ |
+| `interview_confirm` / `interview_cancel_accept` / `work_complete_report` / `bonus_achievement_report` | キャストのみ |
 | `set_job_kind` | 双方 |
 
 | テストケース | 確認内容 |
@@ -91,7 +91,7 @@
 | `hired` / `rejected` | 店舗側のみ実行可 |
 | `cancel_status` | 店舗側のみ実行可、ステータスがリセットされる |
 | `interview_cancel_request` → `interview_cancel_accept` | 店舗発の取消要求をキャストが受諾でクローズ |
-| `fulltime_request` / `work_complete_report` / `bonus_achievement_report` | キャストのみ、応募ステータス整合 |
+| `work_complete_report` / `bonus_achievement_report` | キャストのみ、応募ステータス整合 |
 | `set_job_kind` | 双方から実行可 |
 | 未定義の action_type | Rule::in で 422 拒否 |
 | メッセージ削除（10分以内） | 削除できること |

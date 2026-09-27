@@ -10,7 +10,7 @@
 @section('body-class', 'page-talk page-talk-room')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/talk.css') }}?v=20260927-fulltime-panel-in-composer">
+<link rel="stylesheet" href="{{ asset('assets/css/talk.css') }}?v=20260927-remove-fulltime-request">
 <link rel="stylesheet" href="{{ asset('assets/css/talk-light.css') }}?v=20260823-template-popup">
 @if($isCast)
 <link rel="stylesheet" href="{{ asset('assets/css/mypage.css') }}">
@@ -589,26 +589,9 @@
         <input type="hidden" id="send-cancel-status-enabled" value="1">
     @endif
 
-    {{-- 入力エリア（本入店リクエストパネルもここに含める。chat-input-area は
-         #talk-room-container に対して position:absolute; bottom:0 で貼り付いているため、
-         パネルを内部に置けばフッター（=入力欄）と重ならず、offsetHeight 経由で
-         .chat-messages の padding-bottom（--talk-composer-h）も自動で追従する） --}}
+    {{-- 入力エリア --}}
     @if(!empty($canSend))
         <div class="chat-input-area">
-            @if($isCast && !empty($canRequestFulltime))
-                <div class="talk-result-panel talk-result-panel--in-composer">
-                    <div class="talk-result-panel-copy">
-                        <span class="talk-result-panel-title">本入店リクエスト</span>
-                        <p>体験採用後に、本入店希望を店舗へ送信できます。</p>
-                    </div>
-                    <div class="talk-result-panel-actions">
-                        <button type="button" id="send-fulltime-request" class="btn-interview btn-interview-result">
-                            <i class="fas fa-paper-plane"></i>
-                            <span>本入店をリクエスト</span>
-                        </button>
-                    </div>
-                </div>
-            @endif
             <form id="chat-form" data-url="{{ $sendUrl }}" data-action-url="{{ $actionUrl }}" data-partner-id="{{ $partnerId }}" data-initiate="{{ request()->boolean('initiate') ? '1' : '0' }}">
                 @csrf
                 <div class="chat-input-row">

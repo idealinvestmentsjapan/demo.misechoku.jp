@@ -69,9 +69,6 @@
                             <div class="flex justify-between items-center mt-1">
                                 <span class="talk-status">{{ $talk['status_label'] ?? 'やり取り中' }}</span>
                                 <span class="flex items-center gap-2">
-                                    @if(!empty($talk['has_fulltime_request_badge']))
-                                        <span class="unread-badge" style="background:linear-gradient(135deg,#c4b5fd,#a78bfa 45%,#7c3aed);color:#1a0814;">本入店希望</span>
-                                    @endif
                                     {{-- 最終更新はメッセージ末尾の右下に --}}
                                     <span class="talk-time talk-time--bottom">{{ $talk['last_time'] }}</span>
                                 </span>
@@ -131,9 +128,6 @@
                                     </div>
                                     <div class="request-meta-row">
                                         <span class="request-status">{{ $talk['status_label'] ?? $requestTabText }}</span>
-                                        @if(!empty($talk['has_fulltime_request_badge']))
-                                            <span class="unread-badge" style="margin-left:8px; background:linear-gradient(135deg,#c4b5fd,#a78bfa 45%,#7c3aed);color:#1a0814;">本入店希望</span>
-                                        @endif
                                     </div>
                                     <div class="request-msg-preview">{{ $talk['last_message'] }}</div>
                                 </div>
@@ -165,9 +159,6 @@
                                 <div class="flex justify-between items-center mt-1">
                                     <span class="talk-status">{{ $talk['status_label'] ?? $requestTabText }}</span>
                                     <span class="flex items-center gap-2">
-                                        @if(!empty($talk['has_fulltime_request_badge']))
-                                            <span class="unread-badge" style="background:linear-gradient(135deg,#c4b5fd,#a78bfa 45%,#7c3aed);color:#1a0814;">本入店希望</span>
-                                        @endif
                                         <span class="talk-time talk-time--bottom">{{ $talk['last_time'] }}</span>
                                     </span>
                                 </div>

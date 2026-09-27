@@ -1463,7 +1463,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const talkActionMenuOverlay = document.getElementById('talk-action-menu-overlay');
         const talkActionMenuCloseButtons = document.querySelectorAll('.js-talk-action-menu-close');
         const openTemplateSendMenu = document.getElementById('open-template-send-menu');
-        const fulltimeRequestBtn = document.getElementById('send-fulltime-request');
         const confirmOverlay = document.getElementById('interview-confirm-overlay');
         const confirmSelected = document.getElementById('interview-confirm-selected');
         const confirmSubmitBtn = document.getElementById('interview-confirm-submit');
@@ -1586,24 +1585,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 } catch (error) {
                     showTalkError(error.message || '面談日の確定に失敗しました。');
                     confirmSubmitBtn.disabled = false;
-                }
-            });
-        }
-
-        if (fulltimeRequestBtn) {
-            fulltimeRequestBtn.addEventListener('click', async function(e) {
-                e.preventDefault();
-                if (!window.confirm('本入店リクエストを送信しますか？')) return;
-                fulltimeRequestBtn.disabled = true;
-                try {
-                    await postJson(actionUrl, token, {
-                        partner_id: partnerId,
-                        action_type: 'fulltime_request'
-                    });
-                    window.location.reload();
-                } catch (error) {
-                    showTalkError(error.message || '本入店リクエストの送信に失敗しました。');
-                    fulltimeRequestBtn.disabled = false;
                 }
             });
         }

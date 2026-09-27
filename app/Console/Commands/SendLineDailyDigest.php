@@ -30,7 +30,6 @@ class SendLineDailyDigest extends Command
         $this->collectShopDeposit14DaysReminder($now);
         $this->collectShopInterviewOverdueReminder($now);
         $this->collectCastInterviewOffer($since);
-        $this->collectCastPromptFulltimeRequest($since);
         $this->collectCastHired14DaysNoDeposit($now);
 
         $sent = 0;
@@ -132,37 +131,6 @@ class SendLineDailyDigest extends Command
 
         foreach ($rows as $row) {
             $this->addDigestLine('cast', (string) $row->cast_id, '・面談候補日が届いています。確認してください。');
-        }
-    }
-
-    private function collectCastPromptFulltimeRequest(Carbon $since): void
-    {
-        $query = DB::table('shop_job_applications')
-            ->where('status', 4)
-            ->where('updated_at', '>=', $since);
-        if (Schema::hasColumn('shop_job_applications', 'talk_job_kind')) {
-            $query->where('talk_job_kind', 'trial');
-        }
-
-        $rows = $query
-            ->select('id', 'cast_id')
-            ->get();
-
-        foreach ($rows as $row) {
-            $requested = DB::table('messages')
-                ->join('shop_jobs', 'messages.shop_id', '=', 'shop_jobs.shop_id')
-                ->join('shop_job_applications', 'shop_jobs.id', '=', 'shop_job_applications.shop_job_id')
-                ->where('shop_job_applications.id', (int) $row->id)
-                ->where('messages.cast_id', (string) $row->cast_id)
-                ->where('messages.sender_type', 1)
-                ->where('messages.type', 1)
-                ->where('messages.content', '本入店を希望します。ご確認をお願いします。')
-                ->exists();
-
-            if ($requested) {
-                continue;
-            }
-            $this->addDigestLine('cast', (string) $row->cast_id, '・体験入店の採用後です。本入店リクエスト送信をご検討ください。');
         }
     }
 

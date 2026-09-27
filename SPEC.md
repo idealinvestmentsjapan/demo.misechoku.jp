@@ -83,7 +83,7 @@
 3. 店舗が `interview_offer`（候補日提示）→ キャストが `interview_confirm`（受諾）
 4. 面談後、店舗が `hired` / `rejected`（両方 shop-only）
 5. 双方の取消: 店舗発 `interview_cancel_request` → キャスト受諾 `interview_cancel_accept`
-6. キャストの日常業務: `work_complete_report` / `bonus_achievement_report`（フルタイム化リクエスト `fulltime_request` も含む）
+6. キャストの日常業務: `work_complete_report` / `bonus_achievement_report`
 7. `set_job_kind` は双方から可能な業務区分の合意
 8. 権限の正: `App\Support\TalkActionRegistry`
 9. メッセージ削除は送信から **10 分以内 + 自分 + type=TEXT** のみ
@@ -245,7 +245,7 @@
 **通知・コンテンツ**
 - `notifications` / `notification_preferences` / `push_subscriptions`
 - `notices` / `column_articles` / `column_categories`
-- `line_messages` / `ai_suggestion_templates`
+- `ai_suggestion_templates`
 
 **運用・規約**
 - `admin_operation_logs` / `admin_notification_settings` / `admin_role_permissions`

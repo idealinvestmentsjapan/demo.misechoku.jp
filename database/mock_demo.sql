@@ -271,23 +271,20 @@ CREATE TABLE `cast_profiles` (
   `personality_type` varchar(4) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `latitude` decimal(10,7) DEFAULT NULL,
   `longitude` decimal(10,7) DEFAULT NULL,
-  `available_until` timestamp NULL DEFAULT NULL COMMENT '「今すぐ入れる」宣言の有効期限。NULL または過去なら宣言なし',
-  `available_declared_at` timestamp NULL DEFAULT NULL COMMENT '直近の available_until を宣言した時刻（同時刻タイブレーク用）',
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- テーブルのデータのダンプ `cast_profiles`
--- （動作確認用: id=1 は 2h 宣言中／id=5 は 4h 宣言中）
 --
 
-INSERT INTO `cast_profiles` (`id`, `industry_id`, `cast_id`, `nickname`, `name`, `name_kana`, `birthday`, `zip`, `pref`, `city`, `addr`, `building`, `tel`, `height`, `weight`, `bust`, `waist`, `hip`, `profession`, `exp`, `pr`, `personality_type`, `latitude`, `longitude`, `available_until`, `available_declared_at`, `created_at`, `updated_at`) VALUES
-(1, 1, 'c00000001', 'みさき', '桜井美咲', NULL, '2001-05-15', '103-0016', '東京都', '中央区', '日本橋小網町', NULL, NULL, 156, 55, 50, 60, 70, '学生', 1, '自己紹介文です！', 'LCOH', 35.6826780, 139.7807160, DATE_ADD(NOW(), INTERVAL 2 HOUR), NOW(), '2026-05-06 13:57:04', '2026-05-16 15:13:12'),
-(2, NULL, 'c00000002', 'Yui', '田中結衣', NULL, '1994-04-24', '103-0016', '東京都', '中央区', '日本橋小網町', NULL, '07099999999', NULL, NULL, 55, 40, 50, NULL, 0, '自己PR文', NULL, NULL, NULL, NULL, NULL, '2026-03-15 06:24:25', '2026-05-04 08:42:53'),
-(3, 1, 'c00000003', 'マリ', '田端麻里奈', NULL, '1999-10-15', '134-0088', '東京都', '江戸川区', '西葛西', NULL, '07099999999', 160, 50, 50, 50, 50, '学生', 1, '自己PRテスト文章\r\n自己PRテスト文章\r\n自己PRテスト文章', NULL, NULL, NULL, NULL, NULL, '2026-05-06 15:32:47', '2026-05-06 15:32:47'),
-(4, 1, 'c00000004', '政子', '田所政子', NULL, '2005-05-10', '140-0014', '東京都', '品川区', '大井', NULL, '0356743525', 160, 48, 55, 55, 60, '学生', 0, 'こんにちは。', NULL, NULL, NULL, NULL, NULL, '2026-05-10 13:38:39', '2026-05-10 13:38:59'),
-(5, NULL, 'c00000005', 'のりりん', '間瀬紀子', NULL, '1998-05-10', '106-0045', '東京都', '港区', '麻布十番', NULL, '05033333333', 170, 55, 70, 80, 60, '学生', 1, 'はじめまして！お願いします！', NULL, NULL, NULL, DATE_ADD(NOW(), INTERVAL 4 HOUR), NOW(), '2026-05-10 13:47:29', '2026-05-10 13:47:29');
+INSERT INTO `cast_profiles` (`id`, `industry_id`, `cast_id`, `nickname`, `name`, `name_kana`, `birthday`, `zip`, `pref`, `city`, `addr`, `building`, `tel`, `height`, `weight`, `bust`, `waist`, `hip`, `profession`, `exp`, `pr`, `personality_type`, `latitude`, `longitude`, `created_at`, `updated_at`) VALUES
+(1, 1, 'c00000001', 'みさき', '桜井美咲', NULL, '2001-05-15', '103-0016', '東京都', '中央区', '日本橋小網町', NULL, NULL, 156, 55, 50, 60, 70, '学生', 1, '自己紹介文です！', 'LCOH', 35.6826780, 139.7807160, '2026-05-06 13:57:04', '2026-05-16 15:13:12'),
+(2, NULL, 'c00000002', 'Yui', '田中結衣', NULL, '1994-04-24', '103-0016', '東京都', '中央区', '日本橋小網町', NULL, '07099999999', NULL, NULL, 55, 40, 50, NULL, 0, '自己PR文', NULL, NULL, NULL, '2026-03-15 06:24:25', '2026-05-04 08:42:53'),
+(3, 1, 'c00000003', 'マリ', '田端麻里奈', NULL, '1999-10-15', '134-0088', '東京都', '江戸川区', '西葛西', NULL, '07099999999', 160, 50, 50, 50, 50, '学生', 1, '自己PRテスト文章\r\n自己PRテスト文章\r\n自己PRテスト文章', NULL, NULL, NULL, '2026-05-06 15:32:47', '2026-05-06 15:32:47'),
+(4, 1, 'c00000004', '政子', '田所政子', NULL, '2005-05-10', '140-0014', '東京都', '品川区', '大井', NULL, '0356743525', 160, 48, 55, 55, 60, '学生', 0, 'こんにちは。', NULL, NULL, NULL, '2026-05-10 13:38:39', '2026-05-10 13:38:59'),
+(5, NULL, 'c00000005', 'のりりん', '間瀬紀子', NULL, '1998-05-10', '106-0045', '東京都', '港区', '麻布十番', NULL, '05033333333', 170, 55, 70, 80, 60, '学生', 1, 'はじめまして！お願いします！', NULL, NULL, NULL, '2026-05-10 13:47:29', '2026-05-10 13:47:29');
 
 -- --------------------------------------------------------
 
@@ -650,21 +647,6 @@ CREATE TABLE `keeps` (
   `shop_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `type` tinyint NOT NULL DEFAULT '1',
   `is_read` tinyint(1) NOT NULL DEFAULT '0',
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- テーブルの構造 `line_messages`
---
-
-CREATE TABLE `line_messages` (
-  `id` bigint UNSIGNED NOT NULL,
-  `line_user_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `line_message_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `text` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -1522,8 +1504,6 @@ CREATE TABLE `shop_profiles` (
   `close_time` time DEFAULT NULL COMMENT '閉店時刻',
   `latitude` decimal(10,7) DEFAULT NULL,
   `longitude` decimal(10,7) DEFAULT NULL,
-  `available_until` timestamp NULL DEFAULT NULL COMMENT '「本日すぐ入れます」宣言の有効期限。NULL または過去なら宣言なし',
-  `available_declared_at` timestamp NULL DEFAULT NULL COMMENT '直近の available_until を宣言した時刻',
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -1532,11 +1512,11 @@ CREATE TABLE `shop_profiles` (
 -- テーブルのデータのダンプ `shop_profiles`
 --
 
-INSERT INTO `shop_profiles` (`id`, `industry_id`, `industry_label`, `shop_id`, `shop_name`, `zip`, `pref`, `city`, `addr`, `building`, `tel`, `open_time`, `close_is_last`, `close_time`, `latitude`, `longitude`, `available_until`, `available_declared_at`, `created_at`, `updated_at`) VALUES
-(1, 1, NULL, 's00000001', 'Club Luminous (ルミナス)', '103-0016', '東京都', '中央区', '日本橋小網町', 'ヂューエ日本橋 101', '+817099999999', '12:00:00', 1, NULL, 35.6826780, 139.7807160, NULL, NULL, '2026-05-06 15:15:40', '2026-05-06 15:15:40'),
-(2, NULL, NULL, 's00000002', 'CUTE', '134-0088', '東京都', '江戸川区', '西葛西', NULL, '07012345678', NULL, 0, NULL, NULL, NULL, NULL, NULL, '2026-03-16 13:08:08', '2026-03-20 08:22:07'),
-(8, 1, NULL, 's00000003', 'スナック奈緒子', '140-0014', '東京都', '品川区', '大井', '２８－３ＤｕｏＣｏｕｒｔ大井１０１号　室', '0356743525', NULL, 0, NULL, 35.6058540, 139.7325590, NULL, NULL, '2026-05-10 14:14:14', '2026-05-10 14:14:23'),
-(9, 1, NULL, 's00000004', 'USA', '192-0046', '東京都', '八王子市', '明神町', NULL, '99999999', NULL, 0, NULL, 35.6583670, 139.3493350, NULL, NULL, '2026-05-10 14:18:59', '2026-05-10 14:19:06');
+INSERT INTO `shop_profiles` (`id`, `industry_id`, `industry_label`, `shop_id`, `shop_name`, `zip`, `pref`, `city`, `addr`, `building`, `tel`, `open_time`, `close_is_last`, `close_time`, `latitude`, `longitude`, `created_at`, `updated_at`) VALUES
+(1, 1, NULL, 's00000001', 'Club Luminous (ルミナス)', '103-0016', '東京都', '中央区', '日本橋小網町', 'ヂューエ日本橋 101', '+817099999999', '12:00:00', 1, NULL, 35.6826780, 139.7807160, '2026-05-06 15:15:40', '2026-05-06 15:15:40'),
+(2, NULL, NULL, 's00000002', 'CUTE', '134-0088', '東京都', '江戸川区', '西葛西', NULL, '07012345678', NULL, 0, NULL, NULL, NULL, '2026-03-16 13:08:08', '2026-03-20 08:22:07'),
+(8, 1, NULL, 's00000003', 'スナック奈緒子', '140-0014', '東京都', '品川区', '大井', '２８－３ＤｕｏＣｏｕｒｔ大井１０１号　室', '0356743525', NULL, 0, NULL, 35.6058540, 139.7325590, '2026-05-10 14:14:14', '2026-05-10 14:14:23'),
+(9, 1, NULL, 's00000004', 'USA', '192-0046', '東京都', '八王子市', '明神町', NULL, '99999999', NULL, 0, NULL, 35.6583670, 139.3493350, '2026-05-10 14:18:59', '2026-05-10 14:19:06');
 
 -- --------------------------------------------------------
 
@@ -2119,12 +2099,6 @@ ALTER TABLE `keeps`
   ADD KEY `keeps_shop_id_foreign` (`shop_id`);
 
 --
--- テーブルのインデックス `line_messages`
---
-ALTER TABLE `line_messages`
-  ADD PRIMARY KEY (`id`);
-
---
 -- テーブルのインデックス `messages`
 --
 ALTER TABLE `messages`
@@ -2522,12 +2496,6 @@ ALTER TABLE `invoice_template_settings`
 -- テーブルの AUTO_INCREMENT `keeps`
 --
 ALTER TABLE `keeps`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- テーブルの AUTO_INCREMENT `line_messages`
---
-ALTER TABLE `line_messages`
   MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
