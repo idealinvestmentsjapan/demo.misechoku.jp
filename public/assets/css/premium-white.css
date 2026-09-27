@@ -220,7 +220,7 @@ body.theme-premium-white .mypage-tile__sub {
    紫グラデや赤グラデはトーンの主張が強すぎたため 2026-09-27 に廃止。 */
 body.theme-premium-white .mypage-tile__badge,
 body.theme-premium-white .mypage-tile__badge--urgent {
-    background: #d94974 !important;
+    background: #ec4899 !important;
     color: #ffffff !important;
     box-shadow: none !important;
 }

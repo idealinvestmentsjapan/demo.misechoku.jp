@@ -90,12 +90,12 @@
     font-size: 0.62rem;
     font-weight: 900;
     font-variant-numeric: tabular-nums;
-    background: #d94974;
+    background: #ec4899;
     color: #ffffff;
     pointer-events: none;
 }
 .mypage-tile__badge--urgent {
-    background: #d94974;
+    background: #ec4899;
     color: #ffffff;
 }
 

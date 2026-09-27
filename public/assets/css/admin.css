@@ -1562,22 +1562,35 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
     transform: translateX(2px);
 }
 
-/* サイドバーのオペレーションメニュー 4 カテゴリと 1:1 対応するトーン */
-.task-shortcut-card.tone-verification .task-shortcut-card__icon {
-    background: var(--status-info-bg);
-    color: var(--status-info-fg);
-}
+/* サイドバー「オペレーション」メニュー 7 項目と 1:1 対応するトーン
+   （purge は運用バッチのためショートカット対象外） */
 .task-shortcut-card.tone-invoices .task-shortcut-card__icon {
     background: #fffbeb;
     color: #92590a;
 }
-.task-shortcut-card.tone-deposits .task-shortcut-card__icon {
+.task-shortcut-card.tone-confirmations .task-shortcut-card__icon {
     background: var(--status-success-bg);
     color: var(--status-success-fg);
+}
+.task-shortcut-card.tone-transfers .task-shortcut-card__icon {
+    background: rgba(124, 58, 237, 0.12);
+    color: #7c3aed;
+}
+.task-shortcut-card.tone-plans .task-shortcut-card__icon {
+    background: rgba(212, 175, 55, 0.18);
+    color: #b8860b;
+}
+.task-shortcut-card.tone-verification .task-shortcut-card__icon {
+    background: var(--status-info-bg);
+    color: var(--status-info-fg);
 }
 .task-shortcut-card.tone-inquiries .task-shortcut-card__icon {
     background: var(--status-warning-bg);
     color: var(--status-warning-fg);
+}
+.task-shortcut-card.tone-user_reports .task-shortcut-card__icon {
+    background: rgba(220, 38, 38, 0.10);
+    color: #b91c1c;
 }
 
 /* 空状態（0件） */
@@ -1605,6 +1618,10 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
 /* デスクトップ：3カラム */
 @media (min-width: 1024px) {
     .task-shortcut-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+}
+/* ワイド：4カラム（サイドバー 7 項目を 4+3 で並べて余白を減らす） */
+@media (min-width: 1280px) {
+    .task-shortcut-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 }
 
 /* 要対応タスクパネル（旧: task-table 用。現在は未使用だが他画面での再利用に備え残置） */

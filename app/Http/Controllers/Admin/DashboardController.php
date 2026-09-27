@@ -162,12 +162,16 @@ class DashboardController extends Controller
 
         // サイドバーの未対応バッジ（AdminOperationalSummaryService）を単一の集計元とする。
         // これによりダッシュボードの未済タスク合計と、サイドバーの各バッジ合計が完全一致する。
+        // ラインナップはサイドバー「オペレーション」グループと 1:1（purge のみ実運用バッチ扱いで除外）。
         $badges = $this->adminOperationalSummaryService->getOperationBadgeCounts();
         $taskSummary = [
-            ['id' => 'verification', 'title' => '身分証・書類審査', 'count' => (int) ($badges['admin.verification.index'] ?? 0)],
-            ['id' => 'invoices',     'title' => '請求書発行',       'count' => (int) ($badges['admin.invoices.index'] ?? 0)],
-            ['id' => 'deposits',     'title' => '入金確認・振込',   'count' => (int) ($badges['admin.deposits.index'] ?? 0)],
-            ['id' => 'inquiries',    'title' => '問合せ対応',       'count' => (int) ($badges['admin.support-inquiries.index'] ?? 0)],
+            ['id' => 'invoices',      'title' => '請求書発行',       'count' => (int) ($badges['admin.invoices.index'] ?? 0)],
+            ['id' => 'confirmations', 'title' => '入金確認',         'count' => (int) ($badges['admin.deposits.confirmations'] ?? 0)],
+            ['id' => 'transfers',     'title' => 'キャスト振込',     'count' => (int) ($badges['admin.deposits.transfers'] ?? 0)],
+            ['id' => 'plans',         'title' => 'プラン入金管理',   'count' => (int) ($badges['admin.plans.index'] ?? 0)],
+            ['id' => 'verification',  'title' => '身分証・書類審査', 'count' => (int) ($badges['admin.verification.index'] ?? 0)],
+            ['id' => 'inquiries',     'title' => '問合せ対応',       'count' => (int) ($badges['admin.support-inquiries.index'] ?? 0)],
+            ['id' => 'user_reports',  'title' => 'ユーザー通報',     'count' => (int) ($badges['admin.user_reports.index'] ?? 0)],
         ];
         // $tasks は現在ダッシュボード Blade で参照されないが、後方互換のため空配列を渡す
         $tasks = [];

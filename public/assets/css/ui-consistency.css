@@ -133,11 +133,11 @@
 .pwa-install-btn:hover { color: var(--accent-text) !important; }
 
 /* ==================================================================
-   5. バッジの統一（2026-09-27 accent 調和リビジョン / 全画面共通）
+   5. バッジの統一（2026-09-27 pink リビジョン / 全画面共通）
    ルール:
-     - 未済タスク・お知らせともフラットな鮮やかローズ（#d94974）+ 白文字のみ。
-       accent（mauve pink #d670a2）と同色相族にそろえ、少し赤寄りに振ることで
-       「アプリのトーンから浮かないが、注意喚起はする」バッジ色に統一。
+     - 未済タスク・お知らせともフラットなホットピンク（#ec4899）+ 白文字のみ。
+       accent（mauve pink #d670a2）と同色相族の明るいピンクを採用し、
+       赤の警告色にならずに視認性は確保する。
      - グラデーション・リング・枠線・ドロップ影は一切使わない。
      - 画面/テーマ別の上書きは行わない（premium-white 等でも共通）。
    ================================================================== */
@@ -145,14 +145,14 @@
 .header-badge.is-accent,
 .header-badge.is-urgent,
 .badge-notify {
-    background: #d94974 !important;
+    background: #ec4899 !important;
     color: #ffffff !important;
     border: 0 !important;
     box-shadow: none !important;
 }
 .mypage-tile__badge,
 .mypage-tile__badge--urgent {
-    background: #d94974 !important;
+    background: #ec4899 !important;
     color: #ffffff !important;
     box-shadow: none !important;
 }

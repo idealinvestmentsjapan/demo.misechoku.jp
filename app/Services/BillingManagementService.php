@@ -155,6 +155,11 @@ class BillingManagementService
             return $t->lt($sevenDaysAgo);
         })->count();
 
+        // Post-send deposits (money-flow phase). Only these appear on the confirmations /
+        // transfers screens, so the badge counts must be derived from this same subset —
+        // otherwise the sidebar shows "1 to do" while the screen shows an empty list.
+        $sent = collect($deposits)->filter(fn (array $d) => !empty($d['invoice_sent_at']));
+
         return [
             'deposits' => $deposits,
             'summary' => [
@@ -164,9 +169,9 @@ class BillingManagementService
                     self::STATUS_CAST_REQUESTED,
                     self::STATUS_SHOP_APPROVED,
                 ])->count(),
-                'payment_confirmation_pending' => collect($deposits)->where('status_code', self::STATUS_SHOP_PAYMENT_REPORTED)->count(),
-                'cast_transfer_pending' => collect($deposits)->where('status_code', self::STATUS_SHOP_PAYMENT_CONFIRMED)->count(),
-                'invoice_total' => collect($deposits)->sum('invoice_amount'),
+                'payment_confirmation_pending' => $sent->where('status_code', self::STATUS_SHOP_PAYMENT_REPORTED)->count(),
+                'cast_transfer_pending' => $sent->where('status_code', self::STATUS_SHOP_PAYMENT_CONFIRMED)->count(),
+                'invoice_total' => $sent->sum('invoice_amount'),
                 'unconfirmed_cast_over_7days' => $unconfirmedOver7,
             ],
         ];

@@ -41,9 +41,32 @@ class AdminOperationalSummaryService
             'admin.deposits.transfers' => (int) $s['cast_transfer_pending'],
             // Legacy key kept in case some caller still references it.
             'admin.deposits.index' => (int) $s['payment_confirmation_pending'] + (int) $s['cast_transfer_pending'],
+            'admin.plans.index' => $this->getPendingPlanPaymentCount(),
             'admin.verification.index' => (int) $v['cast_pending'] + (int) $v['shop_pending'],
             'admin.support-inquiries.index' => $this->getPendingInquiryCount(),
+            'admin.user_reports.index' => $this->getPendingUserReportCount(),
         ];
+    }
+
+    private function getPendingPlanPaymentCount(): int
+    {
+        if (!Schema::hasTable('shop_plan_subscriptions')) {
+            return 0;
+        }
+        return (int) DB::table('shop_plan_subscriptions')
+            ->where('status', 1) // 1 = PENDING_PAYMENT (see ShopPlanSubscription)
+            ->count();
+    }
+
+    private function getPendingUserReportCount(): int
+    {
+        if (!Schema::hasTable('user_reports')) {
+            return 0;
+        }
+        // UserReport::STATUS_PENDING = 0; use literal to avoid a hard dependency here.
+        return (int) DB::table('user_reports')
+            ->where('status', 0)
+            ->count();
     }
 
     /**
