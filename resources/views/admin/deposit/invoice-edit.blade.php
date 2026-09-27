@@ -71,6 +71,7 @@
                            value="{{ old('cast_transfer_amount', $invoice['cast_transfer_amount']) }}" min="0" step="1" required>
                     <span class="invoice-edit-amount__unit">円</span>
                 </div>
+                <small class="admin-note">銀行振込手数料 220 円はキャスト負担のため、通常は「ボーナス額 − 220 円」を入力します。</small>
             </div>
 
             <h3 class="admin-panel-subtitle u-mt-16">表示名（帳票の宛先・対象）</h3>

@@ -179,16 +179,17 @@ class BillingManagementService
 
     public function getPendingTasks(): array
     {
+        // 運営タスクは「運営にボールがあるステータス」だけを対象にする。
+        // STATUS_CAST_REQUESTED は店舗承認待ちで、運営は待機役 → タスク化しない
+        // （フロー: 1=cast, 2=shop, 3=admin=INVOICE, 4=shop, 5=admin=CONFIRM, 6=admin=TRANSFER, 7=cast）
         return collect($this->getAllDeposits())
             ->filter(fn (array $deposit) => in_array($deposit['status_code'], [
-                self::STATUS_CAST_REQUESTED,
                 self::STATUS_SHOP_APPROVED,
                 self::STATUS_SHOP_PAYMENT_REPORTED,
                 self::STATUS_SHOP_PAYMENT_CONFIRMED,
             ], true))
             ->map(function (array $deposit) {
                 $deposit['task_title'] = match ($deposit['status_code']) {
-                    self::STATUS_CAST_REQUESTED => 'キャスト入金依頼（店舗承認待ち）を確認する',
                     self::STATUS_SHOP_APPROVED => '店舗へ請求書を発行する',
                     self::STATUS_SHOP_PAYMENT_REPORTED => '店舗入金を照合する',
                     self::STATUS_SHOP_PAYMENT_CONFIRMED => 'キャストへの振込を実行する',
@@ -196,23 +197,15 @@ class BillingManagementService
                 };
 
                 $deposit['task_due_date'] = match ($deposit['status_code']) {
-                    self::STATUS_CAST_REQUESTED => $deposit['updated_at_label'] ?: now()->format('Y-m-d H:i'),
                     self::STATUS_SHOP_APPROVED => $deposit['invoice_due_date'] ?: now()->addDays(self::INVOICE_DUE_DAYS)->format('Y-m-d'),
                     self::STATUS_SHOP_PAYMENT_REPORTED => $deposit['shop_payment_reported_at'] ?: now()->format('Y-m-d H:i'),
                     self::STATUS_SHOP_PAYMENT_CONFIRMED => $deposit['shop_payment_confirmed_at'] ?: now()->format('Y-m-d H:i'),
                     default => null,
                 };
 
-                $deposit['task_actor_label'] = match ($deposit['status_code']) {
-                    self::STATUS_CAST_REQUESTED => '運営',
-                    self::STATUS_SHOP_APPROVED => '運営',
-                    self::STATUS_SHOP_PAYMENT_REPORTED => '運営',
-                    self::STATUS_SHOP_PAYMENT_CONFIRMED => '運営',
-                    default => 'システム',
-                };
+                $deposit['task_actor_label'] = '運営';
 
                 $deposit['task_summary'] = match ($deposit['status_code']) {
-                    self::STATUS_CAST_REQUESTED => 'キャストから入金依頼があります。店舗承認後に請求書を発行できます（詳細は請求書発行画面）。',
                     self::STATUS_SHOP_APPROVED => trim((string) ($deposit['bonus_condition'] ?: '店舗承認済みのため、請求書発行へ進めます。')),
                     self::STATUS_SHOP_PAYMENT_REPORTED => '店舗報告金額: ¥' . number_format((int) ($deposit['shop_payment_reported_amount'] ?? 0))
                         . ' / 参照: ' . (($deposit['shop_payment_reference'] ?? '') ?: '未入力'),
@@ -224,7 +217,7 @@ class BillingManagementService
                 $deposit['task_review_summary'] = trim((string) ($deposit['review_comment'] ?? ''));
 
                 $id = (int) ($deposit['id'] ?? 0);
-                $deposit['task_url'] = in_array($deposit['status_code'], [self::STATUS_CAST_REQUESTED, self::STATUS_SHOP_APPROVED], true)
+                $deposit['task_url'] = $deposit['status_code'] === self::STATUS_SHOP_APPROVED
                     ? route('admin.invoices.index') . ($id > 0 ? '#invoice-pending-' . $id : '')
                     : route('admin.deposits.index') . ($id > 0 ? '#deposit-' . $id : '');
 
@@ -767,7 +760,9 @@ class BillingManagementService
 
     /**
      * 店舗入金確認済みの deposit に対して PaymentTask を1件のみ生成（UNIQUE で二重防止）
-     * 振込額 = 店舗入金額 - プラットフォーム手数料 - 銀行振込手数料（手入力禁止のため自動計算のみ）
+     * 銀行振込手数料はキャスト負担のため、payout = cast_transfer_amount（既に手数料
+     * 差し引き済み）と一致させる。計算式は shop_received - platform_fee - bank_fee
+     * と等しい（cast_transfer_amount = bonus - bank_fee, invoice = bonus + fee のため）
      */
     public function ensurePaymentTaskForDeposit(int $depositId): void
     {
@@ -785,10 +780,11 @@ class BillingManagementService
             return;
         }
 
-        $shopReceived = (int) ($deposit->invoice_amount ?? 0);
-        $platformFee = (int) ($deposit->system_fee_amount ?? 0);
+        $amounts = $this->calculateAmounts($deposit);
+        $shopReceived = (int) $amounts['invoice_amount'];
+        $platformFee = (int) $amounts['system_fee_amount'];
         $bankFee = self::BANK_FEE_AMOUNT;
-        $payout = max(0, $shopReceived - $platformFee - $bankFee);
+        $payout = (int) $amounts['cast_transfer_amount'];
 
         DB::table('payment_tasks')->insert([
             'application_deposit_id' => $depositId,
@@ -926,11 +922,12 @@ class BillingManagementService
             if (!$row || empty($row->cast_id)) return;
 
             $amount = number_format((int) ($row->cast_transfer_amount ?? 0));
+            $bankFee = number_format(self::BANK_FEE_AMOUNT);
             app(\App\Services\NotificationService::class)->createForCast(
                 (string) $row->cast_id,
                 'billing.cast_transferred',
                 '採用ボーナスを振込みました',
-                "金額 ¥{$amount} を登録口座へ振込みました。入金をご確認ください。",
+                "金額 ¥{$amount}（銀行振込手数料 ¥{$bankFee} を差し引いた金額）を登録口座へ振込みました。入金をご確認ください。",
                 \Route::has('cast.mypage.management') ? route('cast.mypage.management') : null,
                 ['deposit_id' => $depositId],
             );
@@ -1055,9 +1052,13 @@ class BillingManagementService
         return ['success' => true, 'message' => 'キャストへの振込手続きを記録しました。キャストの入金確認待ちです。'];
     }
 
-    public function confirmCastReceipt(string $castId): array
+    public function confirmCastReceipt(string $castId, array $payload = []): array
     {
-        $deposit = $this->findLatestDepositForCast($castId);
+        // payload の deposit_id / application_id を優先して対象案件を特定する。
+        // 未指定時のみキャスト最新にフォールバック（後方互換）。
+        // これが無いと STATUS_CAST_TRANSFERRED の deposit が複数あるときや
+        // 最新が別ステータスのときに意図した案件を確認できない。
+        $deposit = $this->resolveDepositForCast($castId, $payload);
 
         if (!$deposit || (int) $deposit->status !== self::STATUS_CAST_TRANSFERRED) {
             return ['success' => false, 'message' => '確認待ちの振込データがありません。'];
@@ -1707,6 +1708,37 @@ class BillingManagementService
             ->first();
     }
 
+    /**
+     * 受領確認など「キャストが特定案件に対して行う操作」の対象 deposit を解決する。
+     * - payload.deposit_id が来ていれば ID 一致 + キャスト一致で検索
+     * - なければ payload.application_id で shop_job_application 経由で検索
+     * - どちらも無いときのみ「キャスト最新」にフォールバック（後方互換）
+     * どのケースも他キャストの deposit を返さないよう cast 一致を必ずチェックする。
+     */
+    private function resolveDepositForCast(string $castId, array $payload): ?object
+    {
+        $depositId = isset($payload['deposit_id']) ? (int) $payload['deposit_id'] : 0;
+        if ($depositId > 0) {
+            $row = $this->baseDepositQuery()
+                ->where('application_deposits.id', $depositId)
+                ->where('casts.id', $castId)
+                ->first();
+            if ($row) return $row;
+        }
+
+        $applicationId = isset($payload['application_id']) ? (int) $payload['application_id'] : 0;
+        if ($applicationId > 0) {
+            $row = $this->baseDepositQuery()
+                ->where('application_deposits.shop_job_application_id', $applicationId)
+                ->where('casts.id', $castId)
+                ->orderByDesc('application_deposits.id')
+                ->first();
+            if ($row) return $row;
+        }
+
+        return $this->findLatestDepositForCast($castId);
+    }
+
     private function getLatestEligibleApplicationForCast(string $castId): ?object
     {
         return DB::table('shop_job_applications')
@@ -2117,13 +2149,17 @@ class BillingManagementService
 
     private function calculateAmounts(object $row): array
     {
+        // Bank transfer fee (BANK_FEE_AMOUNT) is deducted from the cast side.
+        // cast_transfer_amount reflects the NET amount the cast actually
+        // receives, keeping notifications, talk messages, and payment_tasks
+        // payout in sync.
         if ($this->isHelpApplicationRow($row)) {
             $helpWage = $this->resolveHelpHourlyWage($row);
             $castBack = (int) round($helpWage * self::HELP_CAST_BACK_RATE);
             $bonusAmount = (int) ($row->bonus_amount ?? $castBack);
             $invoiceAmount = (int) ($row->invoice_amount ?? round($helpWage * self::HELP_INVOICE_RATE));
             $systemFeeAmount = (int) ($row->system_fee_amount ?? max(0, $invoiceAmount - $bonusAmount));
-            $castTransferAmount = (int) ($row->cast_transfer_amount ?? $bonusAmount);
+            $castTransferAmount = (int) ($row->cast_transfer_amount ?? max(0, $bonusAmount - self::BANK_FEE_AMOUNT));
 
             return [
                 'bonus_amount' => $bonusAmount,
@@ -2144,7 +2180,7 @@ class BillingManagementService
 
         $systemFeeAmount = (int) ($row->system_fee_amount ?? round($bonusAmount * self::SYSTEM_FEE_RATE));
         $invoiceAmount = (int) ($row->invoice_amount ?? ($bonusAmount + $systemFeeAmount));
-        $castTransferAmount = (int) ($row->cast_transfer_amount ?? $bonusAmount);
+        $castTransferAmount = (int) ($row->cast_transfer_amount ?? max(0, $bonusAmount - self::BANK_FEE_AMOUNT));
 
         return [
             'bonus_amount' => $bonusAmount,
@@ -2225,8 +2261,11 @@ class BillingManagementService
     {
         $amount = (int) ($deposit->cast_transfer_amount ?? 0);
         $label = ($deposit !== null && $this->isHelpApplicationRow($deposit)) ? 'ヘルプ勤務分の報酬' : '採用ボーナス';
+        $feeNote = '（銀行振込手数料 ¥' . number_format(self::BANK_FEE_AMOUNT) . ' を差し引いた金額）';
 
-        return ($amount > 0 ? $label . ' ¥' . number_format($amount) . ' の振込が完了しました。' : $label . 'の振込が完了しました。')
+        return ($amount > 0
+                ? $label . ' ¥' . number_format($amount) . $feeNote . ' の振込が完了しました。'
+                : $label . 'の振込が完了しました。')
             . '入金をご確認のうえ、採用・入金管理から受取確認をお願いします。';
     }
 

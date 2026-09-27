@@ -103,7 +103,9 @@ final class SalesDemoFixtureTest extends TestCase
             $this->assertSame($status, $deposit['status']);
             $this->assertSame(range(1, $status), array_column($history, 'status'));
             $this->assertSame($deposit['bonus_amount'] + $deposit['system_fee_amount'], $deposit['invoice_amount']);
-            $this->assertSame($deposit['bonus_amount'], $deposit['cast_transfer_amount']);
+            // Bank transfer fee (220 JPY) is deducted from the cast per policy,
+            // so cast_transfer_amount = bonus_amount - 220.
+            $this->assertSame($deposit['bonus_amount'] - 220, $deposit['cast_transfer_amount']);
             $this->assertSame($status === 7, $deposit['completed_at'] !== null);
             $this->assertNull($deposit['invoice_sent_at'], 'No actual email is sent');
             $application = $this->rows($plan, 'shop_job_applications')[0];

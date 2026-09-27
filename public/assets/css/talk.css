@@ -421,6 +421,13 @@
     box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
 }
 
+/* Nested inside .chat-input-area (fulltime-request panel): the composer already
+   provides horizontal padding, so drop side margins. Sits right above the form. */
+.chat-input-area > .talk-result-panel,
+.talk-result-panel.talk-result-panel--in-composer {
+    margin: 0 0 10px;
+}
+
 .talk-result-panel-copy {
     margin-bottom: 10px;
 }

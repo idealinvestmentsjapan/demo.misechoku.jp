@@ -812,9 +812,15 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     document.querySelectorAll('#bonus-confirm-form input[type="checkbox"]').forEach(function (c) { c.addEventListener('change', updateBonusReady); });
 
-    function confirmDepositReceived() {
+    function confirmDepositReceived(applicationId, depositId) {
         if (!confirm('入金を確認しました。よろしいですか？')) return;
-        var fd = new FormData(); fd.append('_token', csrfToken);
+        // Send both application_id and deposit_id so the service targets the
+        // exact case clicked. Without them it falls back to "latest deposit",
+        // which is wrong when the cast has multiple transferred deposits.
+        var fd = new FormData();
+        fd.append('_token', csrfToken);
+        if (applicationId) fd.append('application_id', applicationId);
+        if (depositId) fd.append('deposit_id', depositId);
         fetch(depositConfirmUrl, { method: 'POST', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, body: fd })
             .then(function (r) { return r.json(); }).then(function () { window.location.reload(); })
             .catch(function () { (window.appToast || window.alert)('処理に失敗しました。', 'error'); });
@@ -824,8 +830,43 @@ document.addEventListener('DOMContentLoaded', function () {
         btn.addEventListener('click', function () {
             var action = btn.getAttribute('data-case-action');
             var id = btn.getAttribute('data-application-id');
+            var depId = btn.getAttribute('data-deposit-id') || '';
             if (action === 'request' && id) openReviewModal(id);
-            else if (action === 'confirm') confirmDepositReceived();
+            else if (action === 'confirm') confirmDepositReceived(id || '', depId);
+        });
+    });
+
+    // 本入店リクエスト（体験採用のケースカード限定）：talk-room の fulltime_request と同じ経路。
+    // POST /cast/talk/action { partner_id: shop_id, action_type: 'fulltime_request' }
+    var fulltimeActionUrl = '{{ route("cast.talk.action") }}';
+    document.querySelectorAll('.js-cast-request-fulltime').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var shopId = btn.getAttribute('data-shop-id') || '';
+            if (!shopId) return;
+            if (!window.confirm('本入店リクエストを送信しますか？')) return;
+            btn.disabled = true;
+            var fd = new FormData();
+            fd.append('_token', csrfToken);
+            fd.append('partner_id', shopId);
+            fd.append('action_type', 'fulltime_request');
+            fetch(fulltimeActionUrl, {
+                method: 'POST',
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': csrfToken },
+                body: fd
+            }).then(function (r) {
+                if (r.ok) {
+                    (window.appToast || function () {})('本入店リクエストを送信しました。', 'success');
+                    window.location.reload();
+                    return;
+                }
+                return r.json().catch(function () { return {}; }).then(function (b) {
+                    btn.disabled = false;
+                    (window.appToast || window.alert)((b && b.message) ? b.message : '本入店リクエストの送信に失敗しました。', 'error');
+                });
+            }).catch(function () {
+                btn.disabled = false;
+                (window.appToast || window.alert)('本入店リクエストの送信に失敗しました。', 'error');
+            });
         });
     });
     document.querySelectorAll('[data-close-review-modal]').forEach(function (e) { e.addEventListener('click', closeReviewModal); });

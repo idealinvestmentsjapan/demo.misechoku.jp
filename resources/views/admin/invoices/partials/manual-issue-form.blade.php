@@ -73,6 +73,7 @@
                 <div class="invoice-manual-field">
                     <label class="admin-label" for="manual_cast_transfer">キャスト振込予定額（円）</label>
                     <input type="number" name="cast_transfer_amount" id="manual_cast_transfer" class="admin-input" min="0" step="1" value="{{ old('cast_transfer_amount', $first['cast_transfer_amount'] ?? 0) }}" required>
+                    <small class="invoice-manual-hint">銀行振込手数料 220 円はキャスト負担のため、通常は「ボーナス額 − 220 円」を入力します。</small>
                 </div>
                 <div class="invoice-manual-field">
                     <label class="admin-label" for="manual_invoice_total">請求金額合計（円）</label>

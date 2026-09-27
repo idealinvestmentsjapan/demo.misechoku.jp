@@ -91,6 +91,17 @@ class UserTaskService
             ];
         }
 
+        // (e) 採用済みでボーナス申請が未送信の案件（フローの起点。採用・入金管理から申請する）
+        $bonusRequestPending = $this->countCastBonusRequestPending($castId);
+        if ($bonusRequestPending > 0) {
+            $tasks[] = [
+                'key'     => 'cast.bonus_request_pending',
+                'text'    => "採用ボーナスの申請ができる案件が {$bonusRequestPending} 件あります",
+                'url'     => $this->safeRoute('cast.mypage.management'),
+                'urgency' => 'high',
+            ];
+        }
+
         return $tasks;
     }
 
@@ -291,6 +302,27 @@ class UserTaskService
     }
 
     /**
+     * キャスト：採用済み（application.status IN 4=HIRED / 6=HIRED_FULLTIME）で
+     * 未だ入金申請（application_deposits）が作られていない案件の件数。
+     * これがフローの起点（STATUS_CAST_REQUESTED を作るタスク）。
+     */
+    private function countCastBonusRequestPending(string $castId): int
+    {
+        if (!Schema::hasTable('shop_job_applications')) {
+            return 0;
+        }
+        $q = DB::table('shop_job_applications as sja')
+            ->where('sja.cast_id', $castId)
+            ->whereIn('sja.status', [4, 6]);
+
+        if (Schema::hasTable('application_deposits')) {
+            $q->leftJoin('application_deposits as ad', 'ad.shop_job_application_id', '=', 'sja.id')
+              ->whereNull('ad.id');
+        }
+        return (int) $q->count('sja.id');
+    }
+
+    /**
      * 店舗：キャスト入金依頼が来て承認待ち（status=1）
      */
     private function countShopPendingApproval(string $shopId): int
@@ -307,7 +339,10 @@ class UserTaskService
     }
 
     /**
-     * 店舗：請求書発行済みで未支払いの案件（status=3, 4）
+     * 店舗：請求書発行済みで未支払いの案件（status=3=INVOICE_ISSUED のみ）
+     *
+     * status=4=SHOP_PAYMENT_REPORTED は「店舗が振込報告済み → 運営照合待ち」で
+     * 店舗側にボールがないため除外する（フローでは運営タスク）。
      */
     private function countShopPendingPayment(string $shopId): int
     {
@@ -318,7 +353,7 @@ class UserTaskService
             ->join('shop_job_applications as sja', 'ad.shop_job_application_id', '=', 'sja.id')
             ->join('shop_jobs as sj', 'sja.shop_job_id', '=', 'sj.id')
             ->where('sj.shop_id', $shopId)
-            ->whereIn('ad.status', [3, 4])
+            ->where('ad.status', 3)
             ->count();
     }
 

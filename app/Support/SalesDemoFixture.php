@@ -139,7 +139,7 @@ final class SalesDemoFixture
                 $status = $scenario === 'completed' ? 7 : 3;
                 $add('application_deposits', ['id' => $base, 'shop_job_application_id' => $base, 'status' => $status,
                     'is_read' => 0, 'invoice_number' => 'DEMO-' . $slot . '-' . $now->format('Ymd'), 'bonus_amount' => 100000,
-                    'system_fee_amount' => 10000, 'invoice_amount' => 110000, 'cast_transfer_amount' => 100000,
+                    'system_fee_amount' => 10000, 'invoice_amount' => 110000, 'cast_transfer_amount' => 99780,
                     'invoice_issued_at' => $now->subDays(4)->toDateTimeString(), 'invoice_due_date' => $now->addDays(3)->toDateString(),
                     'invoice_sent_at' => null, 'shop_payment_reported_at' => $status === 7 ? $now->subDays(3)->toDateTimeString() : null,
                     'shop_payment_reported_amount' => $status === 7 ? 110000 : null, 'shop_payment_reference' => 'DEMO・実際の送金なし',

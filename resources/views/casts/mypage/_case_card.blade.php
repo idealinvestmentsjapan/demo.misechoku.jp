@@ -149,20 +149,33 @@
          primary task for this status gets --primary. --}}
     @php
         $hasTalk = !empty($case['talk_link']);
+        $canRequestFulltime = !empty($case['can_request_fulltime']) && !$isCompleted;
         $primaryIcon = match ($case['actionable'] ?? '') {
             'request' => 'fa-paper-plane',
             'confirm' => 'fa-check-circle',
             default   => 'fa-bolt',
         };
     @endphp
-    @if($isActionable || $hasTalk)
+    @if($isActionable || $canRequestFulltime || $hasTalk)
         <div class="case-card__actions">
             @if($isActionable)
                 <button type="button" class="case-card__action-item case-card__action-item--primary"
                         data-case-action="{{ $case['actionable'] }}"
-                        data-application-id="{{ $case['application_id'] }}">
+                        data-application-id="{{ $case['application_id'] }}"
+                        data-deposit-id="{{ $case['deposit']['id'] ?? '' }}">
                     <span class="case-card__action-item__icon"><i class="fas {{ $primaryIcon }}"></i></span>
                     <span class="case-card__action-item__label">{{ $case['actionable_label'] }}</span>
+                    <i class="fas fa-chevron-right case-card__action-item__chev" aria-hidden="true"></i>
+                </button>
+            @endif
+            @if($canRequestFulltime)
+                {{-- 体験採用の状態で、本入店（フルタイム）への切替を店舗へ依頼する。
+                     talk-room から送っていた fulltime_request と同じ経路（cast.talk.action）を叩く。 --}}
+                <button type="button" class="case-card__action-item js-cast-request-fulltime"
+                        data-shop-id="{{ $case['shop_id'] ?? '' }}"
+                        data-application-id="{{ $case['application_id'] }}">
+                    <span class="case-card__action-item__icon"><i class="fas fa-user-check"></i></span>
+                    <span class="case-card__action-item__label">本入店をリクエスト</span>
                     <i class="fas fa-chevron-right case-card__action-item__chev" aria-hidden="true"></i>
                 </button>
             @endif

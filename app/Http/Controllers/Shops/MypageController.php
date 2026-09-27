@@ -596,16 +596,17 @@ class MypageController extends Controller
      */
     public function payToPlatform(Request $request)
     {
+        // deposit_id / application_id must reach the service so shops with
+        // multiple invoices can target the specific case they clicked; without
+        // them resolveDepositForShop falls back to "latest" and updates the
+        // wrong row (or errors when latest is in a different status).
         $payload = $request->validate([
             'reported_amount' => 'required|integer|min:1',
             'reported_at' => 'required|date',
             'reference' => 'nullable|string|max:255',
+            'deposit_id' => 'nullable|integer|min:1',
+            'application_id' => 'nullable|integer|min:1',
         ]);
-
-        // reportShopPayment 側は payload の deposit_id を優先しつつ、
-        // application_id で振り分けたい場合にも application_id を通す。
-        // ここは validate() の allowlist に無いキーを通すため input() を明示。
-        $payload['deposit_id'] = $request->input('deposit_id');
 
         $result = $this->billingManagementService->reportShopPayment($this->currentShopId(), $payload);
 
