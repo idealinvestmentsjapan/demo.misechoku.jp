@@ -200,9 +200,6 @@ class MypageController extends Controller
             'applied_norma_day',
             'applied_norma_hours',
             'applied_regular_hourly_wage',
-            // talk_job_kind is used to decide whether the trial cast may still
-            // send a 本入店リクエスト from the deposit-management screen.
-            'talk_job_kind',
         ] as $col) {
             if (Schema::hasColumn('shop_job_applications', $col)) {
                 $employmentQuery->addSelect('shop_job_applications.' . $col);
@@ -247,9 +244,6 @@ class MypageController extends Controller
                     'link' => route('cast.talk.room', ['id' => $row->shop_id, 'talk_topic' => 'other', 'initiate' => 1]),
                     'bonus_at_apply_lines' => $bonusLines,
                     'hired_hourly_wage_display' => $hiredWage,
-                    'talk_job_kind' => property_exists($row, 'talk_job_kind')
-                        ? (string) ($row->talk_job_kind ?? '')
-                        : '',
                 ];
             })
             ->all();
@@ -387,12 +381,6 @@ class MypageController extends Controller
             default                   => ['label' => '採用済（未申請）', 'tone' => 'action'],
         };
 
-        // 本入店リクエスト送信可否：体験採用（status=4, talk_job_kind='trial'）で
-        // deposit フローが未開始のケースのみ。運営側ではなく、キャストが体験→本入店へ
-        // 切り替えを希望する意思表示アクション（TalkController@action fulltime_request と等価）。
-        $canRequestFulltime = ((int) ($emp['status_code'] ?? 0)) === 4
-            && ($emp['talk_job_kind'] ?? '') === 'trial';
-
         return [
             'application_id' => (int) ($emp['application_id'] ?? 0),
             'shop_name'      => $emp['shop_name'] ?? '',
@@ -413,7 +401,6 @@ class MypageController extends Controller
             'waiting_on'    => $waitingOnLabel,
             'actionable'    => $actionableState,
             'actionable_label' => $actionableLabel,
-            'can_request_fulltime' => $canRequestFulltime,
 
             // deposit のスナップショット
             'deposit'       => $deposit ? [

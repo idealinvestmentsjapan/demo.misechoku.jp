@@ -835,40 +835,6 @@ document.addEventListener('DOMContentLoaded', function () {
             else if (action === 'confirm') confirmDepositReceived(id || '', depId);
         });
     });
-
-    // 本入店リクエスト（体験採用のケースカード限定）：talk-room の fulltime_request と同じ経路。
-    // POST /cast/talk/action { partner_id: shop_id, action_type: 'fulltime_request' }
-    var fulltimeActionUrl = '{{ route("cast.talk.action") }}';
-    document.querySelectorAll('.js-cast-request-fulltime').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var shopId = btn.getAttribute('data-shop-id') || '';
-            if (!shopId) return;
-            if (!window.confirm('本入店リクエストを送信しますか？')) return;
-            btn.disabled = true;
-            var fd = new FormData();
-            fd.append('_token', csrfToken);
-            fd.append('partner_id', shopId);
-            fd.append('action_type', 'fulltime_request');
-            fetch(fulltimeActionUrl, {
-                method: 'POST',
-                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': csrfToken },
-                body: fd
-            }).then(function (r) {
-                if (r.ok) {
-                    (window.appToast || function () {})('本入店リクエストを送信しました。', 'success');
-                    window.location.reload();
-                    return;
-                }
-                return r.json().catch(function () { return {}; }).then(function (b) {
-                    btn.disabled = false;
-                    (window.appToast || window.alert)((b && b.message) ? b.message : '本入店リクエストの送信に失敗しました。', 'error');
-                });
-            }).catch(function () {
-                btn.disabled = false;
-                (window.appToast || window.alert)('本入店リクエストの送信に失敗しました。', 'error');
-            });
-        });
-    });
     document.querySelectorAll('[data-close-review-modal]').forEach(function (e) { e.addEventListener('click', closeReviewModal); });
     document.querySelectorAll('[data-close-bonus-modal]').forEach(function (e) { e.addEventListener('click', closeBonusModal); });
     if (reviewModal) reviewModal.addEventListener('click', function (e) { if (e.target === reviewModal) closeReviewModal(); });
