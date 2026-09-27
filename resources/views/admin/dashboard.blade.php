@@ -154,12 +154,8 @@
             'eyebrow' => 'OVERVIEW',
             'title' => 'ダッシュボード',
             'info' => '
-                <p><strong>この画面の役割：</strong>今この瞬間の運用状況と要対応タスクを把握します。</p>
-                <ul>
-                    <li>登録ユーザの伸び・取引件数をリアルタイムで確認</li>
-                    <li>対応すべきタスク（本人確認・書類審査・請求／入金／振込）を一覧で確認</li>
-                </ul>
-                <p>運営の<strong>収益（仲介料／GMV／推移）</strong>の詳細は <a href="' . route('admin.sales.index') . '">売上管理</a> をご確認ください。</p>
+                <p>今この瞬間の運用状況と要対応タスクを表示します。</p>
+                <p>収益推移の詳細は <a href="' . route('admin.sales.index') . '">売上管理</a> をご確認ください。</p>
             ',
         ])
 
@@ -222,8 +218,14 @@
         </section>
 
         {{-- ============================================================
-             月別 新規登録（cast_new + shop_new、共通スケール折れ線）
+             チャート群（既定は折りたたみ・ノイズ削減）
              ============================================================ --}}
+        <details class="dashboard-charts-fold">
+            <summary class="dashboard-charts-fold__summary">
+                <span class="dashboard-charts-fold__label">グラフを表示</span>
+                <span class="dashboard-charts-fold__chevron" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
+            </summary>
+
         <section class="dashboard-chart-card">
             <div class="dashboard-chart-head">
                 <h3>月別 新規登録数</h3>
@@ -326,6 +328,7 @@
                 </div>
             </div>
         </section>
+        </details>
 
         {{-- ============================================================
              要対応タスク

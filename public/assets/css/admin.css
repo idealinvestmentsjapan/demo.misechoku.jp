@@ -590,7 +590,7 @@ input, select, textarea, button { font-family: inherit; }
 .admin-page {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
 }
 /* ページヘッダ（eyebrow + 和文セリフ・タイトル） */
 .admin-page-header {
@@ -603,34 +603,33 @@ input, select, textarea, button { font-family: inherit; }
     display: inline-block;
     font-family: var(--font-admin-eyebrow);
     font-size: 0.7rem;
-    font-weight: 700;
-    color: var(--admin-gold-darker);
-    letter-spacing: 0.32em;
+    font-weight: 600;
+    color: var(--admin-muted);
+    letter-spacing: 0.18em;
     text-transform: uppercase;
     line-height: 1;
-    /* letter-spacing は右余白を作るので位置補正 */
-    padding-left: 0.32em;
+    padding-left: 0.18em;
     word-break: keep-all;
 }
 .admin-page-eyebrow::before {
     content: '';
     display: inline-block;
-    width: 14px;
-    height: 1.5px;
-    background: var(--admin-gold-deep);
+    width: 12px;
+    height: 1px;
+    background: var(--admin-line-strong, var(--admin-line));
     vertical-align: middle;
     margin-right: 8px;
-    margin-left: -0.32em;
-    opacity: 0.85;
+    margin-left: -0.18em;
+    opacity: 0.7;
 }
 .admin-title {
     margin: 0;
     font-family: var(--font-admin-serif);
-    font-size: 1.35rem;
+    font-size: 1.25rem;
     font-weight: 600;
     color: var(--admin-text);
-    letter-spacing: 0.06em;
-    line-height: 1.35;
+    letter-spacing: 0.02em;
+    line-height: 1.3;
     word-break: break-word;
 }
 .admin-description {
@@ -645,18 +644,18 @@ input, select, textarea, button { font-family: inherit; }
     line-height: 1.6;
 }
 .admin-panel {
-    border-radius: 12px;
+    border-radius: 10px;
     border: 1px solid var(--admin-line);
     background: var(--admin-surface);
     overflow: hidden;
-    box-shadow: var(--admin-shadow);
-    padding: 14px;
+    padding: 16px;
 }
 .admin-panel-title {
-    margin: 0 0 12px;
+    margin: 0 0 10px;
     font-size: 0.95rem;
     font-weight: 700;
     color: var(--admin-text);
+    letter-spacing: 0.01em;
 }
 
 /* ----------------------------------------------------------------
@@ -684,34 +683,35 @@ input, select, textarea, button { font-family: inherit; }
 .table-wrapper {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    border-radius: 12px;
+    border-radius: 10px;
     border: 1px solid var(--admin-line);
     background: var(--admin-surface);
-    box-shadow: var(--admin-shadow);
 }
 .admin-table {
     width: 100%;
     min-width: 560px;
     border-collapse: collapse;
-    font-size: 0.84rem;
+    font-size: 0.85rem;
 }
 .admin-table thead th {
-    padding: 10px 12px;
+    padding: 12px 14px;
     text-align: left;
-    font-size: 0.74rem;
-    font-weight: 700;
-    color: var(--admin-sub);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--admin-muted);
     background: var(--admin-surface-alt);
     border-bottom: 1px solid var(--admin-line);
     white-space: nowrap;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 .admin-table tbody td {
-    padding: 10px 12px;
+    padding: 12px 14px;
     color: var(--admin-text);
     border-top: 1px solid var(--admin-line-soft);
     vertical-align: middle;
-    font-size: 0.84rem;
+    font-size: 0.85rem;
+    line-height: 1.6;
 }
 .admin-table tbody tr:hover { background: var(--admin-card-hover); }
 /* 横スクロール時に最終列（操作）を右端に固定する。
@@ -1054,26 +1054,26 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
 }
 .admin-card,
 .sales-card {
-    padding: 14px;
-    border-radius: 12px;
+    padding: 16px;
+    border-radius: 10px;
     background: var(--admin-surface);
     border: 1px solid var(--admin-line);
-    box-shadow: var(--admin-shadow);
 }
 .admin-card h2,
 .sales-card h2 {
     margin: 0 0 6px;
-    font-size: 0.86rem;
-    font-weight: 700;
-    color: var(--admin-sub);
-    letter-spacing: 0.02em;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--admin-muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 .admin-card p,
 .sales-card p {
     margin: 0;
-    color: var(--admin-muted);
+    color: var(--admin-sub);
     line-height: 1.6;
-    font-size: 0.82rem;
+    font-size: 0.85rem;
 }
 .sales-amount {
     margin-top: 10px;
@@ -1103,7 +1103,7 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
 .dashboard-page {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 20px;
 }
 
 /* KPIカード（モバイル: 2x2、デスクトップ: 4x1） */
@@ -1113,14 +1113,13 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
     gap: 10px;
 }
 .dashboard-kpi-card {
-    padding: 12px;
+    padding: 14px;
     background: var(--admin-surface);
     border: 1px solid var(--admin-line);
-    border-radius: 10px;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    border-radius: 8px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 10px;
 }
 .dashboard-kpi-head {
     display: flex;
@@ -1129,21 +1128,23 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
     gap: 8px;
 }
 .dashboard-kpi-head i {
-    color: var(--admin-primary);
-    background: var(--admin-primary-soft);
-    width: 26px; height: 26px;
-    border-radius: 7px;
+    color: var(--admin-muted);
+    background: transparent;
+    width: auto; height: auto;
+    border-radius: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
     font-size: 0.78rem;
+    opacity: 0.5;
 }
 .dashboard-kpi-title {
-    font-size: 0.74rem;
-    font-weight: 700;
-    color: var(--admin-sub);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--admin-muted);
     line-height: 1.3;
+    letter-spacing: 0.04em;
     word-break: keep-all;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1167,47 +1168,85 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
     color: var(--admin-muted);
 }
 
-/* サブ値（プレミアム店舗等） */
+/* サブ値（プレミアム店舗等） — 枠なしの控えめ表示 */
 .dashboard-kpi-sub {
     display: inline-flex;
     align-items: baseline;
     gap: 4px;
-    padding: 2px 8px;
-    border-radius: 999px;
-    background: var(--admin-primary-soft);
-    color: var(--admin-primary);
+    color: var(--admin-muted);
     font-size: 0.72rem;
     align-self: flex-start;
 }
-.dashboard-kpi-sub-label { font-weight: 700; opacity: 0.8; }
-.dashboard-kpi-sub-value { font-weight: 800; font-size: 0.84rem; }
-.dashboard-kpi-sub-unit { font-weight: 700; opacity: 0.7; }
+.dashboard-kpi-sub-label { font-weight: 600; opacity: 0.85; }
+.dashboard-kpi-sub-value { font-weight: 700; font-size: 0.78rem; color: var(--admin-sub); }
+.dashboard-kpi-sub-unit { font-weight: 600; opacity: 0.7; }
 
 .dashboard-kpi-trend {
     display: inline-flex;
     align-items: center;
     gap: 5px;
     font-size: 0.72rem;
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 999px;
-    align-self: flex-start;
-}
-.dashboard-kpi-trend.is-up { color: var(--status-success-fg); background: var(--status-success-bg); }
-.dashboard-kpi-trend.is-down { color: var(--status-danger-fg); background: var(--status-danger-bg); }
-.dashboard-kpi-trend-caption {
     font-weight: 600;
-    opacity: 0.72;
-    margin-left: 2px;
+    padding: 0;
+    align-self: flex-start;
+    color: var(--admin-muted);
+    letter-spacing: 0.02em;
 }
+.dashboard-kpi-trend.is-up { color: var(--status-success-fg); background: transparent; }
+.dashboard-kpi-trend.is-down { color: var(--status-danger-fg); background: transparent; }
+.dashboard-kpi-trend.is-up i,
+.dashboard-kpi-trend.is-down i { font-size: 0.66rem; }
+.dashboard-kpi-trend-caption {
+    display: none; /* 冗長キャプションは非表示（trend ラベルに集約） */
+}
+
+/* チャート折りたたみ（Dashboard の初期表示を軽くする） */
+.dashboard-charts-fold {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.dashboard-charts-fold__summary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    align-self: flex-start;
+    padding: 8px 14px;
+    border: 1px solid var(--admin-line);
+    border-radius: 999px;
+    background: var(--admin-surface);
+    color: var(--admin-sub);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    list-style: none;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.dashboard-charts-fold__summary::-webkit-details-marker { display: none; }
+.dashboard-charts-fold__summary:hover {
+    background: var(--admin-surface-alt);
+    color: var(--admin-text);
+    border-color: var(--admin-line-strong, var(--admin-line));
+}
+.dashboard-charts-fold__chevron {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--admin-muted);
+    transition: transform 0.2s ease;
+    font-size: 0.72rem;
+}
+.dashboard-charts-fold[open] .dashboard-charts-fold__chevron { transform: rotate(180deg); }
+.dashboard-charts-fold[open] > .dashboard-chart-card:not(:last-child) { margin-bottom: 12px; }
 
 /* チャートカード */
 .dashboard-chart-card {
     background: var(--admin-surface);
     border: 1px solid var(--admin-line);
-    border-radius: 10px;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-    padding: 14px;
+    border-radius: 8px;
+    padding: 16px;
 }
 .dashboard-chart-head {
     display: flex;
@@ -1291,9 +1330,8 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
 .task-panel {
     background: var(--admin-surface);
     border: 1px solid var(--admin-line);
-    border-radius: 12px;
+    border-radius: 10px;
     overflow: hidden;
-    box-shadow: var(--admin-shadow);
 }
 .task-panel-head {
     display: flex;
@@ -1305,9 +1343,10 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
 }
 .task-panel-title {
     margin: 0;
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 700;
     color: var(--admin-text);
+    letter-spacing: 0.01em;
 }
 .task-panel-count {
     font-size: 0.78rem;
@@ -1375,7 +1414,6 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
     border-radius: 10px;
     overflow: hidden;
     background: var(--admin-surface);
-    box-shadow: var(--admin-shadow);
 }
 .task-table tbody tr:last-child { margin-bottom: 0; }
 .task-table tbody td {
@@ -1417,20 +1455,10 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
 /* 請求書発行（従来未定義でデフォルト灰色だったため追加） */
 .task-category-badge.tone-invoice { color: #92590a; background: #fffbeb; border-color: #fde68a; }
 .task-target { display: flex; align-items: center; gap: 10px; }
-.task-target-avatar {
-    width: 28px; height: 28px;
-    border-radius: 8px;
-    background: var(--admin-primary-soft);
-    color: var(--admin-primary);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 auto;
-    font-size: 0.7rem;
-    font-weight: 700;
-}
-.task-target-name { margin-bottom: 2px; font-weight: 700; }
-.task-target-meta { font-size: 0.7rem; color: var(--admin-muted); }
+/* アバターは視覚ノイズになるため非表示（Blade は変更せずCSSで制御） */
+.task-target-avatar { display: none; }
+.task-target-name { margin-bottom: 2px; font-weight: 600; }
+.task-target-meta { font-size: 0.72rem; color: var(--admin-muted); font-variant-numeric: tabular-nums; }
 .task-status {
     display: inline-flex;
     align-items: center;
@@ -1699,7 +1727,6 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
     border-radius: 10px;
     background: var(--admin-surface);
     border: 1px solid var(--admin-line);
-    box-shadow: var(--admin-shadow);
 }
 .invoice-pending-card-info { width: 100%; min-width: 0; }
 .invoice-pending-card-title {
@@ -1842,10 +1869,9 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
 .task-card-list { display: grid; gap: 12px; }
 .task-card {
     padding: 14px;
-    border-radius: 12px;
+    border-radius: 10px;
     border: 1px solid var(--admin-line);
     background: var(--admin-surface);
-    box-shadow: var(--admin-shadow);
 }
 .task-card-head {
     display: flex;
@@ -2567,8 +2593,7 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
     padding: 12px 14px;
     background: var(--admin-surface);
     border: 1px solid var(--admin-line);
-    border-radius: 12px;
-    box-shadow: var(--admin-shadow);
+    border-radius: 10px;
 }
 .admin-page-toolbar-row {
     display: flex;
@@ -2654,9 +2679,8 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
 /* アコーディオン（details要素ベース） */
 .admin-accordion {
     border: 1px solid var(--admin-line);
-    border-radius: 12px;
+    border-radius: 10px;
     background: var(--admin-surface);
-    box-shadow: var(--admin-shadow);
     overflow: hidden;
 }
 .admin-accordion[open] {
@@ -3018,11 +3042,11 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
         --admin-content-pad: 16px;
         --admin-header-h: 60px;
     }
-    .admin-page { gap: 18px; }
-    .admin-title { font-size: 1.6rem; }
-    .admin-page-eyebrow { font-size: 0.74rem; }
+    .admin-page { gap: 20px; }
+    .admin-title { font-size: 1.35rem; }
+    .admin-page-eyebrow { font-size: 0.7rem; letter-spacing: 0.2em; }
     .admin-panel { padding: 18px; }
-    .admin-panel-title { font-size: 1rem; }
+    .admin-panel-title { font-size: 0.95rem; }
 
     /* グリッド2列 */
     .admin-grid,
@@ -3135,7 +3159,7 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
     :root {
         --admin-content-pad: 24px;
     }
-    .admin-content-shell { max-width: 1400px; }
+    .admin-content-shell { max-width: 1200px; }
 
     /* サイドバー固定 */
     .admin-sidebar {
@@ -3150,8 +3174,8 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
     .admin-search-wrap { display: block; width: 240px; }
     .admin-mobile-overlay { display: none !important; }
 
-    .admin-title { font-size: 1.85rem; }
-    .admin-page-eyebrow { font-size: 0.78rem; letter-spacing: 0.36em; }
+    .admin-title { font-size: 1.5rem; }
+    .admin-page-eyebrow { font-size: 0.72rem; letter-spacing: 0.2em; }
     .admin-panel { padding: 20px; }
 
     /* グリッドの最大化 */
@@ -3227,9 +3251,9 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
     .task-action-button { width: auto; }
     .task-table-wrap { padding: 0; overflow-x: auto; }
 
-    .admin-table { min-width: 680px; font-size: 0.86rem; }
-    .admin-table thead th { padding: 12px 16px; }
-    .admin-table tbody td { padding: 12px 16px; font-size: 0.86rem; }
+    .admin-table { min-width: 680px; font-size: 0.85rem; }
+    .admin-table thead th { padding: 14px 16px; }
+    .admin-table tbody td { padding: 14px 16px; font-size: 0.85rem; }
 
     .admin-master-layout {
         grid-template-columns: minmax(300px, 420px) minmax(0, 1fr);

@@ -795,28 +795,29 @@ a.btn-action.btn-action-danger:hover {
     display: inline-flex;
 }
 .admin-info-btn {
-    width: 30px;
-    height: 30px;
+    width: 26px;
+    height: 26px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    border: 1px solid rgba(168, 85, 247, 0.55);
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.18), rgba(168, 85, 247, 0.06));
-    color: #6e4f15;
+    border: 1px solid var(--admin-line);
+    background: transparent;
+    color: var(--admin-muted);
     cursor: pointer;
-    transition: background 0.15s ease, transform 0.1s ease;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
     padding: 0;
-    font-size: 0.92rem;
+    font-size: 0.8rem;
 }
 .admin-info-btn:hover {
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.32), rgba(168, 85, 247, 0.12));
-    transform: scale(1.05);
+    background: var(--admin-surface-alt);
+    color: var(--admin-sub);
+    border-color: var(--admin-line-strong, var(--admin-line));
 }
 .admin-info-btn[aria-expanded="true"] {
-    background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-hover));
-    color: #e6dffc;
-    border-color: var(--admin-primary);
+    background: var(--admin-surface-alt);
+    color: var(--admin-primary);
+    border-color: var(--admin-primary-border);
 }
 .u-visually-hidden {
     position: absolute;
@@ -834,11 +835,11 @@ a.btn-action.btn-action-danger:hover {
     top: calc(100% + 8px);
     left: 0;
     z-index: 30;
-    width: min(420px, calc(100vw - 32px));
+    width: min(380px, calc(100vw - 32px));
     background: var(--admin-surface);
-    border-radius: 14px;
-    border: 1px solid rgba(74, 18, 42, 0.12);
-    box-shadow: 0 18px 40px rgba(74, 18, 42, 0.18);
+    border-radius: 10px;
+    border: 1px solid var(--admin-line);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
     padding: 0;
     overflow: hidden;
 }
@@ -853,20 +854,20 @@ a.btn-action.btn-action-danger:hover {
     width: 12px;
     height: 12px;
     background: var(--admin-surface);
-    border-top: 1px solid rgba(74, 18, 42, 0.12);
-    border-left: 1px solid rgba(74, 18, 42, 0.12);
+    border-top: 1px solid var(--admin-line);
+    border-left: 1px solid var(--admin-line);
     transform: rotate(45deg);
 }
 .admin-info-popover__head {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 12px 14px;
-    border-bottom: 1px solid rgba(74, 18, 42, 0.08);
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.10), rgba(255, 255, 255, 0.6));
-    color: var(--admin-primary);
-    font-size: 0.86rem;
-    font-weight: 800;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--admin-line-soft);
+    background: var(--admin-surface-alt);
+    color: var(--admin-sub);
+    font-size: 0.78rem;
+    font-weight: 700;
     letter-spacing: 0.04em;
 }
 .admin-info-popover__head i { color: #7c3aed; }
@@ -885,10 +886,10 @@ a.btn-action.btn-action-danger:hover {
 }
 .admin-info-popover__close:hover { background: rgba(74, 18, 42, 0.06); color: var(--admin-text); }
 .admin-info-popover__body {
-    padding: 14px 16px;
+    padding: 12px 14px;
     color: var(--admin-text);
-    font-size: 0.92rem;
-    line-height: 1.7;
+    font-size: 0.85rem;
+    line-height: 1.65;
 }
 .admin-info-popover__body p { margin: 0 0 8px; }
 .admin-info-popover__body p:last-child { margin-bottom: 0; }
@@ -1165,49 +1166,49 @@ a.btn-action.btn-action-danger:hover {
    - タスク行の緊急度ストライプ
    ============================================================ */
 
-/* --- データ更新時刻バー --- */
+/* --- データ更新時刻バー（軽量な注記スタイル） --- */
 .dashboard-updated-bar {
-    display: inline-flex; align-items: center; gap: 8px;
-    margin: -4px 0 14px;
-    padding: 6px 12px;
-    border-radius: 999px;
-    background: var(--admin-surface);
-    border: 1px solid var(--admin-line);
-    font-size: 12px; color: var(--admin-sub);
-    box-shadow: var(--admin-shadow);
+    display: inline-flex; align-items: center; gap: 6px;
+    margin: -8px 0 0;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    font-size: 0.72rem;
+    color: var(--admin-muted);
 }
 .dashboard-updated-bar__icon {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 20px; height: 20px;
-    border-radius: 50%;
-    background: var(--admin-primary-soft);
-    color: var(--admin-primary);
-    font-size: 10px;
+    width: auto; height: auto;
+    background: transparent;
+    color: var(--admin-muted);
+    font-size: 0.7rem;
+    opacity: 0.7;
 }
 .dashboard-updated-bar__label {
     font-weight: 500;
+    letter-spacing: 0.02em;
 }
 .dashboard-updated-bar__time {
     font-family: "Noto Sans JP", system-ui, sans-serif;
     font-variant-numeric: tabular-nums;
-    font-weight: 700;
-    color: var(--admin-text);
+    font-weight: 600;
+    color: var(--admin-sub);
     letter-spacing: 0.02em;
 }
 .dashboard-updated-bar__refresh {
     display: inline-flex; align-items: center; gap: 4px;
-    margin-left: 4px;
-    padding: 3px 9px;
-    border-radius: 999px;
-    background: var(--admin-primary-soft);
-    color: var(--admin-primary);
-    font-size: 11px; font-weight: 700;
-    text-decoration: none;
-    border: 1px solid var(--admin-primary-border);
-    transition: background .15s ease;
+    margin-left: 6px;
+    padding: 0;
+    background: transparent;
+    color: var(--admin-muted);
+    font-size: 0.72rem; font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    border: 0;
+    transition: color .15s ease;
 }
 .dashboard-updated-bar__refresh:hover {
-    background: var(--admin-primary-soft-hover);
+    color: var(--admin-primary);
 }
 
 /* --- KPI カードのリンク化 --- */
@@ -1432,7 +1433,7 @@ a.dashboard-kpi-card:hover .dashboard-kpi-card__arrow,
     display: inline-flex; gap: 4px;
 }
 .deposit-bulk-toggle__btn {
-    display: inline-flex; align-items: center; gap: 6px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
     padding: 6px 12px;
     border: 1px solid var(--admin-line);
     border-radius: 8px;
@@ -1446,6 +1447,12 @@ a.dashboard-kpi-card:hover .dashboard-kpi-card__arrow,
     background: var(--admin-surface-alt);
     color: var(--admin-text);
     border-color: var(--admin-line-strong);
+}
+/* icon-only 版：正方形ボタンで視覚重量を落とす */
+.deposit-bulk-toggle--icon .deposit-bulk-toggle__btn {
+    width: 32px; height: 32px;
+    padding: 0;
+    border-radius: 8px;
 }
 
 .deposit-summary-progress {
@@ -1492,6 +1499,85 @@ a.dashboard-kpi-card:hover .dashboard-kpi-card__arrow,
 /* ============================================================
    身分証・書類審査画面の追加スタイル
    ============================================================ */
+
+/* プロフィール（案件行の左側の申請者情報） */
+.verification-profile {
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--admin-text);
+    min-width: 220px;
+    display: grid;
+    grid-template-columns: 1fr;
+    row-gap: 2px;
+}
+.verification-profile-label {
+    display: inline-block;
+    min-width: 5em;
+    margin-right: 6px;
+    color: var(--admin-muted);
+    font-size: 0.72rem;
+    letter-spacing: 0.02em;
+}
+@media (min-width: 960px) {
+    .verification-profile {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: 16px;
+    }
+}
+
+/* 個人情報の保持期間ガイド（アコーディオン内） */
+.verification-purge-guide { margin: 12px 0; }
+.verification-purge-guide .admin-accordion-title-main i {
+    color: var(--status-danger-fg);
+    margin-right: 4px;
+}
+.verification-purge-guide__lead {
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 0 0 12px;
+    color: var(--admin-sub);
+}
+.verification-purge-guide__badge {
+    display: inline-block;
+    background: var(--status-danger-bg);
+    color: var(--status-danger-fg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+.verification-purge-guide__cols {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px 20px;
+}
+.verification-purge-guide__cols h4 {
+    font-size: 0.78rem;
+    font-weight: 700;
+    margin: 0 0 6px;
+    color: var(--admin-text);
+    letter-spacing: 0.02em;
+}
+.verification-purge-guide__cols h4 i { margin-right: 4px; }
+.verification-purge-guide__cols ul,
+.verification-purge-guide__cols ol {
+    margin: 0;
+    padding-left: 1.3em;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--admin-sub);
+}
+.verification-purge-guide__caution {
+    margin: 12px 0 0;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--status-danger-bg);
+    border: 1px solid var(--status-danger-bd);
+    color: var(--status-danger-fg);
+    font-size: 0.8rem;
+    line-height: 1.6;
+}
 
 /* KPI ボタン化 */
 .verification-kpi-grid button.dashboard-kpi-card {

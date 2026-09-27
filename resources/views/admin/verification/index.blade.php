@@ -1,71 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', '本人確認・書類審査')
-
-@push('admin-styles')
-<style>
-.verification-profile {
-    font-size: 0.82rem;
-    line-height: 1.7;
-    color: #f1e6c4;
-    min-width: 220px;
-}
-.verification-profile-label {
-    display: inline-block;
-    min-width: 5em;
-    margin-right: 6px;
-    color: #c9b8b8;
-    font-size: 0.72rem;
-}
-.verification-purge-guide { margin: 12px 0; }
-.verification-purge-guide .admin-accordion-title-main i {
-    color: #b91c1c;
-    margin-right: 4px;
-}
-.verification-purge-guide__lead {
-    font-size: 0.86rem;
-    line-height: 1.8;
-    margin: 0 0 14px;
-}
-.verification-purge-guide__badge {
-    display: inline-block;
-    background: #fee2e2;
-    color: #b91c1c;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 700;
-}
-.verification-purge-guide__cols {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 14px 24px;
-}
-.verification-purge-guide__cols h4 {
-    font-size: 0.8rem;
-    font-weight: 700;
-    margin: 0 0 8px;
-}
-.verification-purge-guide__cols h4 i { margin-right: 4px; }
-.verification-purge-guide__cols ul,
-.verification-purge-guide__cols ol {
-    margin: 0;
-    padding-left: 1.4em;
-    font-size: 0.82rem;
-    line-height: 2;
-}
-.verification-purge-guide__caution {
-    margin: 14px 0 0;
-    padding: 10px 12px;
-    border-radius: 8px;
-    background: rgba(220, 38, 38, 0.07);
-    border: 1px solid rgba(220, 38, 38, 0.25);
-    color: #b91c1c;
-    font-size: 0.8rem;
-    line-height: 1.8;
-}
-</style>
-@endpush
+{{-- verification 用の CSS は public/assets/css/admin-detail.css に集約（重複防止） --}}
 
 @section('content')
     @php

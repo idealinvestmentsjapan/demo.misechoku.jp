@@ -106,7 +106,8 @@
             <button type="button"
                 class="dashboard-kpi-card dashboard-kpi-card--link"
                 data-kpi-filter="pay_check"
-                aria-pressed="false">
+                aria-pressed="false"
+                title="クリックで絞り込み">
                 <div class="dashboard-kpi-head">
                     <div class="dashboard-kpi-title">店舗入金照合待ち</div>
                     <i class="fas fa-hourglass-half"></i>
@@ -115,12 +116,12 @@
                     <span class="dashboard-kpi-value">{{ number_format($summary['payment_confirmation_pending'] ?? 0) }}</span>
                     <span class="dashboard-kpi-unit">件</span>
                 </div>
-                <div class="dashboard-kpi-trend">クリックで絞り込み</div>
             </button>
             <button type="button"
                 class="dashboard-kpi-card dashboard-kpi-card--link"
                 data-kpi-filter="transfer"
-                aria-pressed="false">
+                aria-pressed="false"
+                title="運営が今すぐ振込可">
                 <div class="dashboard-kpi-head">
                     <div class="dashboard-kpi-title">キャスト振込待ち</div>
                     <i class="fas fa-paper-plane"></i>
@@ -129,12 +130,12 @@
                     <span class="dashboard-kpi-value">{{ number_format($summary['cast_transfer_pending'] ?? 0) }}</span>
                     <span class="dashboard-kpi-unit">件</span>
                 </div>
-                <div class="dashboard-kpi-trend is-up">運営が今すぐ振込可</div>
             </button>
             <button type="button"
                 class="dashboard-kpi-card dashboard-kpi-card--link {{ ($summary['unconfirmed_cast_over_7days'] ?? 0) > 0 ? 'is-critical' : '' }}"
                 data-kpi-filter="alert"
-                aria-pressed="false">
+                aria-pressed="false"
+                title="キャスト未確認 7日超">
                 <div class="dashboard-kpi-head">
                     <div class="dashboard-kpi-title">要確認（7日）</div>
                     <i class="fas fa-triangle-exclamation"></i>
@@ -143,7 +144,6 @@
                     <span class="dashboard-kpi-value">{{ number_format($summary['unconfirmed_cast_over_7days'] ?? 0) }}</span>
                     <span class="dashboard-kpi-unit">件</span>
                 </div>
-                <div class="dashboard-kpi-trend is-down">キャスト未確認 7日超</div>
             </button>
             <article class="dashboard-kpi-card">
                 <div class="dashboard-kpi-head">
@@ -173,12 +173,12 @@
                         <strong>{{ $catCounts[$chip['key']] ?? 0 }}</strong>
                     </button>
                 @endforeach
-                <div class="deposit-bulk-toggle" role="group" aria-label="一括表示制御">
-                    <button type="button" class="deposit-bulk-toggle__btn" data-deposit-bulk="collapse" title="すべて折りたたむ">
-                        <i class="fas fa-compress-alt"></i><span class="u-vh-mobile">折りたたむ</span>
+                <div class="deposit-bulk-toggle deposit-bulk-toggle--icon" role="group" aria-label="一括表示制御">
+                    <button type="button" class="deposit-bulk-toggle__btn" data-deposit-bulk="collapse" title="すべて折りたたむ" aria-label="すべて折りたたむ">
+                        <i class="fas fa-compress-alt" aria-hidden="true"></i>
                     </button>
-                    <button type="button" class="deposit-bulk-toggle__btn" data-deposit-bulk="expand" title="すべて展開">
-                        <i class="fas fa-expand-alt"></i><span class="u-vh-mobile">展開</span>
+                    <button type="button" class="deposit-bulk-toggle__btn" data-deposit-bulk="expand" title="すべて展開" aria-label="すべて展開">
+                        <i class="fas fa-expand-alt" aria-hidden="true"></i>
                     </button>
                 </div>
             </div>
