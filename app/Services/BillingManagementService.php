@@ -727,10 +727,14 @@ class BillingManagementService
 
         $confirmedAmount = (int) $payload['confirmed_amount'];
         $expectedAmount = (int) ($deposit->invoice_amount ?? 0);
-        $reportedAmount = (int) ($deposit->shop_payment_reported_amount ?? 0);
 
-        if ($confirmedAmount !== $expectedAmount || $reportedAmount !== $expectedAmount) {
-            return ['success' => false, 'message' => '請求金額と報告金額が一致しません。店舗へ再確認してください。'];
+        // Admin verifies the actual bank credit against the invoice amount.
+        // The shop-reported amount is stored for audit and shown in the UI as
+        // reference, but is NOT enforced here: shops can typo the free-form
+        // input, and the invoice_amount may have been edited after the report,
+        // which would otherwise block confirmation forever.
+        if ($confirmedAmount !== $expectedAmount) {
+            return ['success' => false, 'message' => '確認済み金額が請求金額と一致しません。請求金額（¥' . number_format($expectedAmount) . '）で確認してください。'];
         }
 
         DB::table('application_deposits')

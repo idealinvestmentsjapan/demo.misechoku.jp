@@ -168,7 +168,14 @@
                             </div>
                             <div class="ops-ref__row">
                                 <dt>店舗入金報告額</dt>
-                                <dd>{{ $deposit['shop_payment_reported_amount'] ? '¥' . number_format((int) $deposit['shop_payment_reported_amount']) : '未報告' }}</dd>
+                                <dd>
+                                    {{ $deposit['shop_payment_reported_amount'] ? '¥' . number_format((int) $deposit['shop_payment_reported_amount']) : '未報告' }}
+                                    @if($deposit['shop_payment_reported_amount'] && (int) $deposit['shop_payment_reported_amount'] !== (int) $deposit['invoice_amount'])
+                                        <span class="ops-ref__warn" title="店舗の自己申告値が請求金額とズレています。銀行明細で実着金額を必ず確認してください。">
+                                            <i class="fas fa-triangle-exclamation"></i> 請求金額とズレ
+                                        </span>
+                                    @endif
+                                </dd>
                             </div>
                             <div class="ops-ref__row">
                                 <dt>店舗の参照番号</dt>
@@ -392,6 +399,13 @@ document.addEventListener('DOMContentLoaded', function () {
 }
 .ops-ref__row dt { font-size: 0.7rem; color: var(--admin-sub); margin: 0 0 2px; font-weight: 600; }
 .ops-ref__row dd { font-size: 0.9rem; color: var(--admin-text); margin: 0; font-variant-numeric: tabular-nums; }
+.ops-ref__warn {
+    display: inline-flex; align-items: center; gap: 4px; margin-left: 8px;
+    padding: 2px 8px; border-radius: 999px;
+    background: rgba(245, 158, 11, 0.14); color: #f59e0b;
+    font-size: 0.72rem; font-weight: 700; font-variant-numeric: normal;
+}
+.ops-ref__warn i { font-size: 0.7rem; }
 @media (max-width: 500px) { .ops-ref__grid { grid-template-columns: 1fr; } }
 
 /* Input section (prominent, actionable) */

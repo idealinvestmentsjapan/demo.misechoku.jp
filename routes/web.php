@@ -179,6 +179,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('/deposits/{deposit}/invoice/edit', [AdminDeposit::class, 'updateInvoice'])->name('deposits.invoice.update');
             Route::post('/deposits/{deposit}/invoice/reset', [AdminDeposit::class, 'resetInvoice'])->name('deposits.invoice.reset');
             Route::post('/deposits/{deposit}/confirm-shop-payment', [AdminDeposit::class, 'confirmShopPayment'])->name('deposits.shop-payment.confirm');
+            // Plan subscription confirmation now lives on the unified deposit confirmation screen.
+            Route::post('/deposits/plan/{subscription}/confirm', [AdminDeposit::class, 'confirmPlanPayment'])->name('deposits.plan-payment.confirm');
             Route::post('/deposits/{deposit}/transfer-start', [AdminDeposit::class, 'transferStart'])->name('deposits.transfer-start');
             Route::post('/deposits/{deposit}/transfer-complete', [AdminDeposit::class, 'transferComplete'])->name('deposits.transfer-complete');
             Route::post('/deposits/{deposit}/payment-task-invalidate', [AdminDeposit::class, 'paymentTaskInvalidate'])->name('deposits.payment-task.invalidate');
@@ -186,9 +188,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('/deposits/{deposit}/transfer-cast', [AdminDeposit::class, 'transferCast'])->name('deposits.cast-transfer.execute');
         });
 
-        // Premiumプラン入金管理（振込の目視確認 → 有効化）
+        // Premiumプラン入金は入金確認画面に統合済み（旧: /admin/plans）。
+        // 請求書 / 領収書 PDF ダウンロードだけ残し、旧 index は入金確認へリダイレクト。
         Route::middleware('admin.permission:operations.deposits')->group(function () {
-            Route::get('/plans', [\App\Http\Controllers\Admin\PlanSubscriptionController::class, 'index'])->name('plans.index');
+            Route::get('/plans', fn () => redirect()->route('admin.deposits.confirmations'))->name('plans.index');
+            // Kept for backwards compat with in-flight bookmarks / notifications. The
+            // unified screen posts to admin.deposits.plan-payment.confirm instead.
             Route::post('/plans/{subscription}/confirm', [\App\Http\Controllers\Admin\PlanSubscriptionController::class, 'confirm'])->name('plans.confirm');
             Route::get('/plans/{subscription}/invoice', [\App\Http\Controllers\Admin\PlanSubscriptionController::class, 'downloadInvoice'])->name('plans.invoice');
             Route::get('/plans/{subscription}/receipt', [\App\Http\Controllers\Admin\PlanSubscriptionController::class, 'downloadReceipt'])->name('plans.receipt');

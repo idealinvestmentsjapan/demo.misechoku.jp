@@ -73,37 +73,57 @@ class BankLookupService
 
     private function banks(): Collection
     {
-        return collect(Cache::remember(self::BANKS_CACHE_KEY, now()->addDay(), function () {
-            return $this->fetchJson(self::BANKS_URL)
-                ->map(fn (array $item) => $this->mapBank($item))
-                ->all();
-        }));
+        // Cache::remember caches whatever the closure returns — including empty
+        // arrays produced by a transient upstream failure — for the full TTL.
+        // Cache the successful payload separately with Cache::put so a bad
+        // fetch never poisons the next 24 hours.
+        $cached = Cache::get(self::BANKS_CACHE_KEY);
+        if (is_array($cached) && count($cached) > 0) {
+            return collect($cached);
+        }
+
+        $fresh = $this->fetchJson(self::BANKS_URL)
+            ->map(fn (array $item) => $this->mapBank($item))
+            ->all();
+
+        if (count($fresh) > 0) {
+            Cache::put(self::BANKS_CACHE_KEY, $fresh, now()->addDay());
+        }
+
+        return collect($fresh);
     }
 
     private function branches(string $bankCode): Collection
     {
-        return collect(Cache::remember(
-            'bank_lookup.branches.' . $bankCode,
-            now()->addDay(),
-            function () use ($bankCode) {
-                $url = sprintf(self::BRANCHES_URL_TEMPLATE, $bankCode);
+        $cacheKey = 'bank_lookup.branches.' . $bankCode;
+        $cached = Cache::get($cacheKey);
+        if (is_array($cached) && count($cached) > 0) {
+            return collect($cached);
+        }
 
-                return $this->fetchJson($url)
-                    ->map(fn (array $item) => $this->mapBranch($item, $bankCode))
-                    ->all();
-            }
-        ));
+        $url = sprintf(self::BRANCHES_URL_TEMPLATE, $bankCode);
+        $fresh = $this->fetchJson($url)
+            ->map(fn (array $item) => $this->mapBranch($item, $bankCode))
+            ->all();
+
+        if (count($fresh) > 0) {
+            Cache::put($cacheKey, $fresh, now()->addDay());
+        }
+
+        return collect($fresh);
     }
 
     private function fetchJson(string $url): Collection
     {
         try {
-            $response = Http::timeout(5)->acceptJson()->get($url);
+            $response = Http::timeout(10)->connectTimeout(5)->acceptJson()->get($url);
         } catch (\Throwable $e) {
+            \Log::warning('BankLookupService fetch failed: ' . $url . ' — ' . $e->getMessage());
             return collect();
         }
 
         if (!$response->successful()) {
+            \Log::warning('BankLookupService non-2xx: ' . $url . ' — HTTP ' . $response->status());
             return collect();
         }
 

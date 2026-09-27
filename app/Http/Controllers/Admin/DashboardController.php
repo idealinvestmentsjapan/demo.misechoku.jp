@@ -168,7 +168,6 @@ class DashboardController extends Controller
             ['id' => 'invoices',      'title' => '請求書発行',       'count' => (int) ($badges['admin.invoices.index'] ?? 0)],
             ['id' => 'confirmations', 'title' => '入金確認',         'count' => (int) ($badges['admin.deposits.confirmations'] ?? 0)],
             ['id' => 'transfers',     'title' => 'キャスト振込',     'count' => (int) ($badges['admin.deposits.transfers'] ?? 0)],
-            ['id' => 'plans',         'title' => 'プラン入金管理',   'count' => (int) ($badges['admin.plans.index'] ?? 0)],
             ['id' => 'verification',  'title' => '身分証・書類審査', 'count' => (int) ($badges['admin.verification.index'] ?? 0)],
             ['id' => 'inquiries',     'title' => '問合せ対応',       'count' => (int) ($badges['admin.support-inquiries.index'] ?? 0)],
             ['id' => 'user_reports',  'title' => 'ユーザー通報',     'count' => (int) ($badges['admin.user_reports.index'] ?? 0)],

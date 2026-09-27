@@ -2,19 +2,26 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Models\ShopPlanSubscription;
 use App\Services\BillingManagementService;
 use App\Services\PdfService;
+use App\Services\PlanSubscriptionService;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Storage;
 
 class DepositController extends Controller
 {
-    public function __construct(private readonly BillingManagementService $billingManagementService)
-    {
+    public function __construct(
+        private readonly BillingManagementService $billingManagementService,
+        private readonly PlanSubscriptionService $planSubscriptionService,
+    ) {
     }
 
     /**
@@ -27,9 +34,13 @@ class DepositController extends Controller
     }
 
     /**
-     * 入金確認画面：店舗からの入金報告を銀行入金と照合する。
-     * 対象データ = 請求書送信済みで、かつ 店舗入金確認 段階以下（STATUS_INVOICE_ISSUED / SHOP_PAYMENT_REPORTED）。
-     * 直近の完了案件はコンテキスト参照として少数だけ含める（デフォルトフィルタで隠す）。
+     * 入金確認画面：3種類の入金対象（ボーナス金 / ヘルプ採用金 / プラン入金）を一元管理。
+     *
+     * - ボーナス金 / ヘルプ採用金: application_deposits を kind=bonus|help で分類。
+     *   請求書送信済みで、店舗入金確認以下（STATUS_INVOICE_ISSUED / SHOP_PAYMENT_REPORTED）を主対象。
+     *   直近の照合済み案件はコンテキスト参照として少数だけ含める（デフォルトフィルタで隠す）。
+     * - プラン入金: shop_plan_subscriptions で status=PENDING_PAYMENT のもの。
+     *   店舗の入金報告フローは無く、運営が銀行明細を目視確認して有効化する運用。
      */
     public function confirmations()
     {
@@ -47,7 +58,23 @@ class DepositController extends Controller
             ->where('status_code', '>=', BillingManagementService::STATUS_SHOP_PAYMENT_CONFIRMED)
             ->sortByDesc('shop_payment_confirmed_at')
             ->take(10);
-        $deposits = $primary->merge($recentlyConfirmed)->values()->all();
+
+        // Tag each application-deposit row with its kind (bonus vs help). The
+        // shop-side "talk_job_kind" already tells us which is which.
+        $bonusHelpRows = $primary->merge($recentlyConfirmed)
+            ->map(function (array $d): array {
+                $isHelp = trim((string) ($d['job_kind'] ?? '')) === 'help';
+                $d['kind'] = $isHelp ? 'help' : 'bonus';
+                return $d;
+            })
+            ->values();
+
+        // Plan subscriptions merge in as kind=plan with a matching row shape.
+        [$planRows, $planSummary] = $this->collectPlanRowsForConfirmations();
+
+        // Combine everything into a single unified list ordered so that
+        // action-needed rows float to the top of each kind.
+        $unified = $bonusHelpRows->merge($planRows)->values()->all();
 
         $summary = [
             'payment_confirmation_pending' => $primary
@@ -56,15 +83,122 @@ class DepositController extends Controller
             'awaiting_shop_payment' => $primary
                 ->where('status_code', BillingManagementService::STATUS_INVOICE_ISSUED)
                 ->count(),
+            'plan_payment_pending' => $planSummary['pending'],
+            'plan_active' => $planSummary['active'],
+            'plan_overdue' => $planSummary['overdue'],
             'invoice_total' => $primary->sum('invoice_amount'),
             'recent_confirmed' => $recentlyConfirmed->count(),
         ];
 
         return view('admin.deposit.confirmations', [
-            'deposits' => $deposits,
+            'deposits' => $unified,
             'summary' => $summary,
             'adminBank' => $this->billingManagementService->getAdminBankAccount(),
         ]);
+    }
+
+    /**
+     * 入金確認画面に混ぜる Premium プラン契約の行を組み立てる。
+     * status_code は application_deposits と衝突しない値（負の値）を割り当てて
+     * ビュー側のフィルタ / ソートロジックを分岐しなくても済むようにする。
+     *
+     * @return array{0: \Illuminate\Support\Collection, 1: array{pending:int, active:int, overdue:int}}
+     */
+    private function collectPlanRowsForConfirmations(): array
+    {
+        $emptySummary = ['pending' => 0, 'active' => 0, 'overdue' => 0];
+
+        if (!Schema::hasTable('shop_plan_subscriptions')) {
+            return [collect(), $emptySummary];
+        }
+
+        // Pending payments are always shown; recently activated plans give context
+        // (mirrors application_deposits' "recent confirmed" window).
+        $pending = ShopPlanSubscription::query()
+            ->where('status', ShopPlanSubscription::STATUS_PENDING_PAYMENT)
+            ->orderByDesc('id')
+            ->get();
+        $recentlyActive = ShopPlanSubscription::query()
+            ->where('status', ShopPlanSubscription::STATUS_ACTIVE)
+            ->orderByDesc('paid_confirmed_at')
+            ->limit(10)
+            ->get();
+
+        $all = $pending->concat($recentlyActive);
+        if ($all->isEmpty()) {
+            return [collect(), $emptySummary];
+        }
+
+        $shopNames = DB::table('shop_profiles')
+            ->whereIn('shop_id', $all->pluck('shop_id')->unique()->values()->all())
+            ->pluck('shop_name', 'shop_id');
+
+        $today = Carbon::today();
+        $overdue = 0;
+
+        $rows = $all->map(function (ShopPlanSubscription $sub) use ($shopNames, $today, &$overdue): array {
+            $isPending = (int) $sub->status === ShopPlanSubscription::STATUS_PENDING_PAYMENT;
+            $isActive = (int) $sub->status === ShopPlanSubscription::STATUS_ACTIVE;
+            $isOverdue = $isPending && $sub->payment_due_date !== null && $sub->payment_due_date->lt($today);
+            if ($isOverdue) {
+                $overdue++;
+            }
+            return [
+                'id' => (int) $sub->id,
+                'kind' => 'plan',
+                'plan_id' => (int) $sub->id,
+                'plan_cycle_label' => $sub->cycleLabel(),
+                'plan_starts_at' => $sub->starts_at?->format('Y-m-d'),
+                'plan_ends_at' => $sub->ends_at?->format('Y-m-d'),
+                'plan_overdue' => $isOverdue,
+                'status_code' => $isPending
+                    ? BillingManagementService::STATUS_INVOICE_ISSUED
+                    : BillingManagementService::STATUS_SHOP_PAYMENT_CONFIRMED,
+                'shop_id' => (string) $sub->shop_id,
+                'shop_name' => (string) ($shopNames[$sub->shop_id] ?? $sub->shop_id),
+                'cast_name' => null,
+                'invoice_number' => (string) ($sub->invoice_number ?? ''),
+                'invoice_issued_at' => optional($sub->invoice_issued_at)->format('Y-m-d H:i'),
+                'invoice_due_date' => optional($sub->payment_due_date)->format('Y-m-d'),
+                'invoice_amount' => (int) $sub->amount,
+                'shop_payment_reported_at' => null,
+                'shop_payment_reported_amount' => null,
+                'shop_payment_reference' => null,
+                'shop_payment_confirmed_at' => optional($sub->paid_confirmed_at)->format('Y-m-d H:i'),
+                'shop_payment_evidence_path' => null,
+                'plan_receipt_available' => $isActive,
+            ];
+        });
+
+        return [
+            $rows,
+            [
+                'pending' => $pending->count(),
+                'active' => $recentlyActive->count(),
+                'overdue' => $overdue,
+            ],
+        ];
+    }
+
+    /**
+     * 入金確認画面から Premium プラン契約を「入金確認済み」にする。
+     * PlanSubscriptionController::confirm と同じサービス呼び出しを、
+     * 統合画面のリダイレクトに寄せた薄いラッパー。
+     */
+    public function confirmPlanPayment(ShopPlanSubscription $subscription): RedirectResponse
+    {
+        if ((int) $subscription->status !== ShopPlanSubscription::STATUS_PENDING_PAYMENT) {
+            return redirect()
+                ->route('admin.deposits.confirmations')
+                ->with('error', 'この契約は入金待ちではありません。');
+        }
+
+        $adminId = (string) (auth()->guard('admin')->id() ?? '');
+        $sub = $this->planSubscriptionService->confirmPayment($subscription, $adminId);
+
+        return redirect()
+            ->route('admin.deposits.confirmations')
+            ->with('status', "「{$sub->invoice_number}」を入金確認済みにしました。Premium機能が有効になりました（{$sub->ends_at?->format('Y/m/d')} まで）。");
     }
 
     /**

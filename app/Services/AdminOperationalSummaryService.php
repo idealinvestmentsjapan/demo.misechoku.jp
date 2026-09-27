@@ -35,13 +35,18 @@ class AdminOperationalSummaryService
         // For invoices, that is SHOP_APPROVED (waiting for admin to issue). CAST_REQUESTED
         // is "shop approval pending" and the invoice page itself labels those as
         // "運営の対応は不要", so they must not inflate the "要対応" badge.
+        // Plan pending count is folded into the 入金確認 badge because plans are
+        // now confirmed on the same screen (kind=plan rows in the unified list).
+        $planPending = $this->getPendingPlanPaymentCount();
+
         return [
             'admin.invoices.index' => (int) ($s['invoice_pending'] ?? 0),
-            'admin.deposits.confirmations' => (int) $s['payment_confirmation_pending'],
+            'admin.deposits.confirmations' => (int) $s['payment_confirmation_pending'] + $planPending,
             'admin.deposits.transfers' => (int) $s['cast_transfer_pending'],
             // Legacy key kept in case some caller still references it.
-            'admin.deposits.index' => (int) $s['payment_confirmation_pending'] + (int) $s['cast_transfer_pending'],
-            'admin.plans.index' => $this->getPendingPlanPaymentCount(),
+            'admin.deposits.index' => (int) $s['payment_confirmation_pending'] + (int) $s['cast_transfer_pending'] + $planPending,
+            // Legacy plans badge left as 0 so the removed sidebar entry does not resurface via badges.
+            'admin.plans.index' => 0,
             'admin.verification.index' => (int) $v['cast_pending'] + (int) $v['shop_pending'],
             'admin.support-inquiries.index' => $this->getPendingInquiryCount(),
             'admin.user_reports.index' => $this->getPendingUserReportCount(),

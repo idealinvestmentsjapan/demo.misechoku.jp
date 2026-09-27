@@ -71,10 +71,15 @@
         });
     }
 
+    // teraren の生レスポンスでは name が略称（例: "みずほ"）、normalize.name が
+    // 正式名（"みずほ銀行"）。datalist の候補として選ばれた値をそのまま bank_name
+    // として保存するため、正式名（normalize.name）を優先する。サーバ API は
+    // BankLookupService::mapBank 側で既に normalize.name を name として返してくる。
     function mapBankItem(item) {
+        var normalizedName = (item.normalize && item.normalize.name) || '';
         return {
             code: String(item.code || ''),
-            name: String(item.name || (item.normalize && item.normalize.name) || ''),
+            name: String(normalizedName || item.name || ''),
             short_name: String(item.short_name || item.name || ''),
             kana: String(item.kana || (item.normalize && item.normalize.kana) || ''),
             hira: String(item.hira || (item.normalize && item.normalize.hira) || '')
@@ -82,10 +87,11 @@
     }
 
     function mapBranchItem(item, bankCode) {
+        var normalizedName = (item.normalize && item.normalize.name) || '';
         return {
             bank_code: String(item.bank_code || bankCode || ''),
             code: String(item.code || ''),
-            name: String(item.name || (item.normalize && item.normalize.name) || ''),
+            name: String(normalizedName || item.name || ''),
             short_name: String(item.short_name || item.name || ''),
             kana: String(item.kana || (item.normalize && item.normalize.kana) || ''),
             hira: String(item.hira || (item.normalize && item.normalize.hira) || '')
@@ -129,6 +135,47 @@
                 branchCodeInput.value = selected ? selected.code : '';
             }
 
+            // Client-side cache of the full teraren bank list, so the fallback
+            // path runs one XHR per session instead of one per keystroke.
+            var teraerenBanksPromise = null;
+            function loadTerarenBanks() {
+                if (teraerenBanksPromise) return teraerenBanksPromise;
+                teraerenBanksPromise = fetchJson('https://bank.teraren.com/banks.json')
+                    .then(function (items) {
+                        return Array.isArray(items) ? items.map(mapBankItem) : [];
+                    })
+                    .catch(function () {
+                        teraerenBanksPromise = null; // allow retry next time
+                        return [];
+                    });
+                return teraerenBanksPromise;
+            }
+
+            function applyBankItems(items, query) {
+                var needle = normalize(query).toLowerCase();
+                var filtered = needle === ''
+                    ? items.slice(0, 20)
+                    : items.filter(function (item) {
+                          return [item.code, item.name, item.short_name, item.kana, item.hira].some(function (value) {
+                              return normalize(value).toLowerCase().indexOf(needle) !== -1;
+                          });
+                      }).slice(0, 20);
+
+                bankMap.clear();
+                filtered.forEach(function (item) {
+                    bankMap.set(normalize(item.name), item);
+                });
+                setOptions(bankList, filtered, function (item) {
+                    return item.code;
+                });
+                syncSelectedBank();
+
+                if (normalize(branchInput.value) !== '' && bankCodeInput.value) {
+                    searchBranches();
+                }
+                return filtered.length;
+            }
+
             var searchBanks = debounce(function () {
                 var query = normalize(bankInput.value);
 
@@ -139,58 +186,38 @@
                     return;
                 }
 
+                // Primary: server API (fast, cached). Fallback: teraren directly
+                // (public, CORS-allowed) — used whenever the primary throws OR
+                // returns an empty list (which happens when the server's upstream
+                // fetch previously failed and cached nothing / when the query
+                // predates the server cache warm-up).
                 fetchJson('/api/bank-lookup/banks?q=' + encodeURIComponent(query))
                     .then(function (data) {
                         var items = Array.isArray(data.items) ? data.items : [];
-                        bankMap.clear();
-                        items.forEach(function (item) {
-                            bankMap.set(normalize(item.name), item);
-                        });
-                        setOptions(bankList, items, function (item) {
-                            return item.code;
-                        });
-                        syncSelectedBank();
-
-                        if (normalize(branchInput.value) !== '' && bankCodeInput.value) {
-                            searchBranches();
-                        }
-                    })
-                    .catch(function () {
-                        return fetchJson('https://bank.teraren.com/banks.json').then(function (items) {
-                            return Array.isArray(items) ? items.map(mapBankItem) : [];
-                        });
-                    })
-                    .then(function (fallbackItems) {
-                        if (!Array.isArray(fallbackItems)) {
+                        if (items.length > 0) {
+                            applyBankItems(items, query);
                             return;
                         }
-
-                        var filtered = fallbackItems.filter(function (item) {
-                            var needle = query.toLowerCase();
-
-                            return [item.code, item.name, item.short_name, item.kana, item.hira].some(function (value) {
-                                return normalize(value).toLowerCase().indexOf(needle) !== -1;
-                            });
-                        }).slice(0, 20);
-
-                        bankMap.clear();
-                        filtered.forEach(function (item) {
-                            bankMap.set(normalize(item.name), item);
+                        return loadTerarenBanks().then(function (fallbackItems) {
+                            applyBankItems(fallbackItems, query);
                         });
-                        setOptions(bankList, filtered, function (item) {
-                            return item.code;
-                        });
-                        syncSelectedBank();
-
-                        if (normalize(branchInput.value) !== '' && bankCodeInput.value) {
-                            searchBranches();
-                        }
                     })
                     .catch(function () {
-                        bankMap.clear();
-                        bankList.innerHTML = '';
+                        return loadTerarenBanks().then(function (fallbackItems) {
+                            applyBankItems(fallbackItems, query);
+                        });
                     });
             }, 250);
+
+            function fetchTerarenBranches(bankCode) {
+                return fetchJson('https://bank.teraren.com/banks/' + encodeURIComponent(bankCode) + '/branches.json')
+                    .then(function (items) {
+                        return Array.isArray(items)
+                            ? items.map(function (item) { return mapBranchItem(item, bankCode); })
+                            : [];
+                    })
+                    .catch(function () { return []; });
+            }
 
             function loadBranches(bankCode) {
                 if (!bankCode) {
@@ -204,21 +231,20 @@
                 return fetchJson('/api/bank-lookup/branches?bank_code=' + encodeURIComponent(bankCode))
                     .then(function (data) {
                         var items = Array.isArray(data.items) ? data.items : [];
-                        branchCache.set(bankCode, items);
-
-                        return items;
+                        if (items.length > 0) {
+                            branchCache.set(bankCode, items);
+                            return items;
+                        }
+                        return fetchTerarenBranches(bankCode).then(function (mapped) {
+                            branchCache.set(bankCode, mapped);
+                            return mapped;
+                        });
                     })
                     .catch(function () {
-                        return fetchJson('https://bank.teraren.com/banks/' + encodeURIComponent(bankCode) + '/branches.json')
-                            .then(function (items) {
-                                var mapped = Array.isArray(items)
-                                    ? items.map(function (item) { return mapBranchItem(item, bankCode); })
-                                    : [];
-
-                                branchCache.set(bankCode, mapped);
-
-                                return mapped;
-                            });
+                        return fetchTerarenBranches(bankCode).then(function (mapped) {
+                            branchCache.set(bankCode, mapped);
+                            return mapped;
+                        });
                     });
             }
 

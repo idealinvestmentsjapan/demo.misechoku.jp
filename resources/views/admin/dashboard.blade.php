@@ -11,7 +11,6 @@
             'invoices'      => ['route' => 'admin.invoices.index',           'icon' => 'fa-file-invoice'],
             'confirmations' => ['route' => 'admin.deposits.confirmations',   'icon' => 'fa-money-bill-wave'],
             'transfers'     => ['route' => 'admin.deposits.transfers',       'icon' => 'fa-paper-plane'],
-            'plans'         => ['route' => 'admin.plans.index',              'icon' => 'fa-crown'],
             'verification'  => ['route' => 'admin.verification.index',       'icon' => 'fa-id-card'],
             'inquiries'     => ['route' => 'admin.support-inquiries.index',  'icon' => 'fa-envelope-open-text'],
             'user_reports'  => ['route' => 'admin.user_reports.index',       'icon' => 'fa-flag'],
