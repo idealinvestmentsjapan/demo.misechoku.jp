@@ -2269,6 +2269,7 @@ body.page-talk-list .request-card .request-img,
     width: 56px !important;
     height: 56px !important;
     border: 0 !important;
+    border-radius: 50% !important;
     box-shadow: none !important;
 }
 

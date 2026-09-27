@@ -2158,3 +2158,64 @@ body.theme-light .job-edit-v2 select {
     border-color: rgba(124, 58, 237, 0.24) !important;
     color-scheme: light;
 }
+
+
+/* §29 スカウト受信カード (pane-requests / .request-card)
+   Cast portal only. talk.css has already flattened the card into a row for
+   both themes, but the child text/border colors were still tuned for dark
+   backgrounds (#c5b0b0, #fff2c4, #d8c6c6, #e4d2d2) and became unreadable
+   on the light surface. Align every element with the .talk-item palette
+   used in the ongoing panel above (§ around line 1230). */
+body.theme-light.page-talk-list .request-card,
+body.theme-light .talk-list-container .request-card {
+    border-bottom-color: rgba(124, 58, 237, 0.14) !important;
+}
+body.theme-light.page-talk-list .request-card:hover,
+body.theme-light .talk-list-container .request-card:hover {
+    background: rgba(124, 58, 237, 0.05) !important;
+}
+body.theme-light.page-talk-list .request-upper-link:active,
+body.theme-light .talk-list-container .request-upper-link:active {
+    background: rgba(124, 58, 237, 0.08) !important;
+}
+/* Name */
+body.theme-light.page-talk-list .request-content .name,
+body.theme-light .talk-list-container .request-content .name {
+    color: #1a1626 !important;
+    font-weight: 700 !important;
+}
+/* Timestamp (top-right, monospace) */
+body.theme-light.page-talk-list .request-time,
+body.theme-light .talk-list-container .request-time {
+    color: #6d6685 !important;
+}
+/* Status pill: match .talk-status light treatment (lavender fill + purple text) */
+body.theme-light.page-talk-list .request-status,
+body.theme-light .talk-list-container .request-status {
+    background: rgba(124, 58, 237, 0.08) !important;
+    border-color: rgba(124, 58, 237, 0.28) !important;
+    color: #6d28d9 !important;
+}
+/* Message preview */
+body.theme-light.page-talk-list .request-msg-preview,
+body.theme-light .talk-list-container .request-msg-preview {
+    color: #5f5876 !important;
+    border-top-color: rgba(124, 58, 237, 0.14) !important;
+}
+/* Reject button: keep the approve gold gradient, but re-tone the reject
+   button so it reads on white (originally rgba(255,255,255,0.04) fill with
+   #e4d2d2 text — invisible on light). */
+body.theme-light.page-talk-list .btn-reject,
+body.theme-light .talk-list-container .btn-reject {
+    color: #4b465c !important;
+    background: rgba(124, 58, 237, 0.04) !important;
+    border-color: rgba(124, 58, 237, 0.22) !important;
+}
+body.theme-light.page-talk-list .btn-reject:hover,
+body.theme-light .talk-list-container .btn-reject:hover {
+    background: rgba(124, 58, 237, 0.10) !important;
+}
+body.theme-light.page-talk-list .btn-reject:active,
+body.theme-light .talk-list-container .btn-reject:active {
+    background: rgba(124, 58, 237, 0.14) !important;
+}
