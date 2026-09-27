@@ -380,7 +380,7 @@
     <div class="shop-action-modal-backdrop" data-close-approve-modal></div>
     <div class="shop-action-modal-panel">
         <div class="shop-action-modal-header">
-            <h3 id="shop-approve-modal-title" class="shop-action-modal-title">ボーナス申請の承認</h3>
+            <h3 id="shop-approve-modal-title" class="shop-action-modal-title">勤務完了報告の承認</h3>
             {{-- title/labels are swapped by JS for help-kind deposits --}}
             <button type="button" class="shop-action-modal-close" data-close-approve-modal aria-label="閉じる"><i class="fas fa-times"></i></button>
         </div>
@@ -555,10 +555,10 @@ document.addEventListener('DOMContentLoaded', function () {
         if (appIdInput) appIdInput.value = applicationId || '';
         var isHelp = (jobKind === 'help');
         var title = document.getElementById('shop-approve-modal-title');
-        if (title) title.textContent = isHelp ? 'ヘルプ勤務完了の承認' : 'ボーナス申請の承認';
+        if (title) title.textContent = '勤務完了報告の承認';
         var note = document.getElementById('shop-approve-note');
         if (note) note.innerHTML = isHelp
-            ? 'キャストからヘルプ勤務の完了申請が届いています。レビューと勤務内容を確認のうえ、承認を行ってください。<br>承認後は、運営からヘルプ時給の135%分の請求書が発行されます（うち50%がキャストへ振り込まれます）。'
+            ? 'キャストからヘルプ勤務の完了報告が届いています。レビューと勤務内容を確認のうえ、承認を行ってください。<br>承認後は、運営からヘルプ時給の135%分の請求書が発行されます（うち50%がキャストへ振り込まれます）。'
             : 'キャストから提出されたレビューと達成条件を確認のうえ、承認を行ってください。<br>承認後は、運営から請求書が発行されます。';
         var condLabel = document.getElementById('shop-approve-condition-label');
         if (condLabel) condLabel.textContent = isHelp

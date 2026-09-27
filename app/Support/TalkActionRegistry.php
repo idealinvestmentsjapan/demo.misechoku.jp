@@ -33,6 +33,10 @@ final class TalkActionRegistry
         'hired',
         'rejected',
         'cancel_status',
+        // Edit hire terms (job kind + hourly wage) after the hired auto-message
+        // was sent. Only allowed before the cast files 勤務完了報告 (deposit exists),
+        // since after that the billing rows are cut.
+        'update_hire_terms',
     ];
 
     public const BOTH_SIDE = [

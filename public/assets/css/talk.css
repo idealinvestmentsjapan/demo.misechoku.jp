@@ -1154,7 +1154,7 @@
 .interview-job-kind-selector { margin-bottom: 14px; }
 .interview-job-kind-choices {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
     margin-top: 4px;
 }
@@ -2617,18 +2617,28 @@ body.page-talk-room .message-bubble-auto,
 }
 .auto-msg-chip i { font-size: 0.6rem; }
 
-/* ---- 面談候補日：選択肢をラジオカード風に明確化 ---- */
+/* ---- 面談候補日：選択肢をラジオカード風に明確化 ----
+   flex-wrap を許可することで、狭幅バブルでも "選択する" ピルが
+   横方向にクリップされず、折り返して表示される。 */
 #talk-room-container .interview-option-btn {
     width: 100%;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
-    padding: 12px 14px;
+    gap: 8px 10px;
+    padding: 10px 12px;
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.14);
     background: rgba(0, 0, 0, 0.25);
     transition: border-color 0.15s ease, background 0.15s ease, transform 0.12s ease;
+}
+#talk-room-container .interview-option-btn .interview-option-main {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+#talk-room-container button.interview-option-btn .interview-option-action {
+    flex: 0 0 auto;
 }
 #talk-room-container button.interview-option-btn { cursor: pointer; }
 #talk-room-container button.interview-option-btn:active { transform: scale(0.985); }

@@ -2245,3 +2245,79 @@ body.theme-light .talk-job-kind-chip--interactive:hover {
 body.theme-light .talk-job-kind-chip--interactive .fa-pen {
     color: #92650a !important;
 }
+
+
+/* §31 面談候補日を送信 モーダル：ダーク前提の入力欄・キャンセルボタン等を白面に統一
+   （talk.css の .interview-option-group input[...] は #050505 の黒地・白文字のままだった） */
+body.theme-light .interview-modal-header h2 { color: #4b465c; }
+body.theme-light .interview-option-group label { color: #4b465c; }
+body.theme-light .interview-option-req { color: #b91c1c; }
+body.theme-light .interview-option-no {
+    background: rgba(124, 58, 237, 0.14);
+    color: #6d28d9;
+}
+body.theme-light .interview-option-group input[type="date"],
+body.theme-light .interview-option-group input[type="time"],
+body.theme-light .interview-option-group input[type="datetime-local"],
+body.theme-light .interview-option-group-grid input[type="date"],
+body.theme-light .interview-option-group-grid input[type="time"],
+body.theme-light .interview-option-group select {
+    background: #ffffff !important;
+    color: #4b465c !important;
+    border-color: rgba(124, 58, 237, 0.30) !important;
+    box-shadow: inset 0 1px 3px rgba(76, 29, 149, 0.06);
+}
+body.theme-light .interview-option-group input[type="date"]:focus,
+body.theme-light .interview-option-group input[type="time"]:focus,
+body.theme-light .interview-option-group input[type="datetime-local"]:focus,
+body.theme-light .interview-option-group-grid input[type="date"]:focus,
+body.theme-light .interview-option-group-grid input[type="time"]:focus,
+body.theme-light .interview-option-group select:focus {
+    outline: none;
+    border-color: rgba(124, 58, 237, 0.55) !important;
+    box-shadow: inset 0 1px 3px rgba(76, 29, 149, 0.06), 0 0 0 3px rgba(124, 58, 237, 0.14) !important;
+}
+body.theme-light .btn-interview-cancel {
+    background: #ffffff !important;
+    color: #4b465c !important;
+    border: 1px solid rgba(124, 58, 237, 0.28) !important;
+}
+body.theme-light .btn-interview-cancel:hover {
+    background: rgba(124, 58, 237, 0.06) !important;
+    border-color: rgba(124, 58, 237, 0.45) !important;
+}
+body.theme-light .btn-interview-submit {
+    background: linear-gradient(135deg, #a78bfa, #7c3aed) !important;
+    color: #ffffff !important;
+    border-color: #7c3aed !important;
+}
+body.theme-light .interview-confirm-summary {
+    background: rgba(124, 58, 237, 0.06);
+    border: 1px solid rgba(124, 58, 237, 0.25);
+    color: #4b465c;
+}
+body.theme-light .interview-confirm-summary-label { color: #6d6685; }
+body.theme-light .interview-confirm-summary-value { color: #6d28d9; }
+
+
+/* §32 自動送信バブルの候補日ピル：時刻が白紫で読めない → 濃紫に。
+   「選択する」アクションピルの背景を統一（白 → 紫グラデ／白文字）。
+   狭幅端末で "選択する" が切れないよう、ボタンに flex-wrap を許可する */
+body.theme-light .interview-option-btn .interview-option-time,
+body.theme-light #talk-room-container .interview-option-btn .interview-option-time {
+    color: #6d28d9 !important;
+}
+body.theme-light #talk-room-container button.interview-option-btn .interview-option-action {
+    background: linear-gradient(135deg, #a78bfa, #7c3aed) !important;
+    color: #ffffff !important;
+}
+body.theme-light #talk-room-container .interview-option-btn.is-selected .interview-option-action {
+    background: transparent !important;
+    color: #059669 !important;
+}
+body.theme-light #talk-room-container .interview-option-btn.is-selected {
+    background: rgba(16, 185, 129, 0.08) !important;
+    border-color: rgba(16, 185, 129, 0.45) !important;
+}
+body.theme-light #talk-room-container .interview-confirmed-date { color: #059669 !important; }
+body.theme-light .interview-note { color: #6d6685 !important; }

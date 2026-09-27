@@ -128,6 +128,46 @@ class TalkController extends Controller
         ], true)
             ? $this->findApplicationForTalk($castId, $shopId)
             : null;
+        // Live hire terms for the 採用連絡 card (dynamic — reflects post-edit values).
+        $applicationForHireTerms = in_array($currentApplicationStatus, [
+            self::APPLICATION_STATUS_HIRED,
+            self::APPLICATION_STATUS_HIRED_FULLTIME,
+        ], true)
+            ? $this->findApplicationForTalk($castId, $shopId)
+            : null;
+        $hiredHourlyWage = null;
+        $hiredEmploymentKind = null;
+        if ($applicationForHireTerms) {
+            if (property_exists($applicationForHireTerms, 'hired_regular_hourly_wage') && $applicationForHireTerms->hired_regular_hourly_wage !== null) {
+                $hiredHourlyWage = (int) $applicationForHireTerms->hired_regular_hourly_wage;
+            } elseif (property_exists($applicationForHireTerms, 'hourly_wage_regular') && $applicationForHireTerms->hourly_wage_regular !== null) {
+                $hiredHourlyWage = (int) $applicationForHireTerms->hourly_wage_regular;
+            }
+            if (property_exists($applicationForHireTerms, 'talk_job_kind') && !empty($applicationForHireTerms->talk_job_kind)) {
+                $hiredEmploymentKind = (string) $applicationForHireTerms->talk_job_kind;
+            } else {
+                $hiredEmploymentKind = $currentApplicationStatus === self::APPLICATION_STATUS_HIRED_FULLTIME
+                    ? 'fulltime'
+                    : ($selectedTalkJobKind ?? 'fulltime');
+            }
+        }
+        $depositExists = $applicationForHireTerms
+            ? $this->hasDepositForConversation($castId, $shopId)
+            : false;
+        $canEditHireTerms = !$isCastPortal
+            && $applicationForHireTerms !== null
+            && !$blockState['is_blocked']
+            && !$depositExists;
+        // The 勤務完了報告 CTA + 種別・時給 修正 CTA only appear on the LATEST
+        // hired auto-message. Old type=4 messages (e.g. from a prior hire that
+        // was cancelled/re-issued) render as read-only history.
+        $latestHiredMessageId = $applicationForHireTerms
+            ? (int) (DB::table('messages')
+                ->where('cast_id', $castId)
+                ->where('shop_id', $shopId)
+                ->where('type', self::MESSAGE_TYPE_HIRED)
+                ->max('id') ?? 0)
+            : 0;
 
         $rawMessages = DB::table('messages')
             ->where($isCastPortal ? 'cast_id' : 'shop_id', $currentId)
@@ -194,6 +234,11 @@ class TalkController extends Controller
                 ]
                 : [],
             'reviewApplicationId' => $applicationForReview ? (int) $applicationForReview->id : null,
+            'hiredHourlyWage' => $hiredHourlyWage,
+            'hiredEmploymentKind' => $hiredEmploymentKind,
+            'canEditHireTerms' => $canEditHireTerms,
+            'hasDepositForHireTerms' => $depositExists,
+            'latestHiredMessageId' => $latestHiredMessageId,
             'initialTalkTopic' => $initialTalkTopic,
             'initialTalkJobKind' => $initialTalkJobKind,
             'hasMessages' => $messages->isNotEmpty(),
@@ -383,8 +428,11 @@ class TalkController extends Controller
             'selected_option' => ['nullable', 'string'],
             'message' => ['nullable', 'string', 'max:5000'],
             'hired_regular_hourly_wage' => ['nullable', 'string', 'max:32'],
+            // employment_kind (hire-time) keeps fulltime because the shop can
+            // still hire a cast into 本入店. job_kind (pre-hire talk context)
+            // is trial/help only — 本入店 is a hire-time distinction.
             'employment_kind' => ['nullable', 'string', 'in:fulltime,trial,help'],
-            'job_kind' => ['nullable', 'string', 'in:fulltime,trial,help'],
+            'job_kind' => ['nullable', 'string', 'in:trial,help'],
         ]);
 
         $partnerId = (string) $request->input('partner_id');
@@ -463,6 +511,38 @@ class TalkController extends Controller
             return response()->json(['success' => true]);
         }
 
+        if ($actionType === 'update_hire_terms') {
+            // Shop-side re-edit of the hire terms (employment kind + hourly wage)
+            // that were fixed at the time the 採用 auto-message was sent.
+            // Allowed while the application is still in HIRED status and the
+            // cast has NOT filed 勤務完了報告 yet — after that the deposit is
+            // created and billing calculations are frozen.
+            abort_if(
+                !in_array($currentApplicationStatus, [
+                    self::APPLICATION_STATUS_HIRED,
+                    self::APPLICATION_STATUS_HIRED_FULLTIME,
+                ], true),
+                422,
+                '採用連絡の内容は採用確定〜勤務完了報告までの間のみ修正できます。'
+            );
+            abort_if($this->hasDepositForConversation($castId, $shopId), 422, '勤務完了報告が既に送信されているため、種別・時給は変更できません。');
+            $newKind = $this->normalizeEmploymentKind((string) $request->input('employment_kind', ''));
+            if ($newKind === null) {
+                abort(422, '採用区分を選択してください。');
+            }
+            $newWage = ShopJobApplicationView::normalizeWageDigits(
+                $request->input('hired_regular_hourly_wage') !== null
+                    ? (string) $request->input('hired_regular_hourly_wage')
+                    : null
+            );
+            if ($newWage === null) {
+                abort(422, '採用時給を入力してください。');
+            }
+            $this->applyHireTermsUpdate($castId, $shopId, $newKind, (string) $newWage);
+
+            return response()->json(['success' => true]);
+        }
+
         if ($actionType === 'interview_confirm') {
             abort_if(
                 $currentApplicationStatus !== self::APPLICATION_STATUS_INTERVIEW_PENDING,
@@ -480,7 +560,7 @@ class TalkController extends Controller
         if ($actionType === 'bonus_achievement_report') {
             abort_if(!$isCastPortal, 403);
             $talkKind = $this->getSelectedTalkJobKind($castId, $shopId);
-            abort_if($talkKind !== 'fulltime', 422, 'ボーナス達成報告は本入店でのみ利用できます。');
+            abort_if($talkKind !== 'fulltime', 422, '本入店の勤務完了報告のみ利用できます。');
         }
 
         if (in_array($actionType, ['hired', 'rejected'], true)) {
@@ -581,7 +661,7 @@ class TalkController extends Controller
             ],
             'bonus_achievement_report' => [
                 self::MESSAGE_TYPE_TEXT,
-                '【自動送信】ボーナス達成報告を送信しました。内容確認後に承認をお願いします。',
+                '【自動送信】勤務完了報告を送信しました。内容確認後に承認をお願いします。',
             ],
         };
 
@@ -603,6 +683,12 @@ class TalkController extends Controller
                 return $dt->lt($now) || $dt->gt($max);
             });
             abort_if($hasOutOfRange, 422, '面談候補日は現在日時〜2か月後まで指定できます。');
+            // 15-minute alignment guard (defense-in-depth; the browser step=900
+            // attribute may be ignored on some Android/Firefox time inputs).
+            $hasOffGrid = $parsedOptions->contains(function (Carbon $dt) {
+                return $dt->minute % 15 !== 0 || $dt->second !== 0;
+            });
+            abort_if($hasOffGrid, 422, '面談候補日は15分刻みで指定してください。');
             if ($currentApplicationStatus === self::APPLICATION_STATUS_INTERVIEW_PENDING) {
                 $this->invalidateInterviewOffers($castId, $shopId);
             }
@@ -1484,6 +1570,100 @@ class TalkController extends Controller
             '時給: ¥' . number_format((int) $hourlyWage);
     }
 
+    /**
+     * Whether an application_deposit row exists for the cast/shop conversation.
+     * Used as the "billing has started, freeze hire terms" guard.
+     */
+    private function hasDepositForConversation(string $castId, string $shopId): bool
+    {
+        $application = $this->findApplicationForTalk($castId, $shopId);
+        if (!$application) {
+            return false;
+        }
+        if (!Schema::hasTable('application_deposits')) {
+            return false;
+        }
+        return DB::table('application_deposits')
+            ->where('shop_job_application_id', $application->id)
+            ->exists();
+    }
+
+    /**
+     * Update hire terms (employment kind + hourly wage) for the current
+     * conversation after the 採用連絡 auto-message was already sent.
+     * Also stamps the latest MESSAGE_TYPE_HIRED body so cached blade renders
+     * that read the raw text stay in sync with the application row.
+     */
+    private function applyHireTermsUpdate(string $castId, string $shopId, string $employmentKind, string $hourlyWage): void
+    {
+        $application = $this->findApplicationForTalk($castId, $shopId);
+        if (!$application) {
+            abort(404, '対象の応募が見つかりません。');
+        }
+
+        $targetJobType = match ($employmentKind) {
+            'trial' => 2,
+            'help' => 3,
+            default => 1,
+        };
+        $targetShopJobId = $this->resolveShopJobIdByType($shopId, $targetJobType);
+
+        $newStatus = $employmentKind === 'fulltime'
+            ? self::APPLICATION_STATUS_HIRED_FULLTIME
+            : self::APPLICATION_STATUS_HIRED;
+
+        $updates = [
+            'status'     => $newStatus,
+            'updated_at' => now(),
+        ];
+        if ($targetShopJobId !== null) {
+            $updates['shop_job_id'] = $targetShopJobId;
+        }
+        if (Schema::hasColumn('shop_job_applications', 'talk_job_kind')) {
+            $updates['talk_job_kind'] = $employmentKind;
+        }
+        if (Schema::hasColumn('shop_job_applications', 'hired_regular_hourly_wage')) {
+            $updates['hired_regular_hourly_wage'] = $hourlyWage;
+        } elseif (Schema::hasColumn('shop_job_applications', 'hourly_wage_regular')) {
+            $updates['hourly_wage_regular'] = $hourlyWage;
+        }
+        $hiredBonus = $this->resolveHiredBonusForApplicationUpdate($application, $employmentKind);
+        if ($hiredBonus !== null) {
+            $updates['hired_bonus_amount'] = $hiredBonus['bonus_amount'];
+            if (Schema::hasColumn('shop_job_applications', 'hired_bonus_condition')) {
+                $updates['hired_bonus_condition'] = $hiredBonus['bonus_condition'];
+            }
+        }
+
+        DB::table('shop_job_applications')
+            ->where('id', $application->id)
+            ->update($updates);
+
+        // Rewrite the most-recent 採用連絡 auto-message body so future page
+        // loads render the updated numbers even from the message content
+        // (the room view also displays live values from the application row).
+        $latestHiredMessage = DB::table('messages')
+            ->where('cast_id', $castId)
+            ->where('shop_id', $shopId)
+            ->where('type', self::MESSAGE_TYPE_HIRED)
+            ->orderByDesc('id')
+            ->first();
+        if ($latestHiredMessage) {
+            $existing = (string) $latestHiredMessage->content;
+            $baseSection = $existing;
+            $sepPos = mb_strpos($existing, "\n\n【確定情報】");
+            if ($sepPos !== false) {
+                $baseSection = mb_substr($existing, 0, $sepPos);
+            }
+            DB::table('messages')
+                ->where('id', $latestHiredMessage->id)
+                ->update([
+                    'content'    => $this->buildHiredMessageForCast($baseSection, $hourlyWage, $employmentKind),
+                    'updated_at' => now(),
+                ]);
+        }
+    }
+
     private function ensureAutoPrefix(string $message): string
     {
         $trimmed = trim($message);
@@ -1751,8 +1931,8 @@ class TalkController extends Controller
             $title = '勤務完了報告';
             $body = 'キャストから勤務完了報告が届きました。';
         } elseif ($actionType === 'bonus_achievement_report') {
-            $title = 'ボーナス達成報告';
-            $body = 'キャストからボーナス達成報告が届きました。承認をご確認ください。';
+            $title = '勤務完了報告';
+            $body = 'キャストから勤務完了報告が届きました。承認をご確認ください。';
         } elseif ($actionType === 'interview_cancel_request') {
             $title = '面談キャンセル依頼';
             $body = '店舗から面談キャンセル依頼が届きました。承諾するとやり取り中に戻ります。';
@@ -1855,7 +2035,7 @@ class TalkController extends Controller
         }
         $amount = (int) floor($bonus * 1.23);
         $title = '運営への振込指示';
-        $body = 'ボーナス達成報告を受領しました。指示額: ¥' . number_format($amount);
+        $body = '勤務完了報告を受領しました。指示額: ¥' . number_format($amount);
         $this->notifyConversationPartner($castId, $shopId, true, $title, $body, url('/shop/talk/room/' . $castId));
     }
 

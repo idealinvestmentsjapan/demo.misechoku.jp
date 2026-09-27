@@ -62,13 +62,13 @@ class NotificationSpecService
              'default_enabled' => true],
 
             ['key' => 'talk.status_changed', 'group' => 'トーク', 'label' => '選考・勤務ステータス更新',
-             'condition' => '面談キャンセル依頼／承諾、日程再調整、勤務完了報告、ボーナス達成報告などのトークアクションが実行された時',
+             'condition' => '面談キャンセル依頼／承諾、日程再調整、勤務完了報告などのトークアクションが実行された時',
              'default_title' => 'トーク更新',
              'default_body' => 'トーク内容が更新されました。トーク画面でご確認ください。',
              'default_enabled' => true],
 
             ['key' => 'talk.work_complete_report', 'group' => 'トーク', 'label' => '勤務完了報告（運営宛）',
-             'condition' => 'キャスト or 店舗が勤務完了報告／本入店達成報告を送信した時',
+             'condition' => 'キャスト or 店舗が勤務完了報告を送信した時',
              'default_title' => '振込指示が届きました',
              'default_body' => '勤務完了報告を受領しました。指示額: ¥{amount}。入金確認後に振込を実施してください。',
              'default_enabled' => true],

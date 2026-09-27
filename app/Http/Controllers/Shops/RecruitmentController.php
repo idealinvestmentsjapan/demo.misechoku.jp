@@ -43,7 +43,7 @@ class RecruitmentController extends Controller
     /**
      * 採用・入金管理 統合画面
      *
-     * 採用 → ボーナス申請 → 店舗承認 → 請求書発行 → 店舗入金 → 振込実行 → 受領完了
+     * 採用 → 勤務完了報告 → 店舗承認 → 請求書発行 → 店舗入金 → 振込実行 → 受領完了
      * を 1 件のケースとして組み立て、店舗の操作待ち状態がぱっと見で分かるように表示する。
      */
     public function management(Request $request)
@@ -105,7 +105,7 @@ class RecruitmentController extends Controller
     {
         // パイプライン定義（cast 側と同一の 7 段階）
         //   0: 採用確定（deposit 未作成）
-        //   1: ボーナス申請受信（deposit status=1, 店舗の承認待ち）★ 店舗操作
+        //   1: 勤務完了報告受信（deposit status=1, 店舗の承認待ち）★ 店舗操作（旧称「ボーナス申請」）
         //   2: 店舗承認済み（deposit status=2）
         //   3: 請求書発行済み（deposit status=3）★ 店舗操作（入金）
         //   4: 店舗入金（deposit status=4 or 5）
@@ -125,7 +125,7 @@ class RecruitmentController extends Controller
 
         $stages = [
             ['key' => 'hired',         'label' => '採用確定',     'desc' => '店舗が採用を決定'],
-            ['key' => 'cast_request',  'label' => 'ボーナス申請', 'desc' => 'キャストから申請'],
+            ['key' => 'cast_request',  'label' => '勤務完了報告', 'desc' => 'キャストから報告'],
             ['key' => 'shop_approve',  'label' => '店舗承認',     'desc' => '店舗が承認'],
             ['key' => 'invoice_issue', 'label' => '請求書発行',   'desc' => '運営が発行'],
             ['key' => 'shop_pay',      'label' => '店舗入金',     'desc' => '店舗が支払い'],
@@ -134,13 +134,13 @@ class RecruitmentController extends Controller
         ];
 
         // 「店舗の次のアクション」算出
-        // - 1: ボーナス申請受信 → 「承認する」
+        // - 1: 勤務完了報告受信 → 「承認する」
         // - 3: 請求書発行済み → 「入金処理する」
         $actionableState = null;
         $actionableLabel = null;
         if ($progressIndex === 1) {
             $actionableState = 'approve';
-            $actionableLabel = 'ボーナス申請を承認する';
+            $actionableLabel = '勤務完了報告を承認する';
         } elseif ($progressIndex === 3) {
             $actionableState = 'pay';
             $actionableLabel = '入金処理を行う';
@@ -149,7 +149,7 @@ class RecruitmentController extends Controller
         $waitingOnLabel = null;
         if ($actionableState === null) {
             $waitingOnLabel = match ($progressIndex) {
-                0 => 'キャストの申請待ち',
+                0 => 'キャストの勤務完了報告待ち',
                 2 => '運営の請求書発行待ち',
                 4 => '運営の振込実行待ち',
                 5 => 'キャストの受領確認待ち',

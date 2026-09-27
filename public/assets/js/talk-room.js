@@ -1440,6 +1440,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         showTalkError('面談候補日は2か月後まで指定できます。');
                         return;
                     }
+                    // Firefox and some mobile browsers ignore step="900" on
+                    // <input type="time">, so enforce 15-min alignment here.
+                    if (dt.getMinutes() % 15 !== 0 || dt.getSeconds() !== 0) {
+                        showTalkError('面談候補日は15分刻みで指定してください（例: 19:00 / 19:15 / 19:30 / 19:45）。');
+                        return;
+                    }
                 }
 
                 submitBtn.disabled = true;

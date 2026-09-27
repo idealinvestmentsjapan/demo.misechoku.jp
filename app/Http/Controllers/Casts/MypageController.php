@@ -317,10 +317,10 @@ class MypageController extends Controller
      */
     private function buildCastEmploymentCase(array $emp, ?array $deposit): array
     {
-        // パイプライン定義：採用 → ボーナス申請 → 店舗承認 → 請求書発行 → 店舗入金 → 振込実行 → 受領完了
+        // パイプライン定義：採用 → 勤務完了報告 → 店舗承認 → 請求書発行 → 店舗入金 → 振込実行 → 受領完了
         // 進捗インデックス（数字が大きいほど先へ進んでいる）
         //   0: 採用された（deposit 未作成）
-        //   1: ボーナス申請（deposit status=1）
+        //   1: 勤務完了報告（deposit status=1。旧称「ボーナス申請」）
         //   2: 店舗承認（deposit status=2）
         //   3: 請求書発行（deposit status=3）
         //   4: 店舗入金（deposit status=4 or 5）
@@ -340,7 +340,7 @@ class MypageController extends Controller
 
         $stages = [
             ['key' => 'hired',         'label' => '採用確定',       'desc' => '店舗が採用を決定'],
-            ['key' => 'cast_request',  'label' => 'ボーナス申請',   'desc' => 'キャストから申請'],
+            ['key' => 'cast_request',  'label' => '勤務完了報告',   'desc' => 'キャストから報告'],
             ['key' => 'shop_approve',  'label' => '店舗承認',       'desc' => '店舗が承認'],
             ['key' => 'invoice_issue', 'label' => '請求書発行',     'desc' => '運営が発行'],
             ['key' => 'shop_pay',      'label' => '店舗入金',       'desc' => '店舗が支払い'],
@@ -349,14 +349,14 @@ class MypageController extends Controller
         ];
 
         // 「次のアクション」算出
-        // - 0: 採用直後 → ボーナス申請（cast）
+        // - 0: 採用直後 → 勤務完了報告（cast）
         // - 5: 振込実行済み → 受領確認（cast）
         // - それ以外：相手方の対応待ち
         $actionableState = null;
         $actionableLabel = null;
         if ($progressIndex === 0) {
             $actionableState = 'request';
-            $actionableLabel = 'ボーナス申請を行う';
+            $actionableLabel = '勤務完了報告する';
         } elseif ($progressIndex === 5) {
             $actionableState = 'confirm';
             $actionableLabel = '入金を確認しました';
@@ -378,7 +378,7 @@ class MypageController extends Controller
             $isCompleted              => ['label' => '振込完了',       'tone' => 'done'],
             $progressIndex === 5      => ['label' => '受領確認待ち',   'tone' => 'action'],
             $progressIndex >= 1       => ['label' => '入金処理中',     'tone' => 'progress'],
-            default                   => ['label' => '採用済（未申請）', 'tone' => 'action'],
+            default                   => ['label' => '採用済（未報告）', 'tone' => 'action'],
         };
 
         return [

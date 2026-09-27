@@ -7,11 +7,11 @@
     // hide the send/edit actions and prompt the admin to go back to the issue list.
     $isIssued = $delivery['code'] !== 'pre_issue';
     $isSent = $delivery['code'] === 'sent';
-    // Send button label pivots to "再送" on repeated dispatch, but the primary button still reads
-    // "店舗へ送信" per spec; the confirm dialog text reflects the resend flavour.
-    $sendConfirmMsg = $isSent
-        ? 'もう一度アプリ内通知を送信します。よろしいですか？'
-        : 'この請求書を店舗マネージャー宛にアプリ内で通知します。よろしいですか？';
+    // Once shop payment lands the invoice is locked; hide edit/re-send to prevent
+    // desync between the sent notification and the actual bookkeeping row.
+    $isLockedByPayment = $statusCode >= BMS::STATUS_SHOP_PAYMENT_REPORTED;
+    $sendConfirmMsg = 'この請求書を店舗マネージャー宛にアプリ内で通知します。よろしいですか？';
+    $resendConfirmMsg = 'もう一度アプリ内通知を送信します。よろしいですか？';
     $editConfirmMsg = '請求書の内容を手動で修正しますか？（通常は自動計算値を使用してください）';
 @endphp
 <!DOCTYPE html>
@@ -54,6 +54,13 @@
             box-shadow: 0 6px 18px rgba(74, 18, 42, 0.25);
         }
         .invoice-btn.is-primary:hover { background: #3a0e21; }
+        .invoice-btn.is-muted { color: #6b7280; background: #f9fafb; border-color: #e5e7eb; }
+        .invoice-btn.is-muted:hover { background: #f3f4f6; }
+        .invoice-back-link {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 13px; color: #4b5563; text-decoration: none; margin-bottom: 12px;
+        }
+        .invoice-back-link:hover { color: #111827; text-decoration: underline; }
         .invoice-flash {
             padding: 10px 14px; border-radius: 10px; margin-bottom: 12px; font-size: 14px; font-weight: 600;
         }
@@ -92,6 +99,10 @@
 <body>
     <div class="invoice-shell">
         @if(!$printMode)
+            <a href="{{ route('admin.invoices.index') }}" class="invoice-back-link">
+                <i class="fas fa-arrow-left"></i> 請求書発行一覧へ戻る
+            </a>
+
             @if(session('status'))
                 <div class="invoice-flash is-success"><i class="fas fa-circle-check"></i> {{ session('status') }}</div>
             @endif
@@ -131,24 +142,37 @@
                 </div>
             @endif
 
-            {{-- Action toolbar: 印刷 / 修正 / 店舗へ送信 の3ボタンのみ --}}
+            {{-- Action toolbar: 印刷 / 修正 / 店舗へ送信（未送信のときのみ）／再送（送信済のときのみ） --}}
             <div class="invoice-toolbar">
                 <button type="button" class="invoice-btn" onclick="window.print()">
                     <i class="fas fa-print"></i> 印刷
                 </button>
 
-                @if($isIssued)
+                @if($isIssued && !$isLockedByPayment)
                     <a href="{{ route('admin.deposits.invoice.edit', ['deposit' => $invoice['deposit_id']]) }}"
                        class="invoice-btn"
                        onclick="return confirm('{{ $editConfirmMsg }}');">
                         <i class="fas fa-pen-to-square"></i> 修正
                     </a>
+                @endif
 
+                @if($isIssued && !$isSent)
+                    {{-- 未送信のみ「店舗へ送信」の主導線を出す。送信後は再送UIに切り替える。 --}}
                     <form method="POST" action="{{ route('admin.deposits.invoice.send', ['deposit' => $invoice['deposit_id']]) }}"
                           onsubmit="return confirm('{{ $sendConfirmMsg }}');">
                         @csrf
+                        <input type="hidden" name="return_to" value="invoices">
                         <button type="submit" class="invoice-btn is-primary">
                             <i class="fas fa-paper-plane"></i> 店舗へ送信
+                        </button>
+                    </form>
+                @elseif($isSent)
+                    <form method="POST" action="{{ route('admin.deposits.invoice.send', ['deposit' => $invoice['deposit_id']]) }}"
+                          onsubmit="return confirm('{{ $resendConfirmMsg }}');">
+                        @csrf
+                        <input type="hidden" name="return_to" value="invoices">
+                        <button type="submit" class="invoice-btn is-muted" title="通知が届いていない場合の再送用">
+                            <i class="fas fa-arrows-rotate"></i> 再送
                         </button>
                     </form>
                 @endif

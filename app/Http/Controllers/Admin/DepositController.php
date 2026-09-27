@@ -248,8 +248,10 @@ class DepositController extends Controller
             Storage::disk('public')->delete($path);
         }
 
+        // Return to the confirmations list (originating screen) so the row's
+        // updated status (照合済み) is visible immediately without a manual reload.
         return redirect()
-            ->route('admin.deposits.index')
+            ->route('admin.deposits.confirmations')
             ->with($result['success'] ? 'status' : 'error', $result['message']);
     }
 
@@ -261,8 +263,10 @@ class DepositController extends Controller
         $operatorId = (string) (auth()->guard('admin')->id() ?? '');
         $result = $this->billingManagementService->startTransfer($deposit, $operatorId ?: null);
 
+        // Transfer actions originate on the transfers screen — return there so
+        // the row's task status flips to 振込中 and the modal reflects the next step.
         return redirect()
-            ->route('admin.deposits.index')
+            ->route('admin.deposits.transfers')
             ->with($result['success'] ? 'status' : 'error', $result['message']);
     }
 
@@ -299,7 +303,7 @@ class DepositController extends Controller
         }
 
         return redirect()
-            ->route('admin.deposits.index')
+            ->route('admin.deposits.transfers')
             ->with($result['success'] ? 'status' : 'error', $result['message']);
     }
 
@@ -311,7 +315,7 @@ class DepositController extends Controller
         $result = $this->billingManagementService->invalidatePaymentTask($deposit);
 
         return redirect()
-            ->route('admin.deposits.index')
+            ->route('admin.deposits.transfers')
             ->with($result['success'] ? 'status' : 'error', $result['message']);
     }
 
@@ -323,7 +327,7 @@ class DepositController extends Controller
         $result = $this->billingManagementService->setPaymentTaskRefundRequired($deposit);
 
         return redirect()
-            ->route('admin.deposits.index')
+            ->route('admin.deposits.transfers')
             ->with($result['success'] ? 'status' : 'error', $result['message']);
     }
 
@@ -356,7 +360,7 @@ class DepositController extends Controller
         }
 
         return redirect()
-            ->route('admin.deposits.index')
+            ->route('admin.deposits.transfers')
             ->with($result['success'] ? 'status' : 'error', $result['message']);
     }
 

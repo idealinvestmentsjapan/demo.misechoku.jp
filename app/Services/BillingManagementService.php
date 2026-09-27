@@ -38,8 +38,8 @@ class BillingManagementService
 
     /** Card titles for auto-sent talk messages on deposit status transitions */
     private const BILLING_TALK_TITLES = [
-        self::STATUS_CAST_REQUESTED => '入金申請が届きました',
-        self::STATUS_SHOP_APPROVED => '入金申請が承認されました',
+        self::STATUS_CAST_REQUESTED => '勤務完了報告が届きました',
+        self::STATUS_SHOP_APPROVED => '勤務完了報告が承認されました',
         self::STATUS_INVOICE_ISSUED => '請求書が発行されました',
         self::STATUS_SHOP_PAYMENT_CONFIRMED => '店舗入金を確認しました',
         self::STATUS_CAST_TRANSFERRED => '採用ボーナスを振込みました',
@@ -230,7 +230,7 @@ class BillingManagementService
     public function requestDepositForCast(string $castId, array $payload = [], ?int $applicationId = null): array
     {
         if (!$this->getCastBankAccount($castId)) {
-            return ['success' => false, 'message' => '入金申請の前に、キャストの振込先口座を登録してください。'];
+            return ['success' => false, 'message' => '勤務完了報告の前に、キャストの振込先口座を登録してください。'];
         }
 
         $application = $applicationId !== null
@@ -238,7 +238,7 @@ class BillingManagementService
             : $this->getLatestEligibleApplicationForCast($castId);
 
         if (!$application) {
-            return ['success' => false, 'message' => '入金申請の対象となる採用済み案件がありません。'];
+            return ['success' => false, 'message' => '勤務完了報告の対象となる採用済み案件がありません。'];
         }
 
         $existingDeposit = DB::table('application_deposits')
@@ -247,11 +247,11 @@ class BillingManagementService
             ->first();
 
         if ($existingDeposit) {
-            return ['success' => false, 'message' => 'この案件の入金申請はすでに登録済みです。'];
+            return ['success' => false, 'message' => 'この案件の勤務完了報告はすでに登録済みです。'];
         }
 
         if (empty($payload['confirm_bonus_condition'])) {
-            return ['success' => false, 'message' => 'ボーナス金達成条件を確認したうえで申請してください。'];
+            return ['success' => false, 'message' => '勤務完了条件・ボーナス金内容を確認したうえで報告してください。'];
         }
 
         $existingReview = $this->findExistingReviewForApplication($application);
@@ -280,12 +280,10 @@ class BillingManagementService
         $this->appendHistory($depositId, self::STATUS_CAST_REQUESTED);
 
         $this->postBillingTalkMessages((string) $application->cast_id, (string) $application->shop_id, self::STATUS_CAST_REQUESTED, [
-            'shop' => $this->isHelpApplicationRow($application)
-                ? 'キャストからヘルプ勤務完了の入金申請が届きました。採用・入金管理から内容を確認し、承認をお願いします。'
-                : 'キャストから採用ボーナスの入金申請が届きました。採用・入金管理から内容を確認し、承認をお願いします。',
+            'shop' => 'キャストから勤務完了報告が届きました。採用・入金管理から内容を確認し、承認をお願いします。',
         ]);
 
-        return ['success' => true, 'message' => '入金申請を受け付けました。店舗・運営の確認をお待ちください。'];
+        return ['success' => true, 'message' => '勤務完了報告を受け付けました。店舗・運営の確認をお待ちください。'];
     }
 
     public function confirmDepositForShop(string $shopId, array $payload = []): array
@@ -306,7 +304,7 @@ class BillingManagementService
         ]);
 
         if (!$deposit) {
-            return ['success' => false, 'message' => '対象の入金申請が見つかりません。ページを再読み込みして再度お試しください。'];
+            return ['success' => false, 'message' => '対象の勤務完了報告が見つかりません。ページを再読み込みして再度お試しください。'];
         }
 
         if ((int) $deposit->status !== self::STATUS_CAST_REQUESTED) {
@@ -349,7 +347,7 @@ class BillingManagementService
         $this->appendHistory((int) $deposit->id, self::STATUS_SHOP_APPROVED);
 
         $this->postBillingTalkMessages((string) $deposit->cast_id, (string) $deposit->shop_id, self::STATUS_SHOP_APPROVED, [
-            'cast' => '店舗が入金申請を承認しました。運営が請求書を発行するまでお待ちください。',
+            'cast' => '店舗が勤務完了報告を承認しました。運営が請求書を発行するまでお待ちください。',
         ]);
 
         return ['success' => true, 'message' => 'ノルマ達成・店舗審査を完了しました。運営による請求書発行をお待ちください。'];
@@ -1161,11 +1159,11 @@ class BillingManagementService
 
         $requestDisabledReason = null;
         if (!$bank['exists']) {
-            $requestDisabledReason = '振込先口座を登録すると入金申請できます。';
+            $requestDisabledReason = '振込先口座を登録すると勤務完了報告できます。';
         } elseif (!$eligibleApplication) {
-            $requestDisabledReason = '採用済み案件が確定すると入金申請できます。';
+            $requestDisabledReason = '採用済み案件が確定すると勤務完了報告できます。';
         } elseif ($hasExistingDeposit) {
-            $requestDisabledReason = 'この案件の入金申請はすでに登録済みです。';
+            $requestDisabledReason = 'この案件の勤務完了報告はすでに登録済みです。';
         }
 
         return [
@@ -1174,7 +1172,7 @@ class BillingManagementService
             'payments' => $deposits->map(fn (array $deposit) => [
                 'title' => !empty($deposit['invoice_number'])
                     ? '請求・入金フロー ' . $deposit['invoice_number']
-                    : ((($deposit['job_kind'] ?? '') === 'help') ? 'ヘルプ勤務の入金申請' : 'ボーナス入金申請'),
+                    : '勤務完了報告',
                 'status_label' => $deposit['status_label'],
                 'status_class' => in_array($deposit['status_code'], [self::STATUS_CAST_TRANSFERRED, self::STATUS_COMPLETED], true)
                     ? 'status-paid'
@@ -1822,7 +1820,7 @@ class BillingManagementService
             ->where('shop_job_application_id', $application->id)
             ->exists();
         if ($existingDeposit) {
-            return ['success' => false, 'message' => 'この案件の入金申請はすでに登録済みです。'];
+            return ['success' => false, 'message' => 'この案件の勤務完了報告はすでに登録済みです。'];
         }
         $existingReview = $this->findExistingReviewForApplication($application);
         if ($existingReview) {
@@ -2008,7 +2006,7 @@ class BillingManagementService
             ->filter(fn ($score, $contentId) => $contentId > 0 && $score >= 1 && $score <= 5);
 
         if ($comment === '') {
-            return ['success' => false, 'message' => '入金申請の前にレビューコメントを入力してください。'];
+            return ['success' => false, 'message' => '勤務完了報告の前にレビューコメントを入力してください。'];
         }
 
         if (empty($requiredContentIds)) {
@@ -2017,7 +2015,7 @@ class BillingManagementService
 
         foreach ($requiredContentIds as $contentId) {
             if (!$scores->has($contentId)) {
-                return ['success' => false, 'message' => 'レビュー評価をすべて入力してから申請してください。'];
+                return ['success' => false, 'message' => 'レビュー評価をすべて入力してから勤務完了報告してください。'];
             }
         }
 

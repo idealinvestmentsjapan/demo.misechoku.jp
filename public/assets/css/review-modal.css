@@ -1,13 +1,101 @@
-/* レビュー投稿モーダル（スターレーティング＋コメント） */
-.review-modal-wrap {
-  min-height: 100%;
-  background: var(--dark-bg);
-  color: var(--color-text);
+/* Review post modal (star rating + comment) & shared .payment-bank-modal base.
+ *
+ * The `.payment-bank-modal*` classes are consumed by:
+ *   - Cast employment page: defines its own !important overrides inline in
+ *     employment.blade.php (light/purple theme, bottom-sheet). Those still win
+ *     there via cascade order.
+ *   - Talk room: has no page-level modal CSS. The base rules below are what
+ *     make the overlay position correctly, sit above the global header, and
+ *     keep the panel inside the viewport so the body can scroll.
+ */
+
+/* ================================================================
+   1. Overlay + panel base (fallback for hosts that don't inline their own)
+   ================================================================ */
+.payment-bank-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--header-height, 60px) + 12px) 12px calc(env(safe-area-inset-bottom, 0px) + 12px);
+  background: rgba(10, 8, 24, 0.62);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-sizing: border-box;
+}
+.payment-bank-modal[hidden] { display: none; }
+.payment-bank-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+}
+.payment-bank-modal-panel {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: min(480px, calc(100vw - 1.5rem));
+  max-height: 100%;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  background: #ffffff;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.55);
+  box-sizing: border-box;
+}
+.payment-bank-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+}
+.payment-bank-modal-title {
+  margin: 0;
+  font-size: 1.02rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.payment-bank-modal-close {
+  width: 2.25rem;
+  height: 2.25rem;
+  border: none;
+  background: transparent;
+  border-radius: 999px;
+  cursor: pointer;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.payment-bank-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1.25rem;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* ================================================================
+   2. Review post modal — dark themed variant on the panel
+   ================================================================ */
+.review-modal-wrap {
+  background: var(--dark-bg);
+  color: var(--color-text);
   /* モーダルは読みやすさ優先で全幅追従させず 640px で頭打ち */
-  max-width: min(640px, 100%);
-  margin: 0 auto;
+  max-width: min(640px, calc(100vw - 1.5rem));
+}
+.payment-bank-modal-panel.review-modal-wrap {
+  background: var(--dark-bg);
+  border-color: var(--color-border, rgba(255, 255, 255, 0.14));
+  max-width: min(640px, calc(100vw - 1.5rem));
 }
 
 .review-modal-header {
@@ -48,10 +136,16 @@
   color: var(--color-text-header);
 }
 
-.review-modal-body {
-  flex: 1;
+.payment-bank-modal-body.review-modal-body {
+  /* Scrollable middle section. Extra padding is no longer needed since the
+   * footer is now part of the same flex column (not viewport-fixed). */
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
-  padding: 1.5rem 1.25rem 8rem;
+  overflow-x: hidden;
+  padding: 1.5rem 1.25rem;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 .review-modal-intro {
@@ -212,16 +306,15 @@
   display: block;
 }
 
+/* Footer scrolls with the form contents (it sits inside .review-modal-body /
+ * #review-modal-form-wrap). Previously it was position: fixed to the viewport
+ * bottom, which overlapped the talk room's chat input / global bottom nav and
+ * hid the submit button under those chromes. Keeping it in-flow means the last
+ * items always become reachable by scrolling. */
 .review-modal-footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(to top, var(--dark-bg), rgba(10, 10, 10, 0.95), transparent);
-  padding: 2rem 1.25rem 1.5rem;
-  z-index: 20;
-  max-width: min(640px, 100%);
-  margin: 0 auto;
+  padding: 1.5rem 0 calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
 }
 
 .review-submit-btn {
@@ -267,18 +360,3 @@
   margin-top: 0.75rem;
 }
 
-.review-modal-wrap .payment-bank-modal-panel {
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  overflow: hidden;
-}
-
-.review-modal-wrap .payment-bank-modal-body {
-  flex: 1;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-}

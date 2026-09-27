@@ -10,11 +10,11 @@
 @section('body-class', 'page-talk page-talk-room')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/talk.css') }}?v=20260927-jobkind-inmodal">
-<link rel="stylesheet" href="{{ asset('assets/css/talk-light.css') }}?v=20260823-template-popup">
+<link rel="stylesheet" href="{{ asset('assets/css/talk.css') }}?v=20260928-hire-terms-card">
+<link rel="stylesheet" href="{{ asset('assets/css/talk-light.css') }}?v=20260928-hire-terms-card">
 @if($isCast)
 <link rel="stylesheet" href="{{ asset('assets/css/mypage.css') }}">
-<link rel="stylesheet" href="{{ asset('assets/css/review-modal.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/review-modal.css') }}?v=20260927-scroll-fix">
 @endif
 <style>
     /* 結果テンプレ（自動送信候補）：mypage と同じ紫アクセントに統一 */
@@ -184,6 +184,41 @@
         color: #fff; border-color: rgba(124,58,237,0.35);
     }
     .user-report-modal__btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    /* ===== 採用連絡カードの 種別・時給リスト ===== */
+    .message-bubble-hired .hire-terms {
+        margin: 8px 0 0;
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px solid rgba(168, 85, 247, 0.35);
+        background: rgba(168, 85, 247, 0.08);
+        display: grid;
+        gap: 4px;
+    }
+    .message-bubble-hired .hire-terms__row {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        font-size: 0.78rem;
+    }
+    .message-bubble-hired .hire-terms__row dt {
+        min-width: 68px;
+        margin: 0;
+        color: rgba(196, 181, 253, 0.85);
+        font-weight: 700;
+    }
+    .message-bubble-hired .hire-terms__row dd {
+        margin: 0;
+        font-weight: 800;
+        color: #fff5e0;
+        font-variant-numeric: tabular-nums;
+    }
+    body.theme-light .message-bubble-hired .hire-terms {
+        background: rgba(124, 58, 237, 0.06);
+        border-color: rgba(124, 58, 237, 0.32);
+    }
+    body.theme-light .message-bubble-hired .hire-terms__row dt { color: #6d28d9; }
+    body.theme-light .message-bubble-hired .hire-terms__row dd { color: #241f33; }
 </style>
 @endpush
 
@@ -201,7 +236,7 @@
     window.talkAllQuickReplies = @json($allQuickReplySuggestions ?? []);
     window.talkNgPayload = @json($ngWordPayload ?? ['patterns' => [], 'words' => []]);
 </script>
-<script src="{{ asset('assets/js/talk-room.js') }}?v=20260927-jobkind-inmodal"></script>
+<script src="{{ asset('assets/js/talk-room.js') }}?v=20260927-jobkind-2choice"></script>
 @endpush
 
 @section('content')
@@ -506,9 +541,74 @@
                                     </button>
                                 </div>
                             @endif
-                            @if($isCast && !empty($reviewApplicationId) && in_array(($currentStatusCode ?? ''), ['hired'], true))
+            {{-- 勤務完了報告 CTA は type=4 (採用連絡) メッセージ側で表示する。
+                 面談確定メッセージには置かない（採用が確定した後の情報として一体化） --}}
+                            @if($isMineForLayout)
+                                <span class="message-bubble-tail" aria-hidden="true">
+                                    <svg viewBox="0 0 8 12" fill="currentColor"><path d="M0 0V12C3 12 8 8 8 0H0Z"/></svg>
+                                </span>
+                            @endif
+                        </div>
+                    @elseif($msg->type === 4)
+                        @php
+                            // 採用連絡: 本文と 確定情報 (種別・時給) を分離。確定情報は
+                            // メッセージ本文にも残っているが、application 側の値を
+                            // 正としてライブ描画する（店舗が編集した場合の反映のため）。
+                            $hireDisplayContent = trim((string) $msg->content);
+                            $hireDisplayContent = str_replace(["\r\n", "\r"], "\n", $hireDisplayContent);
+                            $hireIsAuto = \Illuminate\Support\Str::startsWith($hireDisplayContent, '【自動送信】');
+                            $hireBody = $hireIsAuto ? trim(mb_substr($hireDisplayContent, mb_strlen('【自動送信】'))) : $hireDisplayContent;
+                            $hireSepPos = mb_strpos($hireBody, "\n\n【確定情報】");
+                            if ($hireSepPos !== false) {
+                                $hireBody = trim(mb_substr($hireBody, 0, $hireSepPos));
+                            }
+                            $hireKindLabel = match ($hiredEmploymentKind ?? '') {
+                                'trial' => '体験入店',
+                                'help' => 'ヘルプ',
+                                'fulltime' => '本入店',
+                                default => '未確定',
+                            };
+                            $isLatestHiredCard = ((int) ($msg->id ?? 0) === (int) ($latestHiredMessageId ?? 0));
+                            $showHireEditActions = $isLatestHiredCard && !empty($canEditHireTerms);
+                            $showWorkCompleteCta = $isLatestHiredCard && $isCast && !empty($reviewApplicationId)
+                                && in_array(($currentStatusCode ?? ''), ['hired'], true)
+                                && empty($hasDepositForHireTerms);
+                        @endphp
+                        <div class="message-bubble message-bubble-interview message-bubble-auto message-bubble-hired">
+                            <div class="interview-card-head">
+                                <div class="interview-title">
+                                    <span class="auto-msg-chip"><i class="fas fa-robot" aria-hidden="true"></i>自動送信</span>
+                                    <span>採用連絡</span>
+                                </div>
+                                <span class="interview-badge">採用確定</span>
+                            </div>
+                            @if($hireBody !== '')
+                                <p class="interview-body-copy">{!! nl2br(e($hireBody)) !!}</p>
+                            @endif
+                            <dl class="hire-terms">
+                                <div class="hire-terms__row">
+                                    <dt>採用区分</dt>
+                                    <dd data-hire-terms-kind>{{ $hireKindLabel }}</dd>
+                                </div>
+                                <div class="hire-terms__row">
+                                    <dt>時給</dt>
+                                    <dd data-hire-terms-wage>{{ isset($hiredHourlyWage) ? '¥' . number_format((int) $hiredHourlyWage) : '未設定' }}</dd>
+                                </div>
+                            </dl>
+                            @if($showHireEditActions)
+                                <p class="interview-change-schedule-wrap">
+                                    <button type="button" class="interview-change-schedule-btn js-open-hire-terms-edit"
+                                            data-employment-kind="{{ $hiredEmploymentKind ?? 'fulltime' }}"
+                                            data-hourly-wage="{{ $hiredHourlyWage ?? '' }}">
+                                        <i class="fas fa-pen" aria-hidden="true"></i> 種別・時給を修正
+                                    </button>
+                                </p>
+                            @elseif($isLatestHiredCard && !$isCast && !empty($hasDepositForHireTerms))
+                                <p class="interview-note">勤務完了報告が送信されたため、種別・時給は変更できません。</p>
+                            @endif
+                            @if($showWorkCompleteCta)
                                 <p class="interview-body-copy" style="margin-top:10px;">
-                                    勤務が完了したら、以下から{{ $currentTalkJobKindValue === 'fulltime' ? 'ボーナス達成' : '勤務完了' }}を報告してください。
+                                    勤務が完了したら、以下から勤務完了を報告してください。レビュー投稿とボーナス金申請までまとめて行えます。
                                 </p>
                                 <button
                                     type="button"
@@ -516,13 +616,8 @@
                                     data-application-id="{{ $reviewApplicationId }}"
                                 >
                                     <i class="fas fa-yen-sign" aria-hidden="true"></i>
-                                    {{ $currentTalkJobKindValue === 'fulltime' ? 'ボーナス達成報告をする' : '勤務完了報告をする' }}
+                                    勤務完了報告をする
                                 </button>
-                            @endif
-                            @if($isMineForLayout)
-                                <span class="message-bubble-tail" aria-hidden="true">
-                                    <svg viewBox="0 0 8 12" fill="currentColor"><path d="M0 0V12C3 12 8 8 8 0H0Z"/></svg>
-                                </span>
                             @endif
                         </div>
                     @elseif($msg->type === 6)
@@ -659,12 +754,8 @@
                 <span class="talk-action-icon"><i class="far fa-file-alt"></i></span>
                 <span>定型文を使う</span>
             </button>
-            @if($isCast && !empty($reviewApplicationId))
-                <button type="button" id="open-work-complete-report-menu" class="talk-action-item js-work-complete-trigger" data-application-id="{{ $reviewApplicationId }}">
-                    <span class="talk-action-icon"><i class="fas fa-circle-check"></i></span>
-                    <span>{{ $currentTalkJobKindValue === 'fulltime' ? 'ボーナス達成報告' : '勤務完了報告' }}</span>
-                </button>
-            @endif
+            {{-- 勤務完了報告 CTA は「採用連絡」自動送信メッセージ側に集約したため
+                 このメニューからは撤去。採用連絡が画面外にある時はスクロールで戻る。 --}}
             @if(!empty($canSelectResult))
                 <button type="button" id="open-hire-modal-menu" class="talk-action-item">
                     <span class="talk-action-icon"><i class="fas fa-circle-check"></i></span>
@@ -702,8 +793,7 @@
             <label for="talk-room-job-kind">現在の求人種別</label>
             <select id="talk-room-job-kind" @if(empty($canSelectTalkJobKind)) disabled @endif>
                 <option value="">未選択</option>
-                <option value="trial">新規入店</option>
-                <option value="fulltime">本入店</option>
+                <option value="trial">体験入店</option>
                 <option value="help">ヘルプ</option>
             </select>
         </div>
@@ -732,7 +822,7 @@
             <div class="interview-option-group interview-job-kind-selector">
                 <label>求人種別 <em class="interview-option-req">必須</em></label>
                 <div class="interview-job-kind-choices" role="radiogroup" aria-label="求人種別を選ぶ">
-                    @foreach(['trial' => '新規入店', 'fulltime' => '本入店', 'help' => 'ヘルプ'] as $kindValue => $kindLabel)
+                    @foreach(['trial' => '体験入店', 'help' => 'ヘルプ'] as $kindValue => $kindLabel)
                         <label class="interview-job-kind-choice">
                             <input type="radio" name="modal_job_kind" value="{{ $kindValue }}"
                                    @if($currentTalkJobKindValue === $kindValue) checked @endif>
@@ -740,22 +830,23 @@
                         </label>
                     @endforeach
                 </div>
-                <p class="interview-job-kind-note">確定後もこの画面から変更できます（採用／不採用が確定するまで）。</p>
+                <p class="interview-job-kind-note">求人種別は体験入店またはヘルプの2種類です。採用／不採用が確定するまでは変更できます。</p>
             </div>
+            {{-- step="900" = 15 分刻み（900 秒）。ブラウザ非対応時は JS 側でも 15 分丸めを検証。 --}}
             <div class="interview-option-group interview-option-group-grid">
                 <label><span class="interview-option-no">1</span>候補1 <em class="interview-option-req">必須</em></label>
                 <input type="date" name="option1_date" aria-label="候補1の日付" required>
-                <input type="time" name="option1_time" aria-label="候補1の時刻" required>
+                <input type="time" name="option1_time" aria-label="候補1の時刻" step="900" required>
             </div>
             <div class="interview-option-group interview-option-group-grid">
                 <label><span class="interview-option-no">2</span>候補2（任意）</label>
                 <input type="date" name="option2_date" aria-label="候補2の日付">
-                <input type="time" name="option2_time" aria-label="候補2の時刻">
+                <input type="time" name="option2_time" aria-label="候補2の時刻" step="900">
             </div>
             <div class="interview-option-group interview-option-group-grid">
                 <label><span class="interview-option-no">3</span>候補3（任意）</label>
                 <input type="date" name="option3_date" aria-label="候補3の日付">
-                <input type="time" name="option3_time" aria-label="候補3の時刻">
+                <input type="time" name="option3_time" aria-label="候補3の時刻" step="900">
             </div>
             <div class="interview-modal-footer">
                 <button type="button" class="btn-interview-cancel">キャンセル</button>
@@ -796,6 +887,47 @@
             <button type="button" class="btn-interview-cancel js-interview-confirm-close">戻る</button>
             <button type="button" id="interview-confirm-submit" class="btn-interview-submit">この日時で確定</button>
         </div>
+    </div>
+</div>
+@endif
+
+@if(!$isCast && !empty($canEditHireTerms))
+{{-- 採用連絡の 種別・時給 修正モーダル（店舗側のみ・勤務完了報告前まで） --}}
+<div id="hire-terms-edit-overlay" role="dialog" aria-modal="true" aria-label="採用連絡の内容を修正" class="interview-modal-overlay" aria-hidden="true">
+    <div class="interview-modal">
+        <div class="interview-modal-header">
+            <h2>採用区分・時給の修正</h2>
+            <button type="button" class="interview-modal-close js-hire-terms-close" aria-label="閉じる">&times;</button>
+        </div>
+        <p class="interview-modal-desc">
+            採用連絡送信後に、採用区分（種別）と時給を修正できます。キャストが勤務完了報告を送るまでの間のみ変更できます。
+        </p>
+        <form id="hire-terms-edit-form">
+            @csrf
+            <div class="interview-option-group interview-job-kind-selector">
+                <label>採用区分 <em class="interview-option-req">必須</em></label>
+                <div class="interview-job-kind-choices" role="radiogroup" aria-label="採用区分を選ぶ">
+                    @foreach(['trial' => '体験入店', 'fulltime' => '本入店', 'help' => 'ヘルプ'] as $kindValue => $kindLabel)
+                        <label class="interview-job-kind-choice">
+                            <input type="radio" name="employment_kind" value="{{ $kindValue }}"
+                                   @if(($hiredEmploymentKind ?? '') === $kindValue) checked @endif>
+                            <span>{{ $kindLabel }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+            <div class="interview-option-group">
+                <label for="hire-terms-hourly-wage">時給（円） <em class="interview-option-req">必須</em></label>
+                <input type="text" id="hire-terms-hourly-wage" name="hired_regular_hourly_wage"
+                       inputmode="numeric" placeholder="例: 5000" autocomplete="off"
+                       value="{{ $hiredHourlyWage ?? '' }}">
+            </div>
+            <p id="hire-terms-edit-error" class="interview-note" style="color:#fca5a5; display:none;"></p>
+            <div class="interview-modal-footer">
+                <button type="button" class="btn-interview-cancel js-hire-terms-close">キャンセル</button>
+                <button type="submit" class="btn-interview-submit" id="hire-terms-submit">この内容で更新する</button>
+            </div>
+        </form>
     </div>
 </div>
 @endif
@@ -868,11 +1000,11 @@
     <div class="payment-bank-modal-backdrop" data-close-bonus-modal></div>
     <div class="payment-bank-modal-panel">
         <div class="payment-bank-modal-header">
-            <h3 id="bonus-confirm-modal-title" class="payment-bank-modal-title">ボーナス条件達成確認</h3>
+            <h3 id="bonus-confirm-modal-title" class="payment-bank-modal-title">勤務完了報告</h3>
             <button type="button" class="payment-bank-modal-close" data-close-bonus-modal aria-label="閉じる"><i class="fas fa-times"></i></button>
         </div>
         <div class="payment-bank-modal-body">
-            <p class="deposit-precheck-note">採用された時点のボーナス金・達成条件です。勤務日数・時間などの条件を確認してから申請してください。申請後は店舗の入金確認と運営の振込手続きに進みます。</p>
+            <p class="deposit-precheck-note">勤務が完了した案件のボーナス金・達成条件です。条件を確認してから勤務完了を報告してください。報告後は店舗の入金確認と運営の振込手続きに進みます。</p>
             <div class="deposit-precheck-card">
                 <div class="deposit-precheck-title">
                     <span id="bonus-confirm-shop-name">—</span>
@@ -887,11 +1019,11 @@
                 <input type="hidden" name="confirm_bonus_condition" value="1">
                 <label class="deposit-check-row">
                     <input type="checkbox" name="confirm_checked" value="1" required>
-                    <span>上記のボーナス達成条件を確認し、申請内容に相違がないことを確認しました。</span>
+                    <span>上記の勤務完了条件・ボーナス金内容に相違がないことを確認しました。</span>
                 </label>
                 <p id="bonus-confirm-error" class="deposit-precheck-note" style="color:#fca5a5; display:none;"></p>
                 <div class="text-right mt-3">
-                    <button type="submit" class="btn-action manage" id="bonus-confirm-submit-btn">この内容でボーナスを申請する</button>
+                    <button type="submit" class="btn-action manage" id="bonus-confirm-submit-btn">勤務完了報告する</button>
                 </div>
             </form>
         </div>
@@ -917,6 +1049,81 @@
         interviewInline.addEventListener('click', function () {
             var trigger = document.getElementById('open-interview-modal');
             if (trigger) trigger.click();
+        });
+    }
+
+    // 採用連絡カードの「種別・時給を修正」ボタン → hire-terms-edit モーダル（店舗のみ）
+    var hireTermsOverlay = document.getElementById('hire-terms-edit-overlay');
+    var hireTermsForm = document.getElementById('hire-terms-edit-form');
+    if (hireTermsOverlay && hireTermsForm) {
+        var hireTermsError = document.getElementById('hire-terms-edit-error');
+        var hireTermsWageInput = document.getElementById('hire-terms-hourly-wage');
+        var openHireTerms = function (btn) {
+            // 現在値をフォームへ反映（案件ごとに再オープンした時のため）
+            var kind = btn.getAttribute('data-employment-kind') || 'fulltime';
+            var wage = btn.getAttribute('data-hourly-wage') || '';
+            var radios = hireTermsForm.querySelectorAll('input[name="employment_kind"]');
+            radios.forEach(function (r) { r.checked = (r.value === kind); });
+            if (hireTermsWageInput) hireTermsWageInput.value = wage;
+            if (hireTermsError) { hireTermsError.style.display = 'none'; hireTermsError.textContent = ''; }
+            hireTermsOverlay.setAttribute('aria-hidden', 'false');
+        };
+        var closeHireTerms = function () {
+            hireTermsOverlay.setAttribute('aria-hidden', 'true');
+        };
+        document.querySelectorAll('.js-open-hire-terms-edit').forEach(function (btn) {
+            btn.addEventListener('click', function () { openHireTerms(btn); });
+        });
+        document.querySelectorAll('.js-hire-terms-close').forEach(function (el) {
+            el.addEventListener('click', closeHireTerms);
+        });
+        hireTermsOverlay.addEventListener('click', function (e) {
+            if (e.target === hireTermsOverlay) closeHireTerms();
+        });
+        hireTermsForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            var actionUrl = form.getAttribute('data-action-url');
+            var csrfToken = (form.querySelector('input[name="_token"]') || {}).value || '';
+            var partnerId = form.getAttribute('data-partner-id');
+            var kindEl = hireTermsForm.querySelector('input[name="employment_kind"]:checked');
+            var wageRaw = ((hireTermsWageInput && hireTermsWageInput.value) || '').replace(/[^\d]/g, '');
+            if (!kindEl) {
+                if (hireTermsError) { hireTermsError.textContent = '採用区分を選択してください。'; hireTermsError.style.display = 'block'; }
+                return;
+            }
+            if (!wageRaw) {
+                if (hireTermsError) { hireTermsError.textContent = '時給を入力してください。'; hireTermsError.style.display = 'block'; }
+                return;
+            }
+            var submitBtn = document.getElementById('hire-terms-submit');
+            if (submitBtn) submitBtn.disabled = true;
+            fetch(actionUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    partner_id: partnerId,
+                    action_type: 'update_hire_terms',
+                    employment_kind: kindEl.value,
+                    hired_regular_hourly_wage: wageRaw
+                })
+            })
+            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, json: j }; }); })
+            .then(function (res) {
+                if (submitBtn) submitBtn.disabled = false;
+                if (!res.ok || !res.json.success) {
+                    throw new Error((res.json && res.json.message) || '更新に失敗しました。');
+                }
+                closeHireTerms();
+                window.location.reload();
+            })
+            .catch(function (err) {
+                if (submitBtn) submitBtn.disabled = false;
+                if (hireTermsError) { hireTermsError.textContent = err.message || '更新に失敗しました。'; hireTermsError.style.display = 'block'; }
+            });
         });
     }
 
@@ -1301,7 +1508,7 @@
             .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, json: j }; }); })
             .then(function (reportRes) {
                 if (!reportRes.ok || !reportRes.json.success) {
-                    throw new Error((reportRes.json && reportRes.json.message) || 'ボーナス達成報告に失敗しました。');
+                    throw new Error((reportRes.json && reportRes.json.message) || '勤務完了報告に失敗しました。');
                 }
                 closeBonusModal();
                 if (pendingReviewApplicationId && pendingReviewTarget) {
@@ -1313,7 +1520,7 @@
                 }
             })
             .catch(function (reportErr) {
-                errEl.textContent = reportErr.message || 'ボーナス達成報告に失敗しました。';
+                errEl.textContent = reportErr.message || '勤務完了報告に失敗しました。';
                 errEl.style.display = 'block';
             });
             return;

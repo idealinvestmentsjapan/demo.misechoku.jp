@@ -5,7 +5,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('assets/css/mypage.css') }}">
-<link rel="stylesheet" href="{{ asset('assets/css/review-modal.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/review-modal.css') }}?v=20260927-scroll-fix">
 <link rel="stylesheet" href="{{ asset('assets/css/case-flow.css') }}?v=20260927-accordion">
 <style>
     /* ========================================================
@@ -519,16 +519,16 @@
     </div>
 </div>
 
-{{-- ボーナス条件達成確認モーダル --}}
+{{-- 勤務完了報告モーダル（レビュー投稿とボーナス金申請の両方を含む一連の流れ） --}}
 <div id="bonus-confirm-modal" class="payment-bank-modal" role="dialog" aria-labelledby="bonus-confirm-modal-title" aria-modal="true" hidden>
     <div class="payment-bank-modal-backdrop" data-close-bonus-modal></div>
     <div class="payment-bank-modal-panel">
         <div class="payment-bank-modal-header">
-            <h3 id="bonus-confirm-modal-title" class="payment-bank-modal-title">ボーナス条件達成確認</h3>
+            <h3 id="bonus-confirm-modal-title" class="payment-bank-modal-title">勤務完了報告</h3>
             <button type="button" class="payment-bank-modal-close" data-close-bonus-modal aria-label="閉じる"><i class="fas fa-times"></i></button>
         </div>
         <div class="payment-bank-modal-body">
-            <p class="deposit-precheck-note" id="bonus-confirm-note">採用された時点のボーナス金・達成条件です。勤務日数・時間などの条件を確認してから申請してください。申請後は店舗の入金確認と運営の振込手続きに進みます。</p>
+            <p class="deposit-precheck-note" id="bonus-confirm-note">勤務が完了した案件のボーナス金・達成条件です。条件を確認してから勤務完了を報告してください。報告後は店舗の入金確認と運営の振込手続きに進みます。</p>
             <div class="deposit-precheck-card">
                 <div class="deposit-precheck-title">
                     <span id="bonus-confirm-shop-name">—</span>
@@ -558,7 +558,7 @@
                 </div>
                 <p id="bonus-confirm-error" class="deposit-precheck-note" style="color:#fca5a5; display:none;"></p>
                 <div class="text-right mt-3">
-                    <button type="submit" class="btn-action manage" id="bonus-confirm-submit-btn" disabled>この内容でボーナスを申請する</button>
+                    <button type="submit" class="btn-action manage" id="bonus-confirm-submit-btn" disabled>勤務完了報告する</button>
                 </div>
             </form>
         </div>
@@ -764,15 +764,15 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('bonus-confirm-shop-name').textContent = target.shop_name || '—';
         document.getElementById('bonus-confirm-amount').textContent = (target.bonus_amount || 0).toLocaleString();
         var titleEl = document.getElementById('bonus-confirm-modal-title');
-        if (titleEl) titleEl.textContent = isHelp ? 'ヘルプ勤務完了の入金申請' : 'ボーナス条件達成確認';
+        if (titleEl) titleEl.textContent = '勤務完了報告';
         var noteEl = document.getElementById('bonus-confirm-note');
         if (noteEl) noteEl.textContent = isHelp
-            ? 'ヘルプ勤務の完了に伴う入金申請です。受取額はヘルプ時給の50%です。申請後は店舗の承認と運営の振込手続きに進みます。'
-            : '採用された時点のボーナス金・達成条件です。勤務日数・時間などの条件を確認してから申請してください。申請後は店舗の入金確認と運営の振込手続きに進みます。';
+            ? 'ヘルプ勤務の完了報告です。受取額はヘルプ時給の50%です。報告後は店舗の承認と運営の振込手続きに進みます。'
+            : '勤務が完了した案件のボーナス金・達成条件です。条件を確認してから勤務完了を報告してください。報告後は店舗の入金確認と運営の振込手続きに進みます。';
         var lblEl = document.getElementById('bonus-confirm-amount-label');
         if (lblEl) lblEl.textContent = isHelp ? '受取予定額（ヘルプ時給の50%）' : 'ボーナス金額';
         var btnEl = document.getElementById('bonus-confirm-submit-btn');
-        if (btnEl) btnEl.textContent = isHelp ? 'この内容で入金申請する' : 'この内容でボーナスを申請する';
+        if (btnEl) btnEl.textContent = '勤務完了報告する';
         var bm = target.bonus_meta || {};
         var d = (bm.working_days || '').toString().trim();
         var h = (bm.working_hours || '').toString().trim();
