@@ -1150,6 +1150,79 @@
     min-height: 44px;
 }
 
+/* 求人種別 3択セグメント（interview モーダル内） 2026-09-27 追加 */
+.interview-job-kind-selector { margin-bottom: 14px; }
+.interview-job-kind-choices {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 4px;
+}
+/* Selector prefixed so it wins over the generic `.interview-option-group label`
+   rule (which forces display:block, font-size:0.78rem, margin-bottom:4px). */
+.interview-option-group .interview-job-kind-choice {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 8px;
+    border-radius: 12px;
+    border: 1px solid rgba(148, 121, 79, 0.7);
+    background: rgba(255, 255, 255, 0.02);
+    color: rgba(245, 236, 236, 0.88);
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    min-height: 40px;
+    margin-bottom: 0;
+    position: relative;
+}
+.interview-job-kind-choice input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    cursor: pointer;
+}
+.interview-job-kind-choice:has(input:checked) {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.28), rgba(124, 58, 237, 0.35));
+    border-color: rgba(168, 85, 247, 0.65);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.22);
+}
+.interview-job-kind-choice:focus-within {
+    outline: 2px solid rgba(168, 85, 247, 0.55);
+    outline-offset: 2px;
+}
+.interview-job-kind-note {
+    margin-top: 8px;
+    font-size: 0.7rem;
+    color: rgba(245, 236, 236, 0.55);
+    line-height: 1.4;
+}
+
+/* 種別チップをボタン化（本入店ロック時に「クリックで変更」を示す） 2026-09-27 追加 */
+.talk-job-kind-chip--interactive {
+    cursor: pointer;
+    background-color: transparent;
+    -webkit-appearance: none;
+    appearance: none;
+    font: inherit;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+.talk-job-kind-chip--interactive:hover {
+    border-color: rgba(244, 208, 135, 0.85);
+    background: rgba(212, 160, 23, 0.18);
+}
+.talk-job-kind-chip--interactive:active { transform: scale(0.97); }
+.talk-job-kind-chip--interactive .fa-pen {
+    font-size: 0.6rem;
+    color: rgba(244, 208, 135, 0.85);
+}
+
 .interview-option-group-grid {
     display: grid;
     grid-template-columns: 1fr 120px;

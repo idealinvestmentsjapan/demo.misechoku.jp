@@ -202,6 +202,7 @@ class TalkController extends Controller
                 && in_array($currentApplicationStatus, [
                     self::APPLICATION_STATUS_CHATTING,
                     self::APPLICATION_STATUS_INTERVIEW_PENDING,
+                    self::APPLICATION_STATUS_INTERVIEW_FIXED,
                 ], true),
             'quickTemplates' => $this->messageTemplateService->getQuickTemplateSlots(
                 $isCastPortal ? 'cast' : 'shop',
@@ -401,10 +402,18 @@ class TalkController extends Controller
             : null;
 
         if ($actionType === 'interview_offer') {
+            // 2026-09-27: the interview modal now bundles the job-kind selector
+            // so shops can pick trial/fulltime/help and candidate dates at the
+            // same time. If the request carries a job_kind, persist it before
+            // the "kind must be set" guard runs.
+            $inlineJobKind = $this->normalizeTalkJobKind((string) $request->input('job_kind', ''));
+            if ($inlineJobKind !== null) {
+                $this->setConversationJobKind($castId, $shopId, $inlineJobKind);
+            }
             abort_if(
                 $this->getSelectedTalkJobKind($castId, $shopId) === null,
                 422,
-                '面談候補日を送る前に求人種別（体験入店／本入店／ヘルプ）を選択してください。'
+                '求人種別（体験入店／本入店／ヘルプ）を選択してください。'
             );
             abort_if(
                 !in_array($currentApplicationStatus, [
@@ -433,13 +442,17 @@ class TalkController extends Controller
         }
 
         if ($actionType === 'set_job_kind') {
+            // 2026-09-27: job-kind is now editable through interview-fixed too
+            // (previously locked at interview-pending). Only hire/reject
+            // freezes it, since after those points the billing rows are cut.
             abort_if(
                 !in_array($currentApplicationStatus, [
                     self::APPLICATION_STATUS_CHATTING,
                     self::APPLICATION_STATUS_INTERVIEW_PENDING,
+                    self::APPLICATION_STATUS_INTERVIEW_FIXED,
                 ], true),
                 422,
-                '面談日確定後は求人種別を変更できません。'
+                '採用／不採用が確定した後は求人種別を変更できません。'
             );
             $jobKind = $this->normalizeTalkJobKind((string) $request->input('job_kind', ''));
             if ($jobKind === null) {

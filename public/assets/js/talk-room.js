@@ -520,14 +520,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const renderTalkKindGuidance = (kind) => {
         if (!kind) {
             if (talkJobKindGuidance) {
-                talkJobKindGuidance.textContent = '面談日を送る前に求人種別を確定してください。面談日確定後は変更できません。';
+                talkJobKindGuidance.textContent = '求人種別（体験入店／本入店／ヘルプ）を選んでください。採用／不採用が確定するまでは変更できます。';
             }
             if (talkJobKindCurrent) talkJobKindCurrent.textContent = '未選択';
             return;
         }
         const label = talkKindLabelMap[kind] || '未選択';
         if (talkJobKindGuidance) {
-            talkJobKindGuidance.textContent = '現在の求人種別: ' + label + '。面談日確定後は変更できません。';
+            talkJobKindGuidance.textContent = '現在の求人種別: ' + label + '。採用／不採用が確定するまでは変更できます。';
         }
         if (talkJobKindCurrent) talkJobKindCurrent.textContent = label;
     };
@@ -1077,6 +1077,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 input.min = minDate;
                 input.max = maxDate;
             });
+            // Preselect the saved job kind (radio group added 2026-09-27 so the
+            // modal covers both kind + candidate dates in one step).
+            if (interviewForm && currentSavedTalkJobKind) {
+                const radio = interviewForm.querySelector(
+                    'input[name="modal_job_kind"][value="' + currentSavedTalkJobKind + '"]'
+                );
+                if (radio) radio.checked = true;
+            }
             overlay.setAttribute('aria-hidden', 'false');
         };
 
@@ -1390,6 +1398,16 @@ document.addEventListener('DOMContentLoaded', function() {
             interviewForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 const formData = new FormData(interviewForm);
+                // Job kind is now selected inline within the interview modal
+                // (2026-09-27). Fall back to the saved kind if the radio group
+                // is somehow absent (e.g. cached older template).
+                const modalJobKind = String(formData.get('modal_job_kind') || '').trim()
+                    || currentSavedTalkJobKind
+                    || '';
+                if (!modalJobKind) {
+                    showTalkError('求人種別を選択してください。');
+                    return;
+                }
                 const options = [
                     ['option1_date', 'option1_time'],
                     ['option2_date', 'option2_time'],
@@ -1429,7 +1447,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     await postJson(actionUrl, token, {
                         partner_id: partnerId,
                         action_type: 'interview_offer',
-                        options: options
+                        options: options,
+                        job_kind: modalJobKind
                     });
                     window.location.reload();
                 } catch (error) {

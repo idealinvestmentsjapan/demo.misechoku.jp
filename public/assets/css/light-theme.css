@@ -2219,3 +2219,29 @@ body.theme-light.page-talk-list .btn-reject:active,
 body.theme-light .talk-list-container .btn-reject:active {
     background: rgba(124, 58, 237, 0.14) !important;
 }
+
+
+/* §30 面談候補日モーダル内・求人種別セグメント + 種別チップの編集可能状態
+   The dark palette uses gold borders / dark fills; on light we swap to the
+   purple accent used elsewhere in TALK. */
+body.theme-light .interview-job-kind-choice {
+    background: #ffffff !important;
+    border-color: rgba(124, 58, 237, 0.28) !important;
+    color: #4b465c !important;
+}
+body.theme-light .interview-job-kind-choice:has(input:checked) {
+    background: linear-gradient(135deg, #a78bfa, #7c3aed) !important;
+    border-color: #7c3aed !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.25) !important;
+}
+body.theme-light .interview-job-kind-note {
+    color: #6d6685 !important;
+}
+body.theme-light .talk-job-kind-chip--interactive:hover {
+    border-color: rgba(146, 101, 10, 0.55) !important;
+    background: rgba(212, 160, 23, 0.14) !important;
+}
+body.theme-light .talk-job-kind-chip--interactive .fa-pen {
+    color: #92650a !important;
+}

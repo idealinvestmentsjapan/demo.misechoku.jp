@@ -10,7 +10,7 @@
 @section('body-class', 'page-talk page-talk-room')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/talk.css') }}?v=20260927-remove-fulltime-request">
+<link rel="stylesheet" href="{{ asset('assets/css/talk.css') }}?v=20260927-jobkind-inmodal">
 <link rel="stylesheet" href="{{ asset('assets/css/talk-light.css') }}?v=20260823-template-popup">
 @if($isCast)
 <link rel="stylesheet" href="{{ asset('assets/css/mypage.css') }}">
@@ -201,7 +201,7 @@
     window.talkAllQuickReplies = @json($allQuickReplySuggestions ?? []);
     window.talkNgPayload = @json($ngWordPayload ?? ['patterns' => [], 'words' => []]);
 </script>
-<script src="{{ asset('assets/js/talk-room.js') }}?v=20260926-talkroom-kbd"></script>
+<script src="{{ asset('assets/js/talk-room.js') }}?v=20260927-jobkind-inmodal"></script>
 @endpush
 
 @section('content')
@@ -257,14 +257,31 @@
                         <span id="talk-job-kind-current" data-job-kind-current="{{ $currentTalkJobKindValue ?? '' }}" hidden></span>
                     </div>
                 @else
-                    {{-- キャスト側 or 本入店ロック済み：読み取り専用チップ --}}
-                    <span class="talk-job-kind-chip {{ $isJobKindFulltimeLocked ? 'talk-job-kind-chip--locked' : '' }}">
-                        <span class="talk-job-kind-chip__caption">種別</span>
-                        <span id="talk-job-kind-current" class="talk-job-kind-chip__value" data-job-kind-current="{{ $currentTalkJobKindValue ?? '' }}">{{ $currentTalkJobKindLabel }}</span>
-                        @if($isJobKindFulltimeLocked)
-                            <i class="fas fa-lock" aria-hidden="true"></i>
-                        @endif
-                    </span>
+                    @php
+                        // 店舗側かつ本入店ロック済みでは、チップをそのまま「種別変更モーダル」の
+                        // 起動ボタンに切り替える（採用／不採用が確定するまでは変更可能）。
+                        $chipAsButton = !$isCast && $isJobKindFulltimeLocked && !empty($canSelectTalkJobKind);
+                    @endphp
+                    @if($chipAsButton)
+                        <button type="button"
+                                id="open-job-kind-modal"
+                                class="talk-job-kind-chip talk-job-kind-chip--locked talk-job-kind-chip--interactive"
+                                aria-label="求人種別を変更"
+                                title="求人種別を変更">
+                            <span class="talk-job-kind-chip__caption">種別</span>
+                            <span id="talk-job-kind-current" class="talk-job-kind-chip__value" data-job-kind-current="{{ $currentTalkJobKindValue ?? '' }}">{{ $currentTalkJobKindLabel }}</span>
+                            <i class="fas fa-pen" aria-hidden="true"></i>
+                        </button>
+                    @else
+                        {{-- キャスト側 or 変更不可（採用／不採用 確定後）：読み取り専用チップ --}}
+                        <span class="talk-job-kind-chip {{ $isJobKindFulltimeLocked ? 'talk-job-kind-chip--locked' : '' }}">
+                            <span class="talk-job-kind-chip__caption">種別</span>
+                            <span id="talk-job-kind-current" class="talk-job-kind-chip__value" data-job-kind-current="{{ $currentTalkJobKindValue ?? '' }}">{{ $currentTalkJobKindLabel }}</span>
+                            @if($isJobKindFulltimeLocked)
+                                <i class="fas fa-lock" aria-hidden="true"></i>
+                            @endif
+                        </span>
+                    @endif
                 @endif
                 @if($partnerProfileUrl)
                     {{-- プロフィール導線：相手のプロフィール画面へ遷移（2026-09-26 追加） --}}
@@ -709,9 +726,22 @@
             <button type="button" class="interview-modal-close" aria-label="閉じる">&times;</button>
         </div>
         <p class="interview-modal-desc">
-            面談の候補日時を最大3件まで送れます。キャストはこの中から1つ選んで確定します。
+            求人種別を選んだうえで、面談の候補日時を最大3件まで送れます。キャストはこの中から1つ選んで確定します。
         </p>
         <form id="interview-form">
+            <div class="interview-option-group interview-job-kind-selector">
+                <label>求人種別 <em class="interview-option-req">必須</em></label>
+                <div class="interview-job-kind-choices" role="radiogroup" aria-label="求人種別を選ぶ">
+                    @foreach(['trial' => '新規入店', 'fulltime' => '本入店', 'help' => 'ヘルプ'] as $kindValue => $kindLabel)
+                        <label class="interview-job-kind-choice">
+                            <input type="radio" name="modal_job_kind" value="{{ $kindValue }}"
+                                   @if($currentTalkJobKindValue === $kindValue) checked @endif>
+                            <span>{{ $kindLabel }}</span>
+                        </label>
+                    @endforeach
+                </div>
+                <p class="interview-job-kind-note">確定後もこの画面から変更できます（採用／不採用が確定するまで）。</p>
+            </div>
             <div class="interview-option-group interview-option-group-grid">
                 <label><span class="interview-option-no">1</span>候補1 <em class="interview-option-req">必須</em></label>
                 <input type="date" name="option1_date" aria-label="候補1の日付" required>
