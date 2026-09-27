@@ -41,12 +41,6 @@
             ',
         ])
 
-        {{-- 個人情報取扱い注意 --}}
-        <div class="admin-alert admin-alert-warning admin-alert-thin">
-            <i class="fas fa-shield-halved"></i>
-            <strong>個人情報の取り扱い注意</strong>：氏名・生年月日・住所・連絡先は<em>詳細画面の非公開情報</em>に格納されており、解除操作のあるユーザのみ閲覧できます。一覧画面では公開ニックネームのみ表示されます。
-        </div>
-
         @if(session('status'))
             <div class="admin-alert admin-alert-success">{{ session('status') }}</div>
         @endif
@@ -85,7 +79,7 @@
         </div>
 
         <div class="table-wrapper">
-            <table class="admin-table admin-table-clickable admin-table--stack">
+            <table class="admin-table admin-table-clickable admin-table--wide-nowrap">
                 <thead>
                     <tr>
                         <th>キャスト（ID / 登録日）</th>

@@ -42,11 +42,10 @@ class InvoiceController extends Controller
             ->all();
         $deliverySummary = [
             'sent' => 0,
-            'unsent' => 0,
-            'no_email' => 0,
+            'issued_unsent' => 0,
         ];
         foreach ($issued as $d) {
-            $code = $d['mail_delivery_status']['code'] ?? '';
+            $code = $d['delivery_status']['code'] ?? '';
             if (isset($deliverySummary[$code])) {
                 $deliverySummary[$code]++;
             }
@@ -95,9 +94,16 @@ class InvoiceController extends Controller
             $validated
         );
 
+        if (!$result['success']) {
+            return redirect()
+                ->route('admin.invoices.index')
+                ->with('error', $result['message']);
+        }
+
+        // 手動発行後もプレビュー画面へ遷移して「送信」を促す（メール自動送付は廃止）
         return redirect()
-            ->route('admin.invoices.index')
-            ->with($result['success'] ? 'status' : 'error', $result['message']);
+            ->route('admin.deposits.invoice.show', ['deposit' => (int) $validated['deposit_id']])
+            ->with('status', $result['message']);
     }
 
     /**

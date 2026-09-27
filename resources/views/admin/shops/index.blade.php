@@ -86,7 +86,7 @@
         </div>
 
         <div class="table-wrapper">
-            <table class="admin-table admin-table-clickable admin-table--stack">
+            <table class="admin-table admin-table-clickable admin-table--wide-nowrap">
                 <thead>
                     <tr>
                         <th>店舗（ID / 登録日）</th>

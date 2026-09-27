@@ -79,11 +79,12 @@
         @endif
     </nav>
 
-    {{-- ヘッダー --}}
-    <section class="admin-panel admin-detail-hero" id="sec-overview">
-        <div class="admin-detail-hero__main">
-            <div class="admin-detail-hero__title-row">
-                <h2 class="admin-panel-title u-mb-0">{{ $displayName }}</h2>
+    {{-- 概要（ヒーロー） --}}
+    <section class="admin-section" id="sec-overview">
+        <div class="admin-section__head">
+            <div class="admin-detail-hero-title-row">
+                <h2 class="admin-detail-hero-name">{{ $displayName }}</h2>
+                <span class="admin-detail-hero-id">{{ $shopId }}</span>
                 <span class="admin-status-badge {{ $accountStatusBadge }}">
                     @if($isSuspended)<i class="fas fa-ban"></i> @endif{{ $accountStatusLabel }}
                 </span>
@@ -91,48 +92,50 @@
                     書類確認: {{ $licenseLabel }}
                 </span>
             </div>
-            <p class="admin-note u-mb-0">ID: <code>{{ $shopId }}</code></p>
         </div>
-        <div class="admin-detail-hero__meta">
+        <div class="admin-detail-meta-row">
             <div>
-                <span class="admin-detail-hero__meta-label">登録日</span>
-                <span class="admin-detail-hero__meta-value">
+                <span class="admin-detail-meta-row__label">登録日</span>
+                <span class="admin-detail-meta-row__value">
                     {{ $registeredAt ? \Illuminate\Support\Carbon::parse($registeredAt)->format('Y-m-d H:i') : '—' }}
                 </span>
             </div>
             <div>
-                <span class="admin-detail-hero__meta-label">最終ログイン（管理者）</span>
-                <span class="admin-detail-hero__meta-value">
+                <span class="admin-detail-meta-row__label">最終ログイン（管理者）</span>
+                <span class="admin-detail-meta-row__value">
                     {{ $latestManagerLogin ? \Illuminate\Support\Carbon::parse($latestManagerLogin)->format('Y-m-d H:i') : '—' }}
                 </span>
             </div>
             <div>
-                <span class="admin-detail-hero__meta-label">累計請求額</span>
-                <span class="admin-detail-hero__meta-value">
+                <span class="admin-detail-meta-row__label">累計請求額</span>
+                <span class="admin-detail-meta-row__value">
                     {{ number_format($totalBilled) }} <small>円</small>
                 </span>
             </div>
         </div>
     </section>
 
-    {{-- 公開プロフィール／求人情報 導線（アプリ内で公開されている情報はそちらで確認） --}}
-    <section class="admin-panel admin-public-link-card" id="sec-public">
-        <div class="admin-public-link-card__icon"><i class="fas fa-eye"></i></div>
-        <div class="admin-public-link-card__body">
-            <h2 class="admin-panel-title u-mb-0">公開プロフィール／求人情報</h2>
-            <p class="admin-note u-mb-0">
-                店舗名・エリア・キャッチ・求人条件などの<strong>公開情報</strong>は、求職者と同じ求人画面で確認できます。
-            </p>
+    {{-- 公開プロフィール／求人情報 --}}
+    <section class="admin-section" id="sec-public">
+        <div class="admin-section__head">
+            <h2 class="admin-section__title">公開プロフィール／求人情報</h2>
+            @php $shopNumericId = (int) ltrim((string) $shopId, 'sS0'); @endphp
+            <div class="admin-section__actions">
+                <a href="{{ route('share.recruit.show', $shopNumericId) }}" target="_blank" rel="noopener" class="btn-action btn-action-secondary">
+                    <i class="fas fa-arrow-up-right-from-square"></i> 求人画面を開く
+                </a>
+            </div>
         </div>
-        @php $shopNumericId = (int) ltrim((string) $shopId, 'sS0'); @endphp
-        <a href="{{ route('share.recruit.show', $shopNumericId) }}" target="_blank" rel="noopener" class="btn-action btn-action-secondary">
-            <i class="fas fa-arrow-up-right-from-square"></i> 求人画面を開く
-        </a>
+        <p class="admin-section__note">
+            店舗名・エリア・キャッチ・求人条件などの<strong>公開情報</strong>は、求職者と同じ求人画面で確認できます。
+        </p>
     </section>
 
     {{-- 運用実績 --}}
-    <section class="admin-panel" id="sec-operation">
-        <h2 class="admin-panel-title">運用実績（請求／入金フロー）</h2>
+    <section class="admin-section" id="sec-operation">
+        <div class="admin-section__head">
+            <h2 class="admin-section__title">運用実績（請求／入金フロー）</h2>
+        </div>
         @if($operationSummary)
             <div class="admin-summary-grid">
                 <div><span>請求書送付</span><strong>{{ number_format($operationSummary['invoice_issued']) }}</strong></div>
@@ -141,20 +144,25 @@
                 <div><span>完了</span><strong>{{ number_format($operationSummary['completed']) }}</strong></div>
             </div>
             @if(!empty($operationSummary['latest_status_label']))
-                <p class="admin-note u-mt-12">
+                <p class="admin-section__note">
                     最新ステータス: {{ $operationSummary['latest_status_label'] }}{{ !empty($operationSummary['latest_updated_at']) ? '（' . $operationSummary['latest_updated_at'] . '）' : '' }}
                 </p>
             @endif
         @else
-            <p class="admin-note u-mb-0">請求・入金フローの実績はありません。</p>
+            <p class="admin-section__note">請求・入金フローの実績はありません。</p>
         @endif
     </section>
 
     {{-- 入金履歴 --}}
-    <section class="admin-panel" id="sec-history">
-        <h2 class="admin-panel-title">請求・入金履歴（{{ $applicationDeposits->count() }} 件）</h2>
+    <section class="admin-section" id="sec-history">
+        <div class="admin-section__head">
+            <h2 class="admin-section__title">
+                請求・入金履歴
+                <span class="admin-section__title-count">{{ $applicationDeposits->count() }} 件</span>
+            </h2>
+        </div>
         @if($applicationDeposits->isEmpty())
-            <p class="admin-note u-mb-0">請求・入金履歴はありません。</p>
+            <p class="admin-section__note">請求・入金履歴はありません。</p>
         @else
             <div class="table-wrapper">
                 <table class="admin-table admin-table--stack">
@@ -177,19 +185,15 @@
                                 $hasShopPaid = !empty($d->shop_payment_confirmed_at);
                                 $hasCompleted = !empty($d->completed_at);
                                 if ($hasCompleted) {
-                                    $statusKey = 'completed';
                                     $statusLabel = '完了';
                                     $statusClass = 'is-success';
                                 } elseif ($hasShopPaid) {
-                                    $statusKey = 'paid';
                                     $statusLabel = '入金確認済';
                                     $statusClass = 'is-info';
                                 } elseif ($hasInvoice) {
-                                    $statusKey = 'issued';
                                     $statusLabel = '請求書発行済';
                                     $statusClass = 'is-warning';
                                 } else {
-                                    $statusKey = 'pending';
                                     $statusLabel = '請求未発行';
                                     $statusClass = 'is-inactive';
                                 }
@@ -224,12 +228,14 @@
     ])
 
     @if($isUnlocked)
-        <section class="admin-panel admin-private-section" id="sec-private">
-            <div class="u-flex-between u-mb-12">
-                <h2 class="admin-panel-title u-mb-0">非公開情報（連絡先・口座・運営メモ）</h2>
-                <span class="admin-private-status__pill admin-private-status__pill--inline">
-                    <i class="fas fa-eye"></i> 解除中
-                </span>
+        <section class="admin-section admin-private-section" id="sec-private">
+            <div class="admin-section__head">
+                <h2 class="admin-section__title">非公開情報（連絡先・口座・運営メモ）</h2>
+                <div class="admin-section__actions">
+                    <span class="admin-private-status__pill admin-private-status__pill--inline">
+                        <i class="fas fa-eye"></i> 解除中
+                    </span>
+                </div>
             </div>
             <div class="inquiry-detail-meta">
                 <div class="inquiry-detail-meta-item">
@@ -260,10 +266,17 @@
                     <div class="inquiry-detail-meta-value u-text-pre">{{ $profile->memo ?? '—' }}</div>
                 </div>
             </div>
+        </section>
 
-            <h3 class="admin-panel-title u-mt-24">店舗管理者アカウント（{{ $managers->count() }} 名）</h3>
+        <section class="admin-section" id="sec-managers">
+            <div class="admin-section__head">
+                <h2 class="admin-section__title">
+                    店舗管理者アカウント
+                    <span class="admin-section__title-count">{{ $managers->count() }} 名</span>
+                </h2>
+            </div>
             @if($managers->isEmpty())
-                <p class="admin-note u-mb-0">管理者アカウントは未登録です。</p>
+                <p class="admin-section__note">管理者アカウントは未登録です。</p>
             @else
                 <div class="table-wrapper">
                     <table class="admin-table admin-table--stack">
@@ -308,8 +321,12 @@
                     </table>
                 </div>
             @endif
+        </section>
 
-            <h3 class="admin-panel-title u-mt-24">振込先銀行口座</h3>
+        <section class="admin-section" id="sec-bank">
+            <div class="admin-section__head">
+                <h2 class="admin-section__title">振込先銀行口座</h2>
+            </div>
             @if($bank)
                 <div class="inquiry-detail-meta">
                     <div class="inquiry-detail-meta-item">
@@ -334,7 +351,7 @@
                     </div>
                 </div>
             @else
-                <p class="admin-note u-mb-0">振込先口座は未登録です。</p>
+                <p class="admin-section__note">振込先口座は未登録です。</p>
             @endif
         </section>
     @endif

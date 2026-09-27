@@ -88,7 +88,7 @@
             </p>
         </div>
 
-        {{-- Bank-like period selector: sidebar-style compact control --}}
+        {{-- Period selector: pulldown only --}}
         <div class="sales-period-control" role="group" aria-label="期間の選択">
             <label class="sales-period-control__label" for="sales-period-select">期間</label>
             <div class="sales-period-control__wrap">
@@ -102,15 +102,6 @@
                 <span class="sales-period-control__range">
                     {{ $periodStart->format('Y/n/j') }} 〜 {{ $periodEnd->format('Y/n/j') }}
                 </span>
-            </div>
-            <div class="sales-period-quick" role="tablist" aria-label="期間のプリセット">
-                @foreach($periodOptions as $key => $label)
-                    <a href="{{ route('admin.sales.index', ['period' => $key]) }}"
-                       class="sales-period-quick__chip {{ $period === $key ? 'is-active' : '' }}"
-                       role="tab" aria-selected="{{ $period === $key ? 'true' : 'false' }}">
-                        {{ $label }}
-                    </a>
-                @endforeach
             </div>
         </div>
     </header>
@@ -309,6 +300,7 @@
             @if(empty($topShops))
                 <p class="admin-note u-mb-0">対象期間に取引のある店舗はありません。</p>
             @else
+                <div class="sales-table-wrap">
                 <table class="sales-rank-table" id="sales-rank-shops">
                     <thead>
                         <tr>
@@ -355,6 +347,7 @@
                         @endforeach
                     </tbody>
                 </table>
+                </div>
             @endif
         </section>
 
@@ -370,6 +363,7 @@
             @if(empty($topCasts))
                 <p class="admin-note u-mb-0">対象期間に取引のあるキャストはいません。</p>
             @else
+                <div class="sales-table-wrap">
                 <table class="sales-rank-table" id="sales-rank-casts">
                     <thead>
                         <tr>
@@ -416,6 +410,7 @@
                         @endforeach
                     </tbody>
                 </table>
+                </div>
             @endif
         </section>
     </div>
@@ -590,30 +585,6 @@ document.addEventListener('DOMContentLoaded', function () {
     font-size: 0.78rem;
     color: var(--sales-fg-muted);
     font-variant-numeric: tabular-nums;
-}
-.sales-period-quick {
-    display: flex;
-    gap: 4px;
-    flex-wrap: wrap;
-}
-.sales-period-quick__chip {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 10px;
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: var(--sales-fg-muted);
-    background: transparent;
-    border: 1px solid var(--sales-border);
-    border-radius: 999px;
-    text-decoration: none;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
-}
-.sales-period-quick__chip:hover { background: var(--sales-bg-alt); color: var(--sales-fg); }
-.sales-period-quick__chip.is-active {
-    background: var(--sales-accent);
-    color: #ffffff;
-    border-color: var(--sales-accent);
 }
 
 @media (max-width: 900px) {
@@ -841,6 +812,16 @@ document.addEventListener('DOMContentLoaded', function () {
 .sales-panel__legend-unit { color: var(--sales-fg-muted); font-style: italic; }
 .sales-chart-wrap { overflow-x: auto; }
 .sales-chart { width: 100%; height: auto; display: block; }
+
+/* Horizontally-scrollable table wrapper (monthly breakdown + rank tables) */
+.sales-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.sales-table-wrap .sales-table,
+.sales-table-wrap .sales-rank-table {
+    min-width: 640px;
+}
 
 /* --- Bank-style tables --- */
 .sales-table,

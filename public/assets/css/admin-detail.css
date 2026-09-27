@@ -8,6 +8,182 @@
    Cast/Shop 詳細ページ＋非公開情報ゲート
    ========================================================================== */
 
+/* ============================================================
+   詳細画面用：カード枠なしのエリア区切りセクション
+   ・タイトル下の細い下線でエリアを分ける
+   ・.admin-panel より軽量。並べても圧迫感が出ない
+   ============================================================ */
+.admin-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0;
+    background: transparent;
+    border: 0;
+}
+.admin-section__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--admin-line);
+    flex-wrap: wrap;
+    row-gap: 6px;
+}
+.admin-section__title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--admin-text);
+    letter-spacing: 0.02em;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 10px;
+}
+.admin-section__title-count {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--admin-muted);
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+}
+.admin-section__actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+.admin-section__note {
+    color: var(--admin-muted);
+    font-size: 0.85rem;
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* ヒーロー：名前 + 状態バッジ + メタ（登録日 / 最終ログイン / 累計金額） */
+.admin-detail-hero-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    row-gap: 8px;
+}
+.admin-detail-hero-name {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--admin-text);
+    letter-spacing: 0.01em;
+}
+.admin-detail-hero-id {
+    font-size: 0.75rem;
+    color: var(--admin-muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: var(--admin-surface-alt);
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+.admin-detail-meta-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px 24px;
+    padding: 6px 0;
+}
+@media (min-width: 640px) {
+    .admin-detail-meta-row {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+.admin-detail-meta-row > div {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+.admin-detail-meta-row__label {
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    color: var(--admin-muted);
+    text-transform: uppercase;
+    font-weight: 600;
+}
+.admin-detail-meta-row__value {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--admin-text);
+    font-variant-numeric: tabular-nums;
+    word-break: break-word;
+}
+.admin-detail-meta-row__value small {
+    font-size: 0.7rem;
+    color: var(--admin-muted);
+    font-weight: 500;
+    margin-left: 2px;
+}
+
+/* .admin-summary-grid が .admin-section 直下にある場合：カード枠を外して縦線区切りに */
+.admin-section .admin-summary-grid {
+    gap: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (min-width: 640px) {
+    .admin-section .admin-summary-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+.admin-section .admin-summary-grid > div {
+    background: transparent;
+    border: 0;
+    border-right: 1px solid var(--admin-line-soft);
+    border-radius: 0;
+    padding: 8px 14px;
+    min-width: 0;
+}
+.admin-section .admin-summary-grid > div:last-child { border-right: 0; }
+.admin-section .admin-summary-grid > div:first-child { padding-left: 0; }
+.admin-section .admin-summary-grid > div strong {
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: -0.005em;
+}
+
+/* .inquiry-detail-meta が .admin-section 直下にある場合：セルの枠を外す */
+.admin-section .inquiry-detail-meta {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px 24px;
+    margin: 0;
+}
+@media (min-width: 640px) {
+    .admin-section .inquiry-detail-meta {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+.admin-section .inquiry-detail-meta-item {
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--admin-line-soft);
+    border-radius: 0;
+    padding: 10px 0;
+    min-width: 0;
+}
+.admin-section .inquiry-detail-meta-item .inquiry-detail-meta-label {
+    font-size: 0.7rem;
+    color: var(--admin-muted);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    margin-bottom: 3px;
+}
+.admin-section .inquiry-detail-meta-item .inquiry-detail-meta-value {
+    font-size: 0.9rem;
+    color: var(--admin-text);
+    font-weight: 500;
+    word-break: break-word;
+}
+
 /* ヘッダー（名前＋ステータス＋メタ情報） */
 .admin-detail-hero {
     display: grid;

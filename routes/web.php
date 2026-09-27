@@ -161,7 +161,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/deposits/{deposit}/invoice', [AdminDeposit::class, 'showInvoice'])->name('deposits.invoice.show');
             Route::get('/deposits/{deposit}/invoice/pdf', [AdminDeposit::class, 'downloadInvoicePdf'])->name('deposits.invoice.pdf');
             Route::post('/deposits/{deposit}/invoice', [AdminDeposit::class, 'issueInvoice'])->name('deposits.invoice.issue');
-            Route::post('/deposits/{deposit}/invoice/resend', [AdminDeposit::class, 'resendInvoiceMail'])->name('deposits.invoice.resend');
+            Route::post('/deposits/{deposit}/invoice/send', [AdminDeposit::class, 'sendInvoice'])->name('deposits.invoice.send');
             Route::post('/deposits/{deposit}/confirm-shop-payment', [AdminDeposit::class, 'confirmShopPayment'])->name('deposits.shop-payment.confirm');
             Route::post('/deposits/{deposit}/transfer-start', [AdminDeposit::class, 'transferStart'])->name('deposits.transfer-start');
             Route::post('/deposits/{deposit}/transfer-complete', [AdminDeposit::class, 'transferComplete'])->name('deposits.transfer-complete');

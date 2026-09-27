@@ -61,7 +61,8 @@ class DepositController extends Controller
     }
 
     /**
-     * 運営側：店舗への請求書発行
+     * 運営側：請求書レコードを発行する（アプリ内通知の送信は sendInvoice で別ステップ）。
+     * 発行後はプレビューへ遷移し、内容確認 → 「店舗に送信する」で通知する運用。
      */
     public function issueInvoice(Request $request, int $deposit)
     {
@@ -72,21 +73,33 @@ class DepositController extends Controller
 
         $result = $this->billingManagementService->issueInvoice($deposit, $payload);
 
+        if (!$result['success']) {
+            return redirect()
+                ->route('admin.invoices.index')
+                ->with('error', $result['message']);
+        }
+
+        // 発行成功時はプレビューへ遷移して「送信」を促す
         return redirect()
-            ->route('admin.invoices.index')
-            ->with($result['success'] ? 'status' : 'error', $result['message']);
+            ->route('admin.deposits.invoice.show', ['deposit' => $deposit])
+            ->with('status', $result['message']);
     }
 
     /**
-     * 運営側：発行済み請求書のメール再送（送付失敗リカバリー）
+     * 運営側：発行済み請求書を店舗にアプリ内で送信する（NotificationService::createForShop）。
+     * 通知作成後、各ユーザーの通知設定に従って Push / LINE も配信される。
+     * すでに送信済みの場合も呼び出せば再送になる。
      */
-    public function resendInvoiceMail(Request $request, int $deposit)
+    public function sendInvoice(Request $request, int $deposit)
     {
-        $result = $this->billingManagementService->resendInvoiceMail($deposit);
+        $result = $this->billingManagementService->sendInvoice($deposit);
 
-        $redirect = $request->input('return_to') === 'deposits'
-            ? redirect()->route('admin.deposits.index')
-            : redirect()->route('admin.invoices.index');
+        $returnTo = $request->input('return_to');
+        $redirect = match ($returnTo) {
+            'deposits' => redirect()->route('admin.deposits.index'),
+            'invoices' => redirect()->route('admin.invoices.index'),
+            default => redirect()->route('admin.deposits.invoice.show', ['deposit' => $deposit]),
+        };
 
         return $redirect->with($result['success'] ? 'status' : 'error', $result['message']);
     }

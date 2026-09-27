@@ -1020,6 +1020,27 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
 .admin-status-badge.is-danger,
 .admin-status-badge.is-error { background: var(--status-danger-bg); color: var(--status-danger-fg); border-color: var(--status-danger-bd); }
 .admin-status-badge.is-info { background: var(--status-info-bg); color: var(--status-info-fg); border-color: var(--status-info-bd); }
+
+/* 一覧テーブルの改行抑制モード：
+   カード化（--stack）せず、常に真のテーブルのまま。狭い画面では table-wrapper で横スクロール。
+   セルは white-space: nowrap を基本とし、名前セルのみ長文が来たら省略記号にする */
+.admin-table--wide-nowrap { min-width: 900px; }
+.admin-table--wide-nowrap tbody td { white-space: nowrap; }
+.admin-table--wide-nowrap tbody td:first-child {
+    white-space: normal;
+    max-width: 260px;
+}
+.admin-table--wide-nowrap tbody td:first-child .admin-row-clickable__link {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: bottom;
+}
+/* プラン列のみ 3 行構成（バッジ + 期間 + 入金日）を許可 */
+.admin-table--wide-nowrap tbody td.shop-plan-cell { white-space: normal; }
+
 .admin-status-badge.is-premium {
     background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(168, 85, 247, 0.05));
     color: var(--admin-primary);

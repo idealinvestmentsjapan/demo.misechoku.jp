@@ -10,7 +10,6 @@ use App\Models\SystemAccount;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 
@@ -360,30 +359,23 @@ class BillingManagementService
 
         $this->appendHistory($depositId, self::STATUS_INVOICE_ISSUED);
 
-        // Mail delivery outcome is tracked via invoice_sent_at (set only on success)
-        // so the admin list can render an accurate "sent / not sent / no email" badge.
-        $mailOutcome = $this->deliverInvoiceMail($depositId, (string) ($deposit->shop_email ?? ''));
-
-        // 店舗マネージャー宛おしらせ：請求書発行（メールと独立して常時送る）
-        $this->notifyInvoiceIssued($deposit);
-
-        $dueLabel = $issuedAt->copy()->addDays(self::INVOICE_DUE_DAYS)->format('Y年n月j日');
-        $this->postBillingTalkMessages((string) $deposit->cast_id, (string) $deposit->shop_id, self::STATUS_INVOICE_ISSUED, [
-            'cast' => '店舗へ請求書を発行しました。店舗の入金確認後、振込準備に進みます。',
-            'shop' => "請求書を発行しました。お支払い期限（{$dueLabel}）までにお振込をお願いします。",
-        ]);
-
+        // Delivery to the shop is a separate step (see sendInvoice). Issue only
+        // creates the record so admin can preview the numbers before dispatch.
         return [
             'success' => true,
-            'message' => $this->composeIssueMessage('請求書を発行しました。', $mailOutcome),
-            'mail_outcome' => $mailOutcome['status'],
+            'message' => '請求書を発行しました。プレビュー画面で内容を確認し、「店舗に送信する」で通知してください。',
+            'delivery_status' => 'issued_unsent',
         ];
     }
 
     /**
-     * 店舗マネージャーに「請求書が発行されました」のおしらせを送る。
+     * 店舗マネージャーに「請求書が発行されました」のアプリ内通知を送る。
+     * 通知は NotificationService 経由で作成され、各ユーザーの通知設定に応じて
+     * Push / LINE へも配信される（メール添付は行わない）。
+     *
+     * @return int 作成された通知の件数（受信可能なマネージャーの数）
      */
-    private function notifyInvoiceIssued(object $deposit): void
+    private function notifyInvoiceIssued(object $deposit): int
     {
         try {
             $shopId = null;
@@ -394,20 +386,26 @@ class BillingManagementService
                     ->value('sj.shop_id');
                 $shopId = $row ? (string) $row : null;
             }
-            if (!$shopId) return;
+            if (!$shopId) return 0;
 
             $notifier = app(\App\Services\NotificationService::class);
             $amount = number_format((int) ($deposit->invoice_amount ?? 0));
-            $notifier->createForShop(
+            $invoiceNumber = (string) ($deposit->invoice_number ?? '');
+            $title = $invoiceNumber !== ''
+                ? "請求書 {$invoiceNumber} が届きました"
+                : '請求書が届きました';
+            $created = $notifier->createForShop(
                 $shopId,
                 'billing.invoice_issued',
-                '請求書が発行されました',
-                "請求番号 #{$deposit->id} ・ 金額 ¥{$amount} ・ 期限内のお支払いをお願いします",
+                $title,
+                "金額 ¥{$amount} ／ 期限内のお支払いをお願いします。アプリ内マイページから請求書をご確認いただけます。",
                 route('shop.mypage.management', ['tab' => 'payment']),
-                ['deposit_id' => $deposit->id],
+                ['deposit_id' => $deposit->id, 'invoice_number' => $invoiceNumber],
             );
+            return is_array($created) ? count($created) : 0;
         } catch (\Throwable $e) {
             \Log::warning('Invoice issued notify failed: ' . $e->getMessage());
+            return 0;
         }
     }
 
@@ -479,39 +477,44 @@ class BillingManagementService
 
         $this->appendHistory($depositId, self::STATUS_INVOICE_ISSUED);
 
-        $invoice = $this->getInvoiceData($depositId);
-        $mailTarget = $invoice ? trim((string) ($invoice['shop_email'] ?? '')) : '';
-        $mailOutcome = $this->deliverInvoiceMail($depositId, $mailTarget);
-
-        $dueLabel = $issuedAt->copy()->addDays(self::INVOICE_DUE_DAYS)->format('Y年n月j日');
-        $this->postBillingTalkMessages((string) $deposit->cast_id, (string) $deposit->shop_id, self::STATUS_INVOICE_ISSUED, [
-            'cast' => '店舗へ請求書を発行しました。店舗の入金確認後、振込準備に進みます。',
-            'shop' => "請求書を発行しました。お支払い期限（{$dueLabel}）までにお振込をお願いします。",
-        ]);
-
         return [
             'success' => true,
-            'message' => $this->composeIssueMessage('手動で請求書を発行しました。', $mailOutcome),
-            'mail_outcome' => $mailOutcome['status'],
+            'message' => '手動で請求書を発行しました。プレビュー画面で内容を確認し、「店舗に送信する」で通知してください。',
+            'delivery_status' => 'issued_unsent',
         ];
     }
 
     /**
-     * Attempt to send the invoice mail and persist invoice_sent_at only on success.
-     * Returns a structured outcome so callers can render precise status to the admin.
+     * 発行済みの請求書を店舗へ送信する（アプリ内通知 = Notification 作成）。
      *
-     * status = sent | no_email | failed
+     * NotificationService::createForShop がすべての店舗マネージャー宛に in-app 通知を作成し、
+     * さらに各ユーザーの通知設定に従って Push / LINE への配信を行う。
+     * メールでのPDF直接送付は行わない（店舗はアプリ内で請求書を参照する運用）。
+     *
+     * status = sent | no_recipient | pre_issue
      */
-    private function deliverInvoiceMail(int $depositId, string $shopEmail): array
+    public function sendInvoice(int $depositId): array
     {
-        $shopEmail = trim($shopEmail);
-        if ($shopEmail === '') {
-            return ['status' => 'no_email', 'sent_at' => null, 'shop_email' => ''];
+        $deposit = $this->findDepositById($depositId);
+        if (!$deposit) {
+            return ['success' => false, 'message' => '対象の請求データが見つかりません。', 'delivery_status' => 'pre_issue'];
+        }
+        if (empty($deposit->invoice_number)) {
+            return [
+                'success' => false,
+                'message' => 'まだ請求書が発行されていません。先に発行してから送信してください。',
+                'delivery_status' => 'pre_issue',
+            ];
         }
 
-        $sent = $this->sendInvoiceMail($depositId, $shopEmail);
-        if (!$sent) {
-            return ['status' => 'failed', 'sent_at' => null, 'shop_email' => $shopEmail];
+        $isResend = !empty($deposit->invoice_sent_at);
+        $recipientCount = $this->notifyInvoiceIssued($deposit);
+        if ($recipientCount === 0) {
+            return [
+                'success' => false,
+                'message' => '店舗の受信可能なマネージャーが見つかりません。店舗管理から先に登録してください。',
+                'delivery_status' => 'no_recipient',
+            ];
         }
 
         $sentAt = now();
@@ -522,57 +525,25 @@ class BillingManagementService
                 'updated_at' => $sentAt,
             ]));
 
-        return ['status' => 'sent', 'sent_at' => $sentAt, 'shop_email' => $shopEmail];
-    }
-
-    private function composeIssueMessage(string $prefix, array $outcome): string
-    {
-        return match ($outcome['status']) {
-            'sent' => $prefix . ' 店舗（' . $outcome['shop_email'] . '）へメール送付済みです。',
-            'no_email' => $prefix . ' 店舗のメール未登録のためメール送付はスキップしました。店舗マイページから確認可能です。',
-            'failed' => $prefix . ' メール送付に失敗しました。運営メール設定を確認のうえ「再送」から再試行してください。（店舗マイページからは確認可能）',
-            default => $prefix,
-        };
-    }
-
-    /**
-     * 発行済み請求書のメールを再送する（送付失敗時 / 相手側でメール消失時のリカバリー）。
-     */
-    public function resendInvoiceMail(int $depositId): array
-    {
-        $deposit = $this->findDepositById($depositId);
-        if (!$deposit) {
-            return ['success' => false, 'message' => '対象の請求データが見つかりません。'];
-        }
-        if (empty($deposit->invoice_number)) {
-            return ['success' => false, 'message' => 'まだ請求書が発行されていません。'];
+        // 発行日基準の期限を再計算してトークにも案内。初回送信時のみ post する
+        // （再送で同じメッセージを何度も投げないため）。
+        if (!$isResend) {
+            $issuedAt = $deposit->invoice_issued_at ? Carbon::parse($deposit->invoice_issued_at) : $sentAt;
+            $dueLabel = $issuedAt->copy()->addDays(self::INVOICE_DUE_DAYS)->format('Y年n月j日');
+            $this->postBillingTalkMessages((string) $deposit->cast_id, (string) $deposit->shop_id, self::STATUS_INVOICE_ISSUED, [
+                'cast' => '店舗へ請求書を送信しました。店舗の入金確認後、振込準備に進みます。',
+                'shop' => "請求書を送信しました。お支払い期限（{$dueLabel}）までにお振込をお願いします。",
+            ]);
         }
 
-        $invoice = $this->getInvoiceData($depositId);
-        $shopEmail = $invoice ? trim((string) ($invoice['shop_email'] ?? '')) : '';
-        if ($shopEmail === '') {
-            return ['success' => false, 'message' => '店舗のメールアドレスが未登録のため再送できません。店舗情報を先に確認してください。'];
-        }
-
-        $outcome = $this->deliverInvoiceMail($depositId, $shopEmail);
-
-        return match ($outcome['status']) {
-            'sent' => [
-                'success' => true,
-                'message' => "請求書メールを {$shopEmail} 宛に再送しました。",
-                'mail_outcome' => 'sent',
-            ],
-            'failed' => [
-                'success' => false,
-                'message' => "メール送付に失敗しました（{$shopEmail}）。メール設定（.env の MAIL_*）を確認してください。",
-                'mail_outcome' => 'failed',
-            ],
-            default => [
-                'success' => false,
-                'message' => 'メール再送ができませんでした。',
-                'mail_outcome' => $outcome['status'],
-            ],
-        };
+        return [
+            'success' => true,
+            'message' => $isResend
+                ? "店舗マネージャー {$recipientCount} 名にアプリ内通知を再送しました。（通知設定に応じて Push / LINE も配信）"
+                : "店舗マネージャー {$recipientCount} 名にアプリ内で通知しました。（通知設定に応じて Push / LINE も配信）",
+            'delivery_status' => 'sent',
+            'recipient_count' => $recipientCount,
+        ];
     }
 
     public function reportShopPayment(string $shopId, array $payload): array
@@ -1003,8 +974,11 @@ class BillingManagementService
                     ->sum('invoice_amount'),
                 'next_settlement' => $current['invoice_due_date'] ?? null,
             ],
+            // Shop only sees invoices after admin explicitly sends them (invoice_sent_at set).
+            // Between issue and send, admin is still previewing; leaking the invoice
+            // to the shop would defeat the two-step review flow.
             'invoices' => $deposits
-                ->filter(fn (array $deposit) => !empty($deposit['invoice_number']))
+                ->filter(fn (array $deposit) => !empty($deposit['invoice_number']) && !empty($deposit['invoice_sent_at']))
                 ->map(fn (array $deposit) => [
                     'id' => $deposit['id'],
                     'title' => '請求書 ' . $deposit['invoice_number'],
@@ -1118,6 +1092,8 @@ class BillingManagementService
             'system_fee_amount' => $amounts['system_fee_amount'],
             'invoice_amount' => $amounts['invoice_amount'],
             'cast_transfer_amount' => $amounts['cast_transfer_amount'],
+            'status_code' => (int) ($deposit->status ?? 0),
+            'delivery_status' => $this->resolveDeliveryStatus($deposit),
             'admin_bank' => [
                 'bank_name' => $adminBank->bank_name,
                 'branch_name' => $adminBank->branch_name,
@@ -1945,7 +1921,7 @@ class BillingManagementService
             'invoice_issued_at' => $this->formatDateTime($row->invoice_issued_at),
             'invoice_due_date' => $row->invoice_due_date ? Carbon::parse($row->invoice_due_date)->format('Y-m-d') : null,
             'invoice_sent_at' => $this->formatDateTime($row->invoice_sent_at ?? null),
-            'mail_delivery_status' => $this->resolveMailDeliveryStatus($row),
+            'delivery_status' => $this->resolveDeliveryStatus($row),
             'shop_payment_reported_at' => $this->formatDateTime($row->shop_payment_reported_at),
             'shop_payment_reported_at_form' => $row->shop_payment_reported_at
                 ? Carbon::parse($row->shop_payment_reported_at)->format('Y-m-d\TH:i')
@@ -2106,11 +2082,16 @@ class BillingManagementService
      * no_email    = 発行済みだが店舗メール未登録（マイページ通知のみ）
      * unsent      = 発行済みで送付未達（要再送）
      */
-    private function resolveMailDeliveryStatus(object $row): array
+    /**
+     * UI 表示用：deposit 行の請求書送信状態を返す。
+     *   pre_issue      … 請求書自体まだ未発行
+     *   issued_unsent  … 発行済みで未送信（送信ボタン表示）
+     *   sent           … 送信済み（アプリ内通知作成済み、以降 Push / LINE も通知設定に応じて配信済み）
+     */
+    private function resolveDeliveryStatus(object $row): array
     {
         $issued = !empty($row->invoice_number);
         $sentAt = $row->invoice_sent_at ?? null;
-        $hasEmail = !empty(trim((string) ($row->shop_email ?? '')));
 
         if (!$issued) {
             return ['code' => 'pre_issue', 'label' => '未発行', 'sent_at' => null];
@@ -2118,43 +2099,11 @@ class BillingManagementService
         if ($sentAt) {
             return [
                 'code' => 'sent',
-                'label' => '送付済み',
+                'label' => '送信済み',
                 'sent_at' => $this->formatDateTime($sentAt),
             ];
         }
-        if (!$hasEmail) {
-            return ['code' => 'no_email', 'label' => '店舗メール未登録', 'sent_at' => null];
-        }
-        return ['code' => 'unsent', 'label' => '未送付', 'sent_at' => null];
-    }
-
-    private function sendInvoiceMail(int $depositId, string $shopEmail): bool
-    {
-        $invoice = $this->getInvoiceData($depositId);
-
-        if (!$invoice || !view()->exists('emails.shop-invoice-issued')) {
-            return false;
-        }
-
-        try {
-            Mail::send('emails.shop-invoice-issued', [
-                'invoice' => $invoice,
-                'invoiceUrl' => $this->getSignedInvoiceUrl($depositId),
-            ], function ($message) use ($shopEmail, $invoice) {
-                $message->to($shopEmail)
-                    ->subject('【ミセチョク】請求書を発行しました: ' . $invoice['invoice_number']);
-            });
-
-            return true;
-        } catch (\Throwable $e) {
-            Log::warning('Failed to send invoice mail.', [
-                'deposit_id' => $depositId,
-                'shop_email' => $shopEmail,
-                'error' => $e->getMessage(),
-            ]);
-
-            return false;
-        }
+        return ['code' => 'issued_unsent', 'label' => '未送信', 'sent_at' => null];
     }
 
     private function generateInvoiceNumber(int $depositId, Carbon $issuedAt): string

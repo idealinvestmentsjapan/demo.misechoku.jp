@@ -247,29 +247,26 @@
                             </div>
                             <div class="management-actions" style="margin-top:0;">
                                 @if(!empty($deposit['invoice_number']))
-                                    @php $delivery = $deposit['mail_delivery_status'] ?? ['code' => 'pre_issue']; @endphp
+                                    @php $delivery = $deposit['delivery_status'] ?? ['code' => 'pre_issue']; @endphp
                                     @if($delivery['code'] === 'sent')
-                                        <span class="admin-status-badge is-success" title="{{ $delivery['sent_at'] }} に店舗へメール送付済み">
-                                            <i class="fas fa-circle-check"></i> 送付済み {{ $delivery['sent_at'] }}
+                                        <span class="admin-status-badge is-success" title="{{ $delivery['sent_at'] }} に店舗マネージャーへアプリ内通知済み">
+                                            <i class="fas fa-circle-check"></i> 送信済み {{ $delivery['sent_at'] }}
                                         </span>
-                                    @elseif($delivery['code'] === 'unsent')
-                                        <span class="admin-status-badge is-warning" title="メール送付が完了していません">
-                                            <i class="fas fa-triangle-exclamation"></i> メール未送付
-                                        </span>
-                                    @elseif($delivery['code'] === 'no_email')
-                                        <span class="admin-status-badge is-info" title="店舗のメールアドレスが未登録">
-                                            <i class="fas fa-envelope"></i> メール未登録（マイページ通知のみ）
+                                    @elseif($delivery['code'] === 'issued_unsent')
+                                        <span class="admin-status-badge is-warning" title="発行済み・送信未実施。プレビューから送信してください">
+                                            <i class="fas fa-hourglass-half"></i> 未送信
                                         </span>
                                     @endif
                                     <a href="{{ route('admin.deposits.invoice.show', $deposit['id']) }}" class="btn-action btn-action-secondary" target="_blank" rel="noopener">
                                         <i class="fas fa-file-invoice"></i> 請求書
                                     </a>
-                                    @if(in_array($delivery['code'] ?? '', ['unsent', 'sent'], true))
-                                        <form method="POST" action="{{ route('admin.deposits.invoice.resend', $deposit['id']) }}" style="display:inline;">
+                                    @if($delivery['code'] === 'sent')
+                                        <form method="POST" action="{{ route('admin.deposits.invoice.send', $deposit['id']) }}" style="display:inline;"
+                                              onsubmit="return confirm('もう一度アプリ内通知を送信します。よろしいですか？');">
                                             @csrf
                                             <input type="hidden" name="return_to" value="deposits">
-                                            <button type="submit" class="btn-action btn-action-secondary" title="店舗にメール再送">
-                                                <i class="fas fa-paper-plane"></i> {{ $delivery['code'] === 'sent' ? 'メール再送' : 'メール送信' }}
+                                            <button type="submit" class="btn-action btn-action-secondary" title="店舗にアプリ内通知を再送">
+                                                <i class="fas fa-arrows-rotate"></i> 再送
                                             </button>
                                         </form>
                                     @endif
