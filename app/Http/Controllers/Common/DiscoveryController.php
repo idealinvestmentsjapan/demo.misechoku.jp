@@ -155,7 +155,9 @@ class DiscoveryController extends Controller
             return ['kind' => 'cast-band', 'shops' => []];
         }
 
-        $shopRows = DB::table('shops')->whereIn('id', $shopIds)->pluck('shop_name', 'id');
+        // shop_name lives on shop_profiles, keyed by shop_id (FK to shops.id).
+        // Older code accidentally queried shops.shop_name which never existed → #1054.
+        $shopRows = DB::table('shop_profiles')->whereIn('shop_id', $shopIds)->pluck('shop_name', 'shop_id');
 
         // Wage lookup from shop_jobs (main row)
         $wageRows = collect();
