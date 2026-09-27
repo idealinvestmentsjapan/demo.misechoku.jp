@@ -147,8 +147,10 @@
         color: #6d28d9; font-size: 0.82rem; line-height: 1.5;
     }
 
-    /* モーダル（承認・入金処理共通）：ライト画面に追従して白パネル */
-    .shop-action-modal { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; background: rgba(20, 10, 35, 0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); padding: 0; }
+    /* モーダル（承認・入金処理共通）：ライト画面に追従して白パネル
+       z-index: グローバルフッター（#bottom-nav = 2000）より前面に出して
+       パネル下部のボタンがフッターに被って押せなくなるのを防ぐ */
+    .shop-action-modal { position: fixed; inset: 0; z-index: 3000; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; background: rgba(20, 10, 35, 0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); padding: 0; }
     .shop-action-modal[hidden] { display: none; }
     @media (min-width: 640px) { .shop-action-modal { justify-content: center; } }
     .shop-action-modal-backdrop { position: absolute; inset: 0; cursor: pointer; }

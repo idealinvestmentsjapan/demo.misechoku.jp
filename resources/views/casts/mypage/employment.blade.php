@@ -193,8 +193,10 @@
     .payment-bank-data-value { font-size: 0.86rem; font-weight: 600; color: #241f33; }
     .payment-bank-change-btn { font-size: 0.78rem; padding: 8px 14px; border: 1px solid rgba(124, 58, 237, 0.40); border-radius: 9999px; background: #ffffff; color: #6d28d9; cursor: pointer; }
 
-    /* モーダル共通（口座登録 / レビュー / ボーナス確認）：ライト画面に追従して白パネル */
-    .payment-bank-modal { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; background: rgba(20, 10, 35, 0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); padding: 0; }
+    /* モーダル共通（口座登録 / レビュー / ボーナス確認）：ライト画面に追従して白パネル
+       z-index: グローバルフッター（#bottom-nav = 2000）より前面に出して
+       パネル下部のボタンがフッターに被って押せなくなるのを防ぐ */
+    .payment-bank-modal { position: fixed; inset: 0; z-index: 3000; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; background: rgba(20, 10, 35, 0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); padding: 0; }
     .payment-bank-modal[hidden] { display: none; }
     @media (min-width: 640px) { .payment-bank-modal { justify-content: center; } }
     .payment-bank-modal-backdrop { position: absolute; inset: 0; cursor: pointer; }

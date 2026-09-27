@@ -203,11 +203,13 @@
 }
 .cast-avail__btn--ghost:hover { background: rgba(184, 184, 184, 0.10); }
 
-/* Modal popup wrapper: appears above the page via fixed positioning */
+/* Modal popup wrapper: appears above the page via fixed positioning.
+   z-index: グローバルフッター（#bottom-nav = 2000）とサイドドロワー（2500）より前面。
+   従来 1000 だとフッターに埋没してダイアログ下部のボタンが押せなくなる。 */
 .cast-avail__modal {
     position: fixed;
     inset: 0;
-    z-index: 1000;
+    z-index: 3000;
     display: flex;
     align-items: center;
     justify-content: center;

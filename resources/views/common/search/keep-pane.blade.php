@@ -183,8 +183,10 @@
 .recommend-item__wage { color: var(--gold-light); font-weight: 700; }
 .recommend-item__chev { flex: 0 0 auto; color: var(--color-text-muted); font-size: 0.72rem; }
 
-/* ロジック説明モーダル */
-.recommend-info-modal { position: fixed; inset: 0; z-index: 2000; display: none; align-items: center; justify-content: center; padding: 24px 16px; }
+/* ロジック説明モーダル
+   z-index: グローバルフッター（#bottom-nav = 2000）と同値だと DOM 順で
+   フッターに負ける（背面回り）ため 3000 で確実に前面へ */
+.recommend-info-modal { position: fixed; inset: 0; z-index: 3000; display: none; align-items: center; justify-content: center; padding: 24px 16px; }
 .recommend-info-modal:not([hidden]) { display: flex; }
 .recommend-info-modal__overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
 .recommend-info-modal__panel {
