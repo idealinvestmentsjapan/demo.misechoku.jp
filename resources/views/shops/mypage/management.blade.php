@@ -148,11 +148,24 @@
     }
 
     /* モーダル（承認・入金処理共通）：ライト画面に追従して白パネル
-       z-index: グローバルフッター（#bottom-nav = 2000）より前面に出して
-       パネル下部のボタンがフッターに被って押せなくなるのを防ぐ */
-    .shop-action-modal { position: fixed; inset: 0; z-index: 3000; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; background: rgba(20, 10, 35, 0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); padding: 0; }
+       - z-index: グローバルフッターより前面（`!important` で親の stacking-context 事故を防ぐ）
+       - モバイル時は panel が bottom-nav（--footer-height ≒ 75px + safe-area）に隠れないよう
+         panel を padding-bottom 分だけ物理的に押し上げる（z-index が効かない場合の belt-and-suspenders） */
+    .shop-action-modal {
+        position: fixed !important;
+        inset: 0;
+        z-index: 3000 !important;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: center;
+        background: rgba(20, 10, 35, 0.55);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        padding: 0 0 calc(var(--footer-height, 75px) + 8px);
+    }
     .shop-action-modal[hidden] { display: none; }
-    @media (min-width: 640px) { .shop-action-modal { justify-content: center; } }
+    @media (min-width: 640px) { .shop-action-modal { justify-content: center; padding-bottom: 0; } }
     .shop-action-modal-backdrop { position: absolute; inset: 0; cursor: pointer; }
     .shop-action-modal-panel { position: relative; width: 100%; max-width: min(28rem, calc(100vw - 2rem)); max-height: 90vh; background: #ffffff; border-top-left-radius: 1.5rem; border-top-right-radius: 1.5rem; border: 1px solid rgba(124, 58, 237, 0.30); display: flex; flex-direction: column; box-shadow: 0 25px 60px -12px rgba(76, 29, 149, 0.35); overflow: hidden; box-sizing: border-box; }
     .shop-action-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(124, 58, 237, 0.20); background: #f7f4fc; }
@@ -183,6 +196,33 @@
     .shop-action-modal-btn-cancel { background: transparent; border: 1px solid rgba(124, 58, 237, 0.25); color: #5f5876; }
     .shop-action-modal-btn-submit { background: linear-gradient(135deg, #c4b5fd, #a78bfa 48%, #7c3aed); color: #1a0814; box-shadow: 0 4px 14px rgba(168, 85, 247, 0.35); }
     .shop-action-modal-btn-submit:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+
+    /* レビュー確認への導線（承認モーダル本文の先頭に置く） */
+    .shop-action-modal-review-link {
+        display: flex; align-items: center; gap: 12px;
+        padding: 12px 14px; margin: 0 0 1rem;
+        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(196, 181, 253, 0.14));
+        border: 1px solid rgba(124, 58, 237, 0.30);
+        text-decoration: none; color: #241f33;
+        transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+    }
+    .shop-action-modal-review-link:hover {
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.14), rgba(196, 181, 253, 0.22));
+        border-color: rgba(124, 58, 237, 0.55);
+    }
+    .shop-action-modal-review-link:active { transform: scale(0.99); }
+    .shop-action-modal-review-link__icon {
+        width: 34px; height: 34px; flex: 0 0 auto;
+        border-radius: 8px; background: rgba(124, 58, 237, 0.16);
+        color: #6d28d9;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: 0.92rem;
+    }
+    .shop-action-modal-review-link__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .shop-action-modal-review-link__title { font-size: 0.9rem; font-weight: 700; color: #241f33; line-height: 1.3; }
+    .shop-action-modal-review-link__sub { font-size: 0.72rem; color: #6d6685; line-height: 1.4; }
+    .shop-action-modal-review-link__chev { color: #7c3aed; font-size: 0.8rem; flex: 0 0 auto; }
 </style>
 @endpush
 
@@ -338,6 +378,17 @@
                 キャストから提出されたレビューと達成条件を確認のうえ、承認を行ってください。<br>
                 承認後は、運営から請求書が発行されます。
             </p>
+            {{-- レビュー確認への導線：承認前にキャスト投稿のレビュー本文を確認する --}}
+            <a id="shop-approve-review-link" class="shop-action-modal-review-link"
+               href="{{ route('shop.mypage.review.index') }}"
+               target="_blank" rel="noopener">
+                <span class="shop-action-modal-review-link__icon" aria-hidden="true"><i class="fas fa-comment-dots"></i></span>
+                <span class="shop-action-modal-review-link__body">
+                    <span class="shop-action-modal-review-link__title">レビュー内容を確認する</span>
+                    <span class="shop-action-modal-review-link__sub" id="shop-approve-review-link-sub">別タブでレビュー一覧を開きます</span>
+                </span>
+                <i class="fas fa-external-link-alt shop-action-modal-review-link__chev" aria-hidden="true"></i>
+            </a>
             <form id="shop-approve-form" action="{{ route('shop.mypage.deposit.approve') }}" method="POST">
                 @csrf
                 <div class="shop-action-modal-checklist">
@@ -454,7 +505,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function openApproveForCase(applicationId, jobKind) {
+    var reviewIndexUrl = @json(route('shop.mypage.review.index'));
+    function openApproveForCase(applicationId, jobKind, castId, castName) {
         if (!approveModal) return;
         var isHelp = (jobKind === 'help');
         var title = document.getElementById('shop-approve-modal-title');
@@ -467,6 +519,25 @@ document.addEventListener('DOMContentLoaded', function () {
         if (condLabel) condLabel.textContent = isHelp
             ? 'ヘルプ勤務が完了していることを確認しました（請求額はヘルプ時給の135%です）'
             : '求人票に登録したボーナス達成条件を満たしていることを確認しました';
+
+        // レビュー確認リンクの URL・サブテキストをキャストごとに切り替える。
+        // Reviews page（`/shop/mypage/reviews`）は cast_id クエリで対象キャストの
+        // 直近レビューへ自動スクロール／ハイライトするよう拡張してある。
+        var reviewLink = document.getElementById('shop-approve-review-link');
+        var reviewSub  = document.getElementById('shop-approve-review-link-sub');
+        if (reviewLink) {
+            var url = reviewIndexUrl;
+            if (castId) {
+                url += (url.indexOf('?') === -1 ? '?' : '&') + 'cast=' + encodeURIComponent(castId) + '&highlight=1';
+            }
+            reviewLink.setAttribute('href', url);
+        }
+        if (reviewSub) {
+            reviewSub.textContent = castName
+                ? castName + ' さんの直近レビューを別タブで開きます'
+                : '別タブでレビュー一覧を開きます';
+        }
+
         approveModal.querySelectorAll('input[type="checkbox"]').forEach(function (c) { c.checked = false; });
         var btn = document.getElementById('shop-approve-submit'); if (btn) btn.disabled = true;
         var err = document.getElementById('shop-approve-error'); if (err) { err.textContent = ''; err.classList.remove('show'); }
@@ -485,7 +556,12 @@ document.addEventListener('DOMContentLoaded', function () {
             var action = btn.getAttribute('data-case-action');
             var appId = btn.getAttribute('data-application-id');
             if (action === 'approve') {
-                openApproveForCase(appId, btn.getAttribute('data-job-kind') || '');
+                openApproveForCase(
+                    appId,
+                    btn.getAttribute('data-job-kind') || '',
+                    btn.getAttribute('data-cast-id') || '',
+                    btn.getAttribute('data-cast-name') || ''
+                );
             } else if (action === 'pay') {
                 var card = btn.closest('.case-card');
                 var amountText = card ? (card.querySelector('.case-card__highlight strong') || {}).textContent || '' : '';

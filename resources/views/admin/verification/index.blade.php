@@ -55,11 +55,9 @@
             <div class="admin-alert admin-alert-error">{{ $errors->first() }}</div>
         @endif
 
-        {{-- サマリー：未処理件数を強調表示（クリックでタブ＋フィルタに遷移） --}}
-        <section class="dashboard-kpi-grid verification-kpi-grid" data-verif-kpis>
-            <button type="button"
-                class="dashboard-kpi-card dashboard-kpi-card--link {{ ($summary['cast_pending'] ?? 0) > 0 ? 'is-attention' : '' }}"
-                data-jump-tab="cast" data-jump-filter="pending">
+        {{-- サマリー（表示のみ） --}}
+        <section class="dashboard-kpi-grid verification-kpi-grid">
+            <article class="dashboard-kpi-card {{ ($summary['cast_pending'] ?? 0) > 0 ? 'is-attention' : '' }}">
                 <div class="dashboard-kpi-head">
                     <div class="dashboard-kpi-title">本人確認 未処理</div>
                     <i class="fas fa-id-card"></i>
@@ -68,11 +66,8 @@
                     <span class="dashboard-kpi-value">{{ $summary['cast_pending'] ?? 0 }}</span>
                     <span class="dashboard-kpi-unit">件</span>
                 </div>
-                <div class="dashboard-kpi-trend">キャストタブ・未承認</div>
-            </button>
-            <button type="button"
-                class="dashboard-kpi-card dashboard-kpi-card--link {{ ($summary['shop_pending'] ?? 0) > 0 ? 'is-attention' : '' }}"
-                data-jump-tab="shop" data-jump-filter="pending">
+            </article>
+            <article class="dashboard-kpi-card {{ ($summary['shop_pending'] ?? 0) > 0 ? 'is-attention' : '' }}">
                 <div class="dashboard-kpi-head">
                     <div class="dashboard-kpi-title">店舗書類 未処理</div>
                     <i class="fas fa-folder-open"></i>
@@ -81,11 +76,8 @@
                     <span class="dashboard-kpi-value">{{ $summary['shop_pending'] ?? 0 }}</span>
                     <span class="dashboard-kpi-unit">件</span>
                 </div>
-                <div class="dashboard-kpi-trend">店舗タブ・未承認</div>
-            </button>
-            <button type="button"
-                class="dashboard-kpi-card dashboard-kpi-card--link {{ $shopExpiredCount > 0 ? 'is-critical' : '' }}"
-                data-jump-tab="shop" data-jump-expiry="expired">
+            </article>
+            <article class="dashboard-kpi-card {{ $shopExpiredCount > 0 ? 'is-critical' : '' }}">
                 <div class="dashboard-kpi-head">
                     <div class="dashboard-kpi-title">店舗書類 期限切れ</div>
                     <i class="fas fa-triangle-exclamation"></i>
@@ -94,8 +86,7 @@
                     <span class="dashboard-kpi-value">{{ $shopExpiredCount }}</span>
                     <span class="dashboard-kpi-unit">件</span>
                 </div>
-                <div class="dashboard-kpi-trend is-down">即フォロー推奨</div>
-            </button>
+            </article>
         </section>
 
         {{-- タブ切替（キャスト / 店舗） --}}

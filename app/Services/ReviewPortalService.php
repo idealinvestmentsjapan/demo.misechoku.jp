@@ -42,6 +42,7 @@ class ReviewPortalService
 
             return [
                 'id' => (int) $row->id,
+                'cast_id' => $castId,
                 'user_name' => $displayName !== '' ? $displayName : $castId,
                 'user_img' => $this->resolveCastAvatar($castId),
                 'anonymous' => (int) ($row->anonymous ?? 0),

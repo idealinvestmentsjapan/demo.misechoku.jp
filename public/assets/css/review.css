@@ -1,322 +1,331 @@
-/* prj/resources/css/review.css */
+/* =============================================================================
+   review.css (rewritten 2026-09-27)
+   Flat divider layout for cast MyPage / shop MyPage review lists.
 
+   Design principles (aligned with flat-sections.css):
+   - No card frame, no drop shadow, no rounded corners.
+   - Sibling reviews separated by a 1px hairline.
+   - Content sits flush with the page gutter — maximises reading width.
+   - Colors reference theme tokens so the same rules render correctly on
+     light (default), premium-white and dark themes.
+   ============================================================================= */
+
+/* --------------------------------------------------------------------------
+   Local tokens (mirror flat-sections.css so colors stay in sync)
+   -------------------------------------------------------------------------- */
+:root {
+    --review-divider-light: rgba(36, 31, 51, 0.12);
+    --review-divider-dark:  rgba(255, 255, 255, 0.10);
+    --review-summary-bg-light: rgba(124, 58, 237, 0.05);
+    --review-summary-bg-dark:  rgba(168, 85, 247, 0.08);
+}
+
+/* --------------------------------------------------------------------------
+   Page container
+   -------------------------------------------------------------------------- */
 .review-list-area {
-    max-width: var(--max-content-width);
+    max-width: var(--max-content-width, 720px);
     margin: 0 auto;
-    padding: 0 var(--content-padding-x) calc(var(--footer-height) + 24px);
+    padding: 0 var(--content-padding-x, 16px) calc(var(--footer-height, 60px) + 24px);
     box-sizing: border-box;
 }
 
-/* 総合評価サマリー */
-.review-summary-container {
-    background: linear-gradient(145deg, rgba(26, 11, 14, 0.95), rgba(18, 4, 5, 0.95));
-    padding: 16px 14px;
-    border-radius: 16px;
-    border: 1px solid rgba(168, 85, 247, 0.35);
-    margin: 0 0 16px;
-    text-align: center;
-}
-.summary-label { font-size: 0.8rem; color: var(--accent-text, #f0a6c4); margin-bottom: 10px; }
-.summary-main { display: flex; align-items: center; justify-content: center; gap: 15px; }
-.avg-score-big { font-size: 3rem; font-weight: 600; color: #f5f5f5; font-family: var(--font-serif); letter-spacing: 0.06em; }
-.stars-gold-big { color: var(--accent-text, #f0a6c4); font-size: 1.2rem; }
-.total-count-text { font-size: 0.75rem; color: #909090; margin-top: 5px; }
-
-/* レビューカード */
-.review-card {
-    margin: 0 0 12px;
-    padding: 14px 14px 16px;
-    background: var(--color-card);
-    border-radius: 12px;
-    border: 1px solid var(--color-border);
-    transition: background 0.18s ease, border-color 0.18s ease, transform 0.12s ease, box-shadow 0.12s ease;
-}
-.review-card.is-hidden { opacity: 0.6; background: var(--color-surface-from, #1a1a1a); }
-
-.review-card:hover {
-    border-color: rgba(168, 85, 247, 0.55);
-    background: rgba(5, 5, 5, 0.98);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-    transform: translateY(-1px);
-}
-
-.rev-main-row { display: flex; gap: 15px; }
-.rev-user-img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 1px solid var(--color-border); }
-
-.rev-bubble { flex: 1; position: relative; }
-.badge-hidden {
-    display: inline-block; background: #444; color: #eee;
-    font-size: 0.65rem; padding: 2px 8px; border-radius: 4px; margin-bottom: 8px;
-}
-
-.rev-bubble-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-.rev-name { font-weight: bold; color: #fff; font-size: 0.95rem; }
-.rev-score-small { color: var(--accent-text, #f0a6c4); font-size: 0.85rem; font-weight: bold; }
-
-.rev-comment { font-size: 0.9rem; color: var(--color-text); line-height: 1.6; margin-bottom: 15px; }
-
-/* 詳細項目（マスタ設問ごとのスコア一覧） */
-.rev-toggle-row {
-    display: flex;
-    justify-content: flex-end;
-}
-.toggle-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 0.75rem;
-    color: var(--accent-text, #f0a6c4);
-    cursor: pointer;
-}
-.rev-details-block {
-    margin-top: 14px;
-    padding-top: 12px;
-    border-top: 1px dashed var(--color-border);
-}
-.rev-details-heading {
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    color: var(--accent-text, #f0a6c4);
-    margin: 0 0 10px;
-}
-.rev-details-list {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
-.rev-details-list--open {
-    display: block;
-}
-.detail-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 10px;
-    font-size: 0.8rem;
-    margin-bottom: 8px;
-    color: #b8b8b8;
-}
-.detail-row:last-child {
-    margin-bottom: 0;
-}
-.detail-label {
-    flex: 1;
-    min-width: 0;
-    line-height: 1.45;
-}
-.detail-score-cell {
-    flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    text-align: right;
-}
-.detail-stars {
-    color: var(--accent-text, #f0a6c4);
-    font-size: 0.68rem;
-    letter-spacing: -0.02em;
-    white-space: nowrap;
-}
-.detail-val {
-    min-width: 2rem;
-    font-weight: 700;
-    color: var(--accent-text, #f0a6c4);
-    font-size: 0.82rem;
-}
-
-/* 管理アクション */
-.rev-admin-actions { margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--color-border); }
-.btn-hide, .btn-show-again {
-    width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #444;
-    background: transparent; color: #ccc; font-size: 0.8rem; cursor: pointer;
-}
-.plan-label { display: block; font-size: 0.6rem; color: var(--accent-text, #f0a6c4); margin-top: 2px; }
-
 /* --------------------------------------------------------------------------
-   共通: 星評価（partials/review_stars）— 店舗レビュー一覧で色を上書き
+   Summary block (avg score + total count)
    -------------------------------------------------------------------------- */
-.review-stars {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.2em;
-    line-height: 1;
-}
-.review-stars--sm .review-star {
-    font-size: 0.72rem;
-}
-.review-stars--md .review-star {
-    font-size: 0.85rem;
-}
-.review-stars--lg .review-star {
-    font-size: 1.15rem;
-}
-
-/* --------------------------------------------------------------------------
-   店舗マイページ「Reviews」一覧（区切り線グリッド・アコーディオン）
-   -------------------------------------------------------------------------- */
-body.page-shop-mypage-reviews #global-header .header-title-main.header-title-serif {
-    font-style: italic;
-    letter-spacing: 0.18em;
-    color: var(--accent-text, #f0a6c4);
-    font-weight: 500;
-}
-
-/* このページは PC でやや広めに表示 */
-@media (min-width: 768px) {
-    body.page-shop-mypage-reviews #app { max-width: 960px; }
-}
-@media (min-width: 1024px) {
-    body.page-shop-mypage-reviews #app { max-width: 1080px; }
-}
-
-/* 総合評価サマリー：カード化 */
+.review-summary-container,
 .shop-review-summary {
-    padding: 1.6rem 1.25rem;
+    margin: 0 0 4px;
+    padding: 22px 4px 20px;
     text-align: center;
-    background: linear-gradient(180deg, rgba(168, 85, 247, 0.08), rgba(168, 85, 247, 0.02));
-    border: 1px solid rgba(168, 85, 247, 0.22);
-    border-radius: 18px;
-    margin: 0 0 1rem;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--review-divider-light);
+    border-radius: 0;
+    box-shadow: none;
 }
 
+body:not(.theme-light):not(.theme-premium-white) .review-summary-container,
+body:not(.theme-light):not(.theme-premium-white) .shop-review-summary {
+    border-bottom-color: var(--review-divider-dark);
+}
+
+.summary-label,
 .shop-review-summary__label {
-    margin: 0 0 0.75rem;
-    font-size: 0.875rem;
-    color: #b8b8b8;
+    margin: 0 0 12px;
+    font-size: 0.78rem;
     letter-spacing: 0.14em;
+    color: var(--color-text-muted, #6d6685);
 }
 
+.summary-main,
 .shop-review-summary__main {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 1.5rem;
+    gap: 20px;
     flex-wrap: wrap;
 }
 
+.avg-score-big,
 .shop-review-summary__score {
-    font-size: 3.75rem;
-    font-weight: 300;
-    color: #f5f5f5;
-    letter-spacing: -0.04em;
-    line-height: 1;
+    font-size: 3rem;
+    font-weight: 400;
+    color: var(--color-text, #2d2742);
     font-family: var(--font-serif, 'Shippori Mincho', serif);
+    letter-spacing: 0.02em;
+    line-height: 1;
 }
 
+.summary-right,
 .shop-review-summary__right {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 0.35rem;
+    align-items: flex-start;
+    gap: 4px;
+    text-align: left;
 }
 
+.stars-gold-big {
+    color: var(--accent-text, #7c3aed);
+    font-size: 1.15rem;
+    letter-spacing: 0.06em;
+}
+
+.total-count-text,
 .shop-review-summary__count {
-    margin: 0.35rem 0 0;
-    font-size: 0.8125rem;
-    color: #909090;
+    margin: 2px 0 0;
+    font-size: 0.78rem;
+    color: var(--color-text-muted, #6d6685);
 }
 
+.total-count-text span,
 .shop-review-summary__count span {
     font-weight: 700;
-    color: #b8b8b8;
+    color: var(--color-text, #2d2742);
 }
 
-.shop-mypage-reviews-page .review-stars .review-star--full,
-.shop-mypage-reviews-page .review-stars .review-star--half {
-    color: var(--accent-text, #f0a6c4);
+/* Stars inside the summary — use accent color regardless of theme */
+.review-summary-container .review-star--full,
+.review-summary-container .review-star--half,
+.shop-review-summary .review-star--full,
+.shop-review-summary .review-star--half {
+    color: var(--accent-text, #7c3aed);
+}
+.review-summary-container .review-star--empty,
+.shop-review-summary .review-star--empty {
+    color: rgba(124, 58, 237, 0.28);
 }
 
-.shop-mypage-reviews-page .review-stars .review-star--full {
-    font-weight: 900;
+body:not(.theme-light):not(.theme-premium-white) .shop-review-summary .review-star--empty,
+body:not(.theme-light):not(.theme-premium-white) .review-summary-container .review-star--empty {
+    color: rgba(255, 255, 255, 0.16);
 }
 
-.shop-mypage-reviews-page .review-stars .review-star--empty {
-    color: #3a3a3a;
-}
-
-.shop-review-items {
+/* --------------------------------------------------------------------------
+   Filter chip (cast page — "shop X 宛のレビューだけ")
+   -------------------------------------------------------------------------- */
+.review-filter-chip {
     display: flex;
-    flex-direction: column;
-    gap: 14px;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    margin: 12px 0 6px;
+    border-radius: 999px;
+    background: rgba(124, 58, 237, 0.08);
+    border: 1px solid rgba(124, 58, 237, 0.25);
+    color: var(--color-text, #2d2742);
+    font-size: 0.82rem;
 }
 
-.shop-review-items__empty {
-    padding: 2.5rem 1rem !important;
-    border: 1px dashed rgba(168, 85, 247, 0.22);
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.03);
-    color: #a0a0a0;
+.review-filter-chip a {
+    margin-left: auto;
+    color: var(--accent-text, #7c3aed);
+    font-weight: 700;
+    text-decoration: none;
 }
 
-/* 1 件 1 件のレビューをカードとして区切る */
+body:not(.theme-light):not(.theme-premium-white) .review-filter-chip {
+    background: rgba(168, 85, 247, 0.14);
+    border-color: rgba(168, 85, 247, 0.36);
+    color: #f0e9ff;
+}
+
+/* --------------------------------------------------------------------------
+   List: flat divider rows (no card frame)
+   -------------------------------------------------------------------------- */
+.review-items,
+.shop-review-items {
+    display: block;
+    margin: 0;
+    padding: 0;
+}
+
+/* Each review = row separated by a hairline */
+.review-card,
 .shop-review-item {
     position: relative;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
-    border: 1px solid rgba(168, 85, 247, 0.22);
-    border-radius: 16px;
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.22);
-    overflow: hidden;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    margin: 0;
+    padding: 20px 0;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--review-divider-light);
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
+    transition: opacity 0.15s ease;
 }
 
+.review-card:last-of-type,
+.shop-review-item:last-of-type {
+    border-bottom: 0;
+}
+
+/* Kill legacy hover / lift effects — flat rows do not need hover states */
+.review-card:hover,
 .shop-review-item:hover {
-    border-color: rgba(168, 85, 247, 0.42);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+    background: transparent;
+    border-bottom-color: var(--review-divider-light);
+    box-shadow: none;
+    transform: none;
 }
 
+.review-card.is-hidden,
 .shop-review-item.is-hidden {
     opacity: 0.55;
-    border-style: dashed;
-    background: rgba(255, 255, 255, 0.02);
+    background: transparent;
+    border-style: solid;
 }
 
+body:not(.theme-light):not(.theme-premium-white) .review-card,
+body:not(.theme-light):not(.theme-premium-white) .shop-review-item {
+    border-bottom-color: var(--review-divider-dark);
+}
+body:not(.theme-light):not(.theme-premium-white) .review-card:hover,
+body:not(.theme-light):not(.theme-premium-white) .shop-review-item:hover {
+    border-bottom-color: var(--review-divider-dark);
+}
+
+/* Shop-side inner surface: kept for accordion trigger, but no card padding */
 .shop-review-item__surface {
-    padding: 1.1rem 1.1rem 1rem;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
 }
-
 .shop-review-item__surface--interactive {
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: none;
 }
-
 .shop-review-item__surface--interactive:hover {
-    background-color: rgba(168, 85, 247, 0.04);
+    background: transparent;
 }
-
-.shop-review-item__surface--interactive:focus {
-    outline: none;
-}
-
+.shop-review-item__surface--interactive:focus { outline: none; }
 .shop-review-item__surface--interactive:focus-visible {
-    outline: 2px solid var(--accent, #d670a2);
+    outline: 2px solid var(--accent, #7c3aed);
     outline-offset: 2px;
 }
 
+/* Empty state */
+.no-data-wrapper,
+.shop-review-items__empty {
+    padding: 40px 0 !important;
+    text-align: center;
+    background: transparent;
+    border: 0;
+    color: var(--color-text-muted, #6d6685) !important;
+    opacity: 1 !important;
+}
+
+/* --------------------------------------------------------------------------
+   Row content — cast side (rev-*)
+   -------------------------------------------------------------------------- */
+.rev-main-row {
+    display: block;
+}
+
+.rev-bubble {
+    flex: 1;
+    position: relative;
+    margin: 0 !important;
+}
+
+.rev-bubble-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.rev-score-small {
+    color: var(--accent-text, #7c3aed);
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.rev-name {
+    font-weight: 700;
+    color: var(--color-text, #2d2742);
+    font-size: 0.95rem;
+}
+
+.rev-comment {
+    font-size: 0.94rem;
+    color: var(--color-text, #2d2742);
+    line-height: 1.75;
+    white-space: pre-wrap;
+    margin: 0 0 10px;
+}
+
+/* Cast-side details toggle */
+.rev-toggle-row {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 4px;
+}
+.toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--accent-text, #7c3aed);
+    cursor: pointer;
+    padding: 4px 0;
+}
+
+/* --------------------------------------------------------------------------
+   Row content — shop side (shop-review-item__*)
+   -------------------------------------------------------------------------- */
 .shop-review-item__head {
     display: flex;
     justify-content: flex-start;
     align-items: flex-start;
-    gap: 0.75rem;
-    margin-bottom: 0.6rem;
+    gap: 12px;
+    margin-bottom: 10px;
 }
 
 .shop-review-item__user {
     display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
+    align-items: center;
+    gap: 12px;
     min-width: 0;
+    flex: 1;
 }
 
 .shop-review-item__avatar-wrap {
     flex-shrink: 0;
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     overflow: hidden;
+    background: #efeaf6;
+    border: 1px solid rgba(124, 58, 237, 0.20);
+}
+
+body:not(.theme-light):not(.theme-premium-white) .shop-review-item__avatar-wrap {
     background: #2a2a2a;
-    border: 1px solid rgba(120, 100, 95, 0.45);
+    border-color: rgba(168, 85, 247, 0.30);
 }
 
 .shop-review-item__avatar {
@@ -332,88 +341,98 @@ body.page-shop-mypage-reviews #global-header .header-title-main.header-title-ser
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: #a0a0a0;
+    color: var(--color-text-muted, #6d6685);
     font-size: 1.05rem;
-    background: #2a2a2a;
 }
 
 .shop-review-item__user-text {
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
+    gap: 4px;
     min-width: 0;
 }
 
 .shop-review-item__name {
     font-weight: 700;
-    font-size: 0.9rem;
-    color: #fff;
+    font-size: 0.95rem;
+    color: var(--color-text, #2d2742);
     line-height: 1.3;
 }
 
 .shop-review-item__meta-row {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
     flex-wrap: wrap;
 }
 
 .shop-review-item__meta-score {
-    font-size: 0.8rem;
-    color: #d5d5d5;
-    font-weight: 600;
+    font-size: 0.82rem;
+    color: var(--color-text, #2d2742);
+    font-weight: 700;
     line-height: 1;
 }
 
 .shop-review-item__date {
     margin: 0;
-    font-size: 0.75rem;
-    color: #9ca3af;
+    font-size: 0.74rem;
+    color: var(--color-text-muted, #6d6685);
     line-height: 1;
 }
 
+.badge-hidden,
 .shop-review-item__badge-hidden {
-    margin-bottom: 0.5rem;
+    display: inline-block;
+    background: rgba(107, 114, 128, 0.14);
+    color: var(--color-text-muted, #6d6685);
+    border: 1px solid rgba(107, 114, 128, 0.22);
+    font-size: 0.68rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+body:not(.theme-light):not(.theme-premium-white) .badge-hidden,
+body:not(.theme-light):not(.theme-premium-white) .shop-review-item__badge-hidden {
+    background: #333;
+    color: #e2e2e2;
+    border-color: #4a4a4a;
 }
 
 .shop-review-item__comment {
-    font-size: 0.875rem;
-    color: #e5e0e0;
-    line-height: 1.65;
+    font-size: 0.94rem;
+    color: var(--color-text, #2d2742);
+    line-height: 1.75;
     white-space: pre-wrap;
-    margin-top: 0.25rem;
+    margin: 4px 0 0;
 }
 
+/* --------------------------------------------------------------------------
+   Details toggle + breakdown panel (accordion)
+   -------------------------------------------------------------------------- */
 .shop-review-item__details-toggle {
-    margin-top: 0.85rem;
+    margin-top: 10px;
+    padding: 0;
     border: 0;
     background: transparent;
-    color: #9f8b83;
-    font-size: 0.78rem;
-    font-weight: 600;
+    color: var(--accent-text, #7c3aed);
+    font-size: 0.82rem;
+    font-weight: 700;
     letter-spacing: 0.02em;
     display: inline-flex;
     align-items: center;
-    gap: 0.45rem;
-    padding: 0;
+    gap: 6px;
     cursor: pointer;
 }
 
-.shop-review-item__chevron-icon--up {
-    display: none;
+.shop-review-item__details-toggle:hover {
+    text-decoration: underline;
 }
 
-.shop-review-item.is-open .shop-review-item__details-toggle {
-    color: #c7a06e;
-}
-
-.shop-review-item.is-open .shop-review-item__details-toggle .shop-review-item__chevron-icon--down {
-    display: none;
-}
-
-.shop-review-item.is-open .shop-review-item__details-toggle .shop-review-item__chevron-icon--up {
-    display: inline-block;
-}
+.shop-review-item__chevron-icon--up { display: none; }
+.shop-review-item.is-open .shop-review-item__details-toggle .shop-review-item__chevron-icon--down { display: none; }
+.shop-review-item.is-open .shop-review-item__details-toggle .shop-review-item__chevron-icon--up { display: inline-block; }
 
 .shop-review-item__breakdown {
     max-height: 0;
@@ -425,46 +444,53 @@ body.page-shop-mypage-reviews #global-header .header-title-main.header-title-ser
         margin-top 0.28s ease;
     margin-top: 0;
 }
-
 .shop-review-item.is-open .shop-review-item__breakdown {
     max-height: 48rem;
     opacity: 1;
-    margin-top: 1rem;
+    margin-top: 12px;
 }
 
 .shop-review-item__breakdown-inner {
-    padding-top: 1rem;
-    border-top: 1px dashed rgba(168, 85, 247, 0.28);
+    padding: 12px 0 4px;
+    border-top: 1px dashed var(--review-divider-light);
+}
+
+body:not(.theme-light):not(.theme-premium-white) .shop-review-item__breakdown-inner {
+    border-top-color: var(--review-divider-dark);
 }
 
 .shop-review-item__breakdown-title {
-    margin: 0 0 0.75rem;
-    font-size: 0.75rem;
+    margin: 0 0 10px;
+    font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0.08em;
-    color: #c49a5b;
+    color: var(--accent-text, #7c3aed);
 }
 
-.shop-review-item__detail-list {
+.shop-review-item__detail-list,
+.rev-details-list {
     margin: 0;
     padding: 0;
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 0.875rem;
+    gap: 10px;
 }
 
-.shop-review-item__detail-row {
+.shop-review-item__detail-row,
+.detail-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 0.75rem;
-    font-size: 0.8125rem;
+    gap: 12px;
+    font-size: 0.85rem;
+    margin: 0;
 }
 
-.shop-review-item__detail-label {
-    color: #d1d5db;
-    line-height: 1.45;
+.shop-review-item__detail-label,
+.detail-row .detail-label {
+    color: var(--color-text, #2d2742);
+    line-height: 1.5;
     flex: 1;
     min-width: 0;
 }
@@ -473,40 +499,122 @@ body.page-shop-mypage-reviews #global-header .header-title-main.header-title-ser
     flex-shrink: 0;
     display: inline-flex;
     align-items: center;
-    gap: 0.65rem;
+    gap: 8px;
 }
 
-.shop-review-item__detail-val {
-    min-width: 1.75rem;
+.shop-review-item__detail-val,
+.detail-val,
+.detail-row .detail-val {
+    min-width: 2rem;
     text-align: right;
-    font-weight: 600;
-    color: #9ca3af;
-    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--accent-text, #7c3aed);
+    font-size: 0.85rem;
 }
 
-.shop-review-item__admin {
-    padding: 0.875rem 1.1rem 1rem;
-    border-top: 1px solid rgba(168, 85, 247, 0.18);
-    background: rgba(0, 0, 0, 0.18);
-    margin: 0;
+.detail-stars {
+    color: var(--accent-text, #7c3aed);
+    font-size: 0.72rem;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
 }
 
+/* --------------------------------------------------------------------------
+   Admin actions (hide / show button) — full-width, flat
+   -------------------------------------------------------------------------- */
+.shop-review-item__admin,
+.rev-admin-actions {
+    padding: 12px 0 0;
+    margin: 12px 0 0;
+    border-top: 1px dashed var(--review-divider-light);
+    background: transparent;
+}
+
+body:not(.theme-light):not(.theme-premium-white) .shop-review-item__admin,
+body:not(.theme-light):not(.theme-premium-white) .rev-admin-actions {
+    border-top-color: var(--review-divider-dark);
+}
+
+.btn-hide,
+.btn-show-again,
 .shop-review-item__admin .btn-hide,
 .shop-review-item__admin .btn-show-again {
     width: 100%;
     padding: 10px;
     border-radius: 8px;
-    border: 1px solid rgba(168, 85, 247, 0.35);
+    border: 1px solid rgba(124, 58, 237, 0.35);
     background: transparent;
-    color: #f0a6c4;
-    font-size: 0.8rem;
+    color: var(--accent-text, #7c3aed);
+    font-size: 0.82rem;
     font-weight: 700;
     cursor: pointer;
     transition: background 0.15s ease, border-color 0.15s ease;
 }
 
+.btn-hide:hover,
+.btn-show-again:hover,
 .shop-review-item__admin .btn-hide:hover,
 .shop-review-item__admin .btn-show-again:hover {
-    background: rgba(168, 85, 247, 0.08);
-    border-color: rgba(168, 85, 247, 0.55);
+    background: rgba(124, 58, 237, 0.06);
+    border-color: rgba(124, 58, 237, 0.55);
+}
+
+body:not(.theme-light):not(.theme-premium-white) .btn-hide,
+body:not(.theme-light):not(.theme-premium-white) .btn-show-again,
+body:not(.theme-light):not(.theme-premium-white) .shop-review-item__admin .btn-hide,
+body:not(.theme-light):not(.theme-premium-white) .shop-review-item__admin .btn-show-again {
+    border-color: rgba(168, 85, 247, 0.45);
+    color: #d8caff;
+}
+
+.plan-label {
+    display: block;
+    font-size: 0.62rem;
+    color: var(--color-text-muted, #6d6685);
+    margin-top: 3px;
+    font-weight: 500;
+}
+
+/* --------------------------------------------------------------------------
+   Star icon color per theme (review_stars partial)
+   -------------------------------------------------------------------------- */
+.review-stars {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2em;
+    line-height: 1;
+}
+.review-stars--sm .review-star { font-size: 0.72rem; }
+.review-stars--md .review-star { font-size: 0.85rem; }
+.review-stars--lg .review-star { font-size: 1.15rem; }
+
+.review-stars .review-star--full,
+.review-stars .review-star--half {
+    color: var(--accent-text, #7c3aed);
+}
+.review-stars .review-star--empty {
+    color: rgba(124, 58, 237, 0.28);
+}
+body:not(.theme-light):not(.theme-premium-white) .review-stars .review-star--empty {
+    color: rgba(255, 255, 255, 0.18);
+}
+
+/* --------------------------------------------------------------------------
+   Shop reviews page — global-header title styling (kept from legacy)
+   -------------------------------------------------------------------------- */
+body.page-shop-mypage-reviews #global-header .header-title-main.header-title-serif {
+    font-style: italic;
+    letter-spacing: 0.18em;
+    color: var(--accent-text, #f0a6c4);
+    font-weight: 500;
+}
+
+/* PC: give the list a bit more width */
+@media (min-width: 768px) {
+    body.page-shop-mypage-reviews #app,
+    body.page-cast-mypage #app { max-width: 960px; }
+}
+@media (min-width: 1024px) {
+    body.page-shop-mypage-reviews #app,
+    body.page-cast-mypage #app { max-width: 1080px; }
 }

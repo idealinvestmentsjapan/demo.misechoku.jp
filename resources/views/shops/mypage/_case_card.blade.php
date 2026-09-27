@@ -170,7 +170,9 @@
                         data-case-action="{{ $case['actionable'] }}"
                         data-application-id="{{ $case['application_id'] }}"
                         data-deposit-id="{{ $deposit['id'] ?? '' }}"
-                        data-job-kind="{{ $deposit['job_kind'] ?? '' }}">
+                        data-job-kind="{{ $deposit['job_kind'] ?? '' }}"
+                        data-cast-id="{{ $case['cast_id'] ?? '' }}"
+                        data-cast-name="{{ $case['cast_name'] ?? '' }}">
                     <span class="case-card__action-item__icon"><i class="fas {{ $primaryActionIcon }}"></i></span>
                     <span class="case-card__action-item__label">{{ $case['actionable_label'] }}</span>
                     <i class="fas fa-chevron-right case-card__action-item__chev" aria-hidden="true"></i>

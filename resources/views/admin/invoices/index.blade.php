@@ -52,8 +52,8 @@
                 }
             }
         @endphp
-        <section class="dashboard-kpi-grid invoice-filter-kpis" data-invoice-filter-host>
-            <button type="button" class="dashboard-kpi-card dashboard-kpi-card--link is-active {{ $issueWaitingCount > 0 ? 'is-attention' : '' }}" data-filter="issue_wait" aria-pressed="true">
+        <section class="dashboard-kpi-grid invoice-filter-kpis">
+            <article class="dashboard-kpi-card {{ $issueWaitingCount > 0 ? 'is-attention' : '' }}">
                 <div class="dashboard-kpi-head">
                     <div class="dashboard-kpi-title">要対応（発行待ち）</div>
                     <i class="fas fa-file-invoice"></i>
@@ -62,9 +62,8 @@
                     <span class="dashboard-kpi-value">{{ number_format($issueWaitingCount) }}</span>
                     <span class="dashboard-kpi-unit">件</span>
                 </div>
-                <div class="dashboard-kpi-trend is-up">運営が今すぐ発行可</div>
-            </button>
-            <button type="button" class="dashboard-kpi-card dashboard-kpi-card--link" data-filter="cast_request" aria-pressed="false">
+            </article>
+            <article class="dashboard-kpi-card">
                 <div class="dashboard-kpi-head">
                     <div class="dashboard-kpi-title">店舗承認待ち</div>
                     <i class="fas fa-hourglass-half"></i>
@@ -73,9 +72,8 @@
                     <span class="dashboard-kpi-value">{{ number_format($castWaitingCount) }}</span>
                     <span class="dashboard-kpi-unit">件</span>
                 </div>
-                <div class="dashboard-kpi-trend">運営の対応は不要</div>
-            </button>
-            <button type="button" class="dashboard-kpi-card dashboard-kpi-card--link" data-filter="all" aria-pressed="false">
+            </article>
+            <article class="dashboard-kpi-card">
                 <div class="dashboard-kpi-head">
                     <div class="dashboard-kpi-title">未処理（合計）</div>
                     <i class="fas fa-clipboard-list"></i>
@@ -84,9 +82,8 @@
                     <span class="dashboard-kpi-value">{{ number_format(count($pending ?? [])) }}</span>
                     <span class="dashboard-kpi-unit">件</span>
                 </div>
-                <div class="dashboard-kpi-trend">クリックですべて表示</div>
-            </button>
-            <button type="button" class="dashboard-kpi-card dashboard-kpi-card--link {{ $overdueCount > 0 ? 'is-critical' : '' }}" data-filter="overdue" aria-pressed="false">
+            </article>
+            <article class="dashboard-kpi-card {{ $overdueCount > 0 ? 'is-critical' : '' }}">
                 <div class="dashboard-kpi-head">
                     <div class="dashboard-kpi-title">7日経過</div>
                     <i class="fas fa-triangle-exclamation"></i>
@@ -95,8 +92,7 @@
                     <span class="dashboard-kpi-value">{{ number_format($overdueCount) }}</span>
                     <span class="dashboard-kpi-unit">件</span>
                 </div>
-                <div class="dashboard-kpi-trend is-down">放置リスクあり</div>
-            </button>
+            </article>
         </section>
 
         {{-- 入金依頼・請求書発行待ち --}}
@@ -107,17 +103,16 @@
             </p>
 
             @if(!empty($pending))
-                {{-- ソート --}}
-                <div class="invoice-toolbar" data-invoice-toolbar>
-                    <label class="invoice-toolbar__sort">
-                        <span><i class="fas fa-arrow-down-wide-short"></i> 並び順</span>
-                        <select data-invoice-sort>
-                            <option value="age_desc" selected>申請が古い順（緊急優先）</option>
-                            <option value="age_asc">新しい順</option>
-                            <option value="amount_desc">金額が高い順</option>
-                            <option value="amount_asc">金額が低い順</option>
-                        </select>
-                    </label>
+                {{-- フィルタ：運営対応が必要な案件のみ表示するかを切替 --}}
+                <div class="admin-page-toolbar-filters" data-invoice-filters>
+                    <button type="button" class="admin-filter-chip is-active" data-invoice-filter="issue_wait">
+                        <span>運営対応の要対応のみ</span>
+                        <strong>{{ number_format($issueWaitingCount) }}</strong>
+                    </button>
+                    <button type="button" class="admin-filter-chip" data-invoice-filter="all">
+                        <span>すべて表示</span>
+                        <strong>{{ number_format(count($pending)) }}</strong>
+                    </button>
                 </div>
 
                 <div class="invoice-pending-list" data-invoice-list>
@@ -376,87 +371,38 @@
 @push('admin-scripts')
 <script>
 // =========================================================
-// 請求書発行一覧: KPIタブ + 検索 + ソート
+// 請求書発行一覧: 「運営対応の要対応のみ / すべて表示」の 2 択フィルタ
+// 並び順・検索は撤去。KPI は表示のみ。
 // =========================================================
 document.addEventListener('DOMContentLoaded', function () {
-    var host = document.querySelector('[data-invoice-filter-host]');
+    var chips = document.querySelectorAll('[data-invoice-filters] [data-invoice-filter]');
     var list = document.querySelector('[data-invoice-list]');
-    var toolbar = document.querySelector('[data-invoice-toolbar]');
-    if (!host || !list || !toolbar) return;
+    if (!chips.length || !list) return;
 
-    var filterButtons = host.querySelectorAll('[data-filter]');
-    var searchInput = toolbar.querySelector('[data-invoice-search]');
-    var sortSelect = toolbar.querySelector('[data-invoice-sort]');
-    var hitsEl = toolbar.querySelector('[data-invoice-hits]');
     var emptyEl = document.querySelector('[data-invoice-empty]');
     var cards = Array.prototype.slice.call(list.querySelectorAll('[data-invoice-card]'));
-
-    var state = { filter: 'issue_wait', search: '', sort: 'age_desc' };
-
-    function applySort() {
-        var sorted = cards.slice().sort(function (a, b) {
-            var av, bv;
-            switch (state.sort) {
-                case 'age_asc':    av = +a.dataset.age; bv = +b.dataset.age; return av - bv;
-                case 'age_desc':   av = +a.dataset.age; bv = +b.dataset.age; return bv - av;
-                case 'amount_desc':av = +a.dataset.amount; bv = +b.dataset.amount; return bv - av;
-                case 'amount_asc': av = +a.dataset.amount; bv = +b.dataset.amount; return av - bv;
-            }
-            return 0;
-        });
-        sorted.forEach(function (el) { list.appendChild(el); });
-    }
-
-    function matches(card) {
-        if (state.filter === 'overdue' && card.dataset.overdue !== '1') return false;
-        if (state.filter !== 'all' && state.filter !== 'overdue' && card.dataset.status !== state.filter) return false;
-        if (state.search) {
-            var q = state.search.toLowerCase();
-            if ((card.dataset.search || '').indexOf(q) === -1) return false;
-        }
-        return true;
-    }
+    var state = { filter: 'issue_wait' };
 
     function refresh() {
         var visible = 0;
         cards.forEach(function (card) {
-            var show = matches(card);
+            var show = state.filter === 'all' || card.dataset.status === state.filter;
             card.hidden = !show;
             if (show) visible++;
         });
-        if (hitsEl) {
-            hitsEl.textContent = visible + ' 件表示中';
-        }
-        if (emptyEl) {
-            emptyEl.hidden = visible !== 0;
-        }
+        if (emptyEl) emptyEl.hidden = visible !== 0;
     }
 
-    filterButtons.forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            state.filter = btn.dataset.filter || 'all';
-            filterButtons.forEach(function (b) {
-                var on = b === btn;
-                b.classList.toggle('is-active', on);
-                b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    chips.forEach(function (chip) {
+        chip.addEventListener('click', function () {
+            state.filter = chip.getAttribute('data-invoice-filter') || 'issue_wait';
+            chips.forEach(function (c) {
+                c.classList.toggle('is-active', c === chip);
             });
             refresh();
         });
     });
-    if (searchInput) {
-        searchInput.addEventListener('input', function () {
-            state.search = searchInput.value.trim();
-            refresh();
-        });
-    }
-    if (sortSelect) {
-        sortSelect.addEventListener('change', function () {
-            state.sort = sortSelect.value;
-            applySort();
-        });
-    }
 
-    applySort();
     refresh();
 });
 

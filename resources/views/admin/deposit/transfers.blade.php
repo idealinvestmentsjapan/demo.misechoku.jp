@@ -64,10 +64,9 @@
         <div class="admin-alert admin-alert-error">{{ $errors->first() }}</div>
     @endif
 
-    {{-- KPI --}}
-    <section class="dashboard-kpi-grid deposit-kpi-grid" data-deposit-kpis>
-        <button type="button" class="dashboard-kpi-card dashboard-kpi-card--link is-active {{ ($summary['cast_transfer_pending'] ?? 0) > 0 ? 'is-attention' : '' }}"
-                data-kpi-filter="transfer_pending" aria-pressed="true">
+    {{-- KPI（表示のみ） --}}
+    <section class="dashboard-kpi-grid deposit-kpi-grid">
+        <article class="dashboard-kpi-card {{ ($summary['cast_transfer_pending'] ?? 0) > 0 ? 'is-attention' : '' }}">
             <div class="dashboard-kpi-head">
                 <div class="dashboard-kpi-title">振込待ち</div>
                 <i class="fas fa-paper-plane"></i>
@@ -76,9 +75,8 @@
                 <span class="dashboard-kpi-value">{{ number_format($summary['cast_transfer_pending'] ?? 0) }}</span>
                 <span class="dashboard-kpi-unit">件</span>
             </div>
-            <div class="dashboard-kpi-trend is-up">運営が今すぐ振込可</div>
-        </button>
-        <button type="button" class="dashboard-kpi-card dashboard-kpi-card--link" data-kpi-filter="in_transit" aria-pressed="false">
+        </article>
+        <article class="dashboard-kpi-card">
             <div class="dashboard-kpi-head">
                 <div class="dashboard-kpi-title">キャスト確認待ち</div>
                 <i class="fas fa-user-clock"></i>
@@ -87,9 +85,8 @@
                 <span class="dashboard-kpi-value">{{ number_format($summary['in_transit'] ?? 0) }}</span>
                 <span class="dashboard-kpi-unit">件</span>
             </div>
-        </button>
-        <button type="button" class="dashboard-kpi-card dashboard-kpi-card--link {{ ($summary['unconfirmed_cast_over_7days'] ?? 0) > 0 ? 'is-critical' : '' }}"
-                data-kpi-filter="alert" aria-pressed="false">
+        </article>
+        <article class="dashboard-kpi-card {{ ($summary['unconfirmed_cast_over_7days'] ?? 0) > 0 ? 'is-critical' : '' }}">
             <div class="dashboard-kpi-head">
                 <div class="dashboard-kpi-title">要確認（7日）</div>
                 <i class="fas fa-triangle-exclamation"></i>
@@ -98,8 +95,8 @@
                 <span class="dashboard-kpi-value">{{ number_format($summary['unconfirmed_cast_over_7days'] ?? 0) }}</span>
                 <span class="dashboard-kpi-unit">件</span>
             </div>
-        </button>
-        <button type="button" class="dashboard-kpi-card dashboard-kpi-card--link" data-kpi-filter="completed" aria-pressed="false">
+        </article>
+        <article class="dashboard-kpi-card">
             <div class="dashboard-kpi-head">
                 <div class="dashboard-kpi-title">完了</div>
                 <i class="fas fa-circle-check"></i>
@@ -108,8 +105,19 @@
                 <span class="dashboard-kpi-value">{{ number_format($summary['completed_recent'] ?? 0) }}</span>
                 <span class="dashboard-kpi-unit">件</span>
             </div>
-        </button>
+        </article>
     </section>
+
+    {{-- フィルタ：運営対応のみ / すべて --}}
+    <div class="admin-page-toolbar-filters" data-deposit-filters>
+        <button type="button" class="admin-filter-chip is-active" data-deposit-filter="transfer_pending">
+            <span>運営対応の要対応のみ</span>
+            <strong>{{ number_format($summary['cast_transfer_pending'] ?? 0) }}</strong>
+        </button>
+        <button type="button" class="admin-filter-chip" data-deposit-filter="all">
+            <span>すべて表示</span>
+        </button>
+    </div>
 
     {{-- Compact list --}}
     <section class="admin-panel">
@@ -501,8 +509,8 @@ document.addEventListener('DOMContentLoaded', function () {
         sync();
     });
 
-    // ---- KPI filter ----
-    var kpis = document.querySelectorAll('[data-deposit-kpis] [data-kpi-filter]');
+    // ---- 2択フィルタ（運営対応の要対応のみ / すべて） ----
+    var chips = document.querySelectorAll('[data-deposit-filters] [data-deposit-filter]');
     var rows = document.querySelectorAll('[data-deposit-row]');
     function applyFilter(key) {
         rows.forEach(function (r) {
@@ -510,15 +518,10 @@ document.addEventListener('DOMContentLoaded', function () {
             r.style.display = (key === 'all' || cat === key) ? '' : 'none';
         });
     }
-    kpis.forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var already = btn.getAttribute('aria-pressed') === 'true';
-            var next = already ? 'all' : (btn.getAttribute('data-kpi-filter') || 'all');
-            kpis.forEach(function (b) {
-                var on = !already && b === btn;
-                b.classList.toggle('is-active', on);
-                b.setAttribute('aria-pressed', on ? 'true' : 'false');
-            });
+    chips.forEach(function (chip) {
+        chip.addEventListener('click', function () {
+            var next = chip.getAttribute('data-deposit-filter') || 'transfer_pending';
+            chips.forEach(function (c) { c.classList.toggle('is-active', c === chip); });
             applyFilter(next);
         });
     });

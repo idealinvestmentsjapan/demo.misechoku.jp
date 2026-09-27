@@ -132,7 +132,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800;900&family=Montserrat:wght@400;600;700;800&display=swap">
     <link rel="stylesheet" href="{{ asset('assets/css/admin.css') }}?v=20260927-ops-align-v12">
     {{-- Detail-page + role-UI styles (extracted 2026-08-02); load AFTER admin.css --}}
-    <link rel="stylesheet" href="{{ asset('assets/css/admin-detail.css') }}?v=20260927-quiet-v11">
+    <link rel="stylesheet" href="{{ asset('assets/css/admin-detail.css') }}?v=20260927-ops-align-v12">
     {{-- モバイル最適化（admin.css の後に読み込んで上書き） --}}
     <link rel="stylesheet" href="{{ asset('assets/css/admin-mobile.css') }}?v=20260927-step-labels-v4">
     @stack('admin-styles')

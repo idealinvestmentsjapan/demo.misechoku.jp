@@ -25,7 +25,8 @@ class UserReportController extends Controller
 
     public function index(Request $request): View
     {
-        $status = $request->query('status', 'all');
+        // デフォルトは「未対応」（運営対応の要対応のみ）に絞る。
+        $status = $request->query('status', 'pending');
 
         $q = UserReport::query()->orderByDesc('created_at');
         if ($status === 'pending') {

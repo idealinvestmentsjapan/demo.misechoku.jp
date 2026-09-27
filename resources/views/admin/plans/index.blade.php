@@ -60,6 +60,18 @@
             </div>
         </section>
 
+        {{-- フィルタ：運営対応のみ / すべて --}}
+        <div class="admin-page-toolbar-filters" data-plan-filters>
+            <button type="button" class="admin-filter-chip is-active" data-plan-filter="pending">
+                <span>運営対応の要対応のみ</span>
+                <strong>{{ number_format($summary['pending'] ?? 0) }}</strong>
+            </button>
+            <button type="button" class="admin-filter-chip" data-plan-filter="all">
+                <span>すべて表示</span>
+                <strong>{{ number_format(count($subscriptions ?? [])) }}</strong>
+            </button>
+        </div>
+
         <div class="table-wrapper">
             <table class="admin-table admin-table--stack">
                 <thead>
@@ -74,14 +86,14 @@
                         <th>操作</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="plan-subscriptions-body">
                     @forelse($subscriptions as $sub)
                         @php
                             $isPending = (int) $sub->status === SPS::STATUS_PENDING_PAYMENT;
                             $isActive = (int) $sub->status === SPS::STATUS_ACTIVE;
                             $isOverdue = $isPending && $sub->payment_due_date !== null && $sub->payment_due_date->lt(today());
                         @endphp
-                        <tr>
+                        <tr data-plan-row data-plan-status="{{ $isPending ? 'pending' : 'other' }}">
                             <td>{{ $sub->shop_display_name }}<br><small style="color:#8b8b96;">{{ $sub->shop_id }} / {{ $sub->invoice_number }}</small></td>
                             <td data-label="プラン">Premium（{{ $sub->cycleLabel() }}）</td>
                             <td data-label="金額（税込）">¥{{ number_format((int) $sub->amount) }}</td>
@@ -125,3 +137,26 @@
         </div>
     </div>
 @endsection
+
+@push('admin-scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var chips = document.querySelectorAll('[data-plan-filters] [data-plan-filter]');
+    var rows = document.querySelectorAll('[data-plan-row]');
+    function apply(key) {
+        rows.forEach(function (r) {
+            var s = r.getAttribute('data-plan-status') || '';
+            r.style.display = (key === 'all' || s === key) ? '' : 'none';
+        });
+    }
+    chips.forEach(function (chip) {
+        chip.addEventListener('click', function () {
+            var next = chip.getAttribute('data-plan-filter') || 'pending';
+            chips.forEach(function (c) { c.classList.toggle('is-active', c === chip); });
+            apply(next);
+        });
+    });
+    apply('pending');
+});
+</script>
+@endpush

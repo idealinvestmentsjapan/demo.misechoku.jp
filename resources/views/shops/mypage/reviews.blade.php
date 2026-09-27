@@ -4,16 +4,16 @@
 @section('body-class', 'page-shop-mypage-reviews')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('assets/css/review.css') }}?v=20260509-shop-reviews-cards">
+    <link rel="stylesheet" href="{{ asset('assets/css/review.css') }}?v=20260927-flat">
     <link rel="stylesheet" href="{{ asset('assets/css/mypage.css') }}">
     <style>
-        /* 店舗からの返信ブロック */
+        /* Shop reply block (kept as a filled sub-area so it reads distinct from the review text) */
         .shop-review-reply {
             margin: 12px 0 0;
             padding: 12px 14px;
-            border-radius: 12px;
-            background: rgba(124, 58, 237, 0.06);
-            border: 1px solid rgba(124, 58, 237, 0.22);
+            border-radius: 10px;
+            background: rgba(124, 58, 237, 0.05);
+            border: 1px solid rgba(124, 58, 237, 0.18);
         }
         .shop-review-reply__head {
             margin: 0 0 6px;
@@ -119,11 +119,12 @@
                     @foreach($reviews as $rev)
                         @php
                             $hasDetails = !empty($rev['details']);
-                            $isAnonymous = (int) ($rev['anonymous'] ?? 0) === 1;
-                            $displayName = $isAnonymous ? '匿名' : $rev['user_name'];
+                            // MyPage 上では匿名扱いにせず実名（ニックネーム）を表示する
+                            $displayName = $rev['user_name'];
                         @endphp
                         <article
                             id="review-{{ $rev['id'] }}"
+                            data-cast-id="{{ $rev['cast_id'] ?? '' }}"
                             class="shop-review-item {{ $rev['release'] == 0 ? 'is-hidden' : '' }}"
                             @if($hasDetails) data-shop-review-accordion @endif
                         >
@@ -139,20 +140,14 @@
                                 <div class="shop-review-item__head">
                                     <div class="shop-review-item__user">
                                         <div class="shop-review-item__avatar-wrap">
-                                            @if(!$isAnonymous)
-                                                <img
-                                                    src="{{ $rev['user_img'] ?: asset('assets/images/common/user-default.svg') }}"
-                                                    alt=""
-                                                    class="shop-review-item__avatar"
-                                                    width="48"
-                                                    height="48"
-                                                    loading="lazy"
-                                                >
-                                            @else
-                                                <span class="shop-review-item__avatar-fallback" aria-hidden="true">
-                                                    <i class="fas fa-user"></i>
-                                                </span>
-                                            @endif
+                                            <img
+                                                src="{{ $rev['user_img'] ?: asset('assets/images/common/user-default.svg') }}"
+                                                alt=""
+                                                class="shop-review-item__avatar"
+                                                width="48"
+                                                height="48"
+                                                loading="lazy"
+                                            >
                                         </div>
                                         <div class="shop-review-item__user-text">
                                             <span class="shop-review-item__name">{{ $displayName }}</span>
@@ -272,6 +267,43 @@
 @endsection
 
 @push('scripts')
+<script>
+    /**
+     * 「レビュー確認」導線から遷移して来たときの自動スクロール／ハイライト。
+     * 承認モーダル（shop.mypage.management）の「レビュー内容を確認する」リンクは
+     * `?cast=<cast_id>&highlight=1` を付けて別タブでこの画面を開くため、
+     * ここで対象キャストの直近レビュー要素へスクロールし、一時的にハイライトする。
+     */
+    (function () {
+        var params = new URLSearchParams(window.location.search);
+        var targetCast = params.get('cast');
+        var highlight  = params.get('highlight');
+        if (!targetCast) return;
+        // reviews は controller 側で id DESC ソート済み。DOM 上で最初にヒットするものが直近。
+        var el = document.querySelector('.shop-review-item[data-cast-id="' + CSS.escape(targetCast) + '"]');
+        if (!el) return;
+        // ヘッダー高さ分オフセットしてスクロール
+        var headerH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-height'), 10) || 60;
+        var y = el.getBoundingClientRect().top + window.scrollY - headerH - 12;
+        window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+        if (highlight === '1') {
+            el.classList.add('shop-review-item--highlight');
+            setTimeout(function () { el.classList.remove('shop-review-item--highlight'); }, 3200);
+        }
+    })();
+</script>
+<style>
+    /* 「レビュー確認」導線経由で開いた直近レビューをハイライト */
+    .shop-review-item.shop-review-item--highlight {
+        animation: shop-review-highlight 3s ease-out;
+        box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.55), 0 12px 32px rgba(124, 58, 237, 0.22);
+        border-radius: 12px;
+    }
+    @keyframes shop-review-highlight {
+        0%, 60% { background-color: rgba(196, 181, 253, 0.22); }
+        100%    { background-color: transparent; }
+    }
+</style>
 <script>
     (function () {
         document.querySelectorAll('[data-shop-review-accordion]').forEach(function (article) {

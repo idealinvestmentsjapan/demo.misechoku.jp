@@ -4,7 +4,7 @@
 @section('body-class', 'page-cast-mypage')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('assets/css/review.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/review.css') }}?v=20260927-flat">
     <link rel="stylesheet" href="{{ asset('assets/css/mypage.css') }}">
 @endpush
 
@@ -15,10 +15,10 @@
             {{-- タイトルはヘッダー中央、説明はオコジョガイド（character_guide_settings）に集約 --}}
 
             @if(!empty($filterShopId ?? null))
-                <div class="review-filter-chip" style="display:flex;align-items:center;gap:8px;padding:10px 14px;margin-bottom:14px;border-radius:999px;background:rgba(168, 85, 247, 0.10);border:1px solid rgba(168, 85, 247, 0.35);color:#e6dffc;font-size:0.8rem;">
+                <div class="review-filter-chip">
                     <i class="fas fa-filter"></i>
                     <span>絞り込み：<strong>{{ $filterShopName ?: $filterShopId }}</strong> へ投稿したレビュー</span>
-                    <a href="{{ route('cast.mypage.reviews') }}" style="margin-left:auto;color:#a78bfa;text-decoration:none;font-weight:700;">
+                    <a href="{{ route('cast.mypage.reviews') }}">
                         <i class="fas fa-times-circle"></i> 解除
                     </a>
                 </div>
@@ -58,33 +58,29 @@
             @else
                 @foreach($reviews as $rev)
                 <div class="review-card">
-                    <div class="rev-main-row">
-                        <div class="rev-bubble" style="margin-left: 0;">
-                            <div class="rev-bubble-header">
-                                <span class="rev-score-small">
-                                    <i class="fas fa-star"></i> {{ number_format($rev['score'] ?? 0, 1) }}
-                                </span>
-                            </div>
-                            <div class="rev-comment">
-                                {!! nl2br(e($rev['text'] ?? '')) !!}
-                            </div>
-                            @if(!empty($rev['details']))
-                                <div class="rev-toggle-row">
-                                    <span class="toggle-btn" onclick="toggleDetails(this)">
-                                        詳細 <i class="fas fa-caret-down"></i>
-                                    </span>
-                                </div>
-                                <div class="rev-details-list" style="display:none;">
-                                    @foreach($rev['details'] as $det)
-                                        <div class="detail-row">
-                                            <span class="detail-label">{{ $det['content'] }}</span>
-                                            <span class="detail-val">★ {{ number_format($det['score'], 1) }}</span>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            @endif
-                        </div>
+                    <div class="rev-bubble-header">
+                        <span class="rev-score-small">
+                            <i class="fas fa-star"></i> {{ number_format($rev['score'] ?? 0, 1) }}
+                        </span>
                     </div>
+                    <div class="rev-comment">
+                        {!! nl2br(e($rev['text'] ?? '')) !!}
+                    </div>
+                    @if(!empty($rev['details']))
+                        <div class="rev-toggle-row">
+                            <span class="toggle-btn" onclick="toggleDetails(this)">
+                                詳細 <i class="fas fa-caret-down"></i>
+                            </span>
+                        </div>
+                        <div class="rev-details-list" style="display:none;">
+                            @foreach($rev['details'] as $det)
+                                <div class="detail-row">
+                                    <span class="detail-label">{{ $det['content'] }}</span>
+                                    <span class="detail-val">★ {{ number_format($det['score'], 1) }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
                 @endforeach
             @endif

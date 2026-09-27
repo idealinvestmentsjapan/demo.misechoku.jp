@@ -41,10 +41,9 @@
         <div class="admin-alert admin-alert-error">{{ $errors->first() }}</div>
     @endif
 
-    {{-- KPI --}}
-    <section class="dashboard-kpi-grid deposit-kpi-grid" data-deposit-kpis>
-        <button type="button" class="dashboard-kpi-card dashboard-kpi-card--link is-active {{ ($summary['payment_confirmation_pending'] ?? 0) > 0 ? 'is-attention' : '' }}"
-                data-kpi-filter="pay_check" aria-pressed="true">
+    {{-- KPI（表示のみ） --}}
+    <section class="dashboard-kpi-grid deposit-kpi-grid">
+        <article class="dashboard-kpi-card {{ ($summary['payment_confirmation_pending'] ?? 0) > 0 ? 'is-attention' : '' }}">
             <div class="dashboard-kpi-head">
                 <div class="dashboard-kpi-title">照合待ち</div>
                 <i class="fas fa-hourglass-half"></i>
@@ -53,9 +52,8 @@
                 <span class="dashboard-kpi-value">{{ number_format($summary['payment_confirmation_pending'] ?? 0) }}</span>
                 <span class="dashboard-kpi-unit">件</span>
             </div>
-            <div class="dashboard-kpi-trend is-up">運営で照合してください</div>
-        </button>
-        <button type="button" class="dashboard-kpi-card dashboard-kpi-card--link" data-kpi-filter="await_shop" aria-pressed="false">
+        </article>
+        <article class="dashboard-kpi-card">
             <div class="dashboard-kpi-head">
                 <div class="dashboard-kpi-title">店舗入金待ち</div>
                 <i class="fas fa-store"></i>
@@ -64,9 +62,8 @@
                 <span class="dashboard-kpi-value">{{ number_format($summary['awaiting_shop_payment'] ?? 0) }}</span>
                 <span class="dashboard-kpi-unit">件</span>
             </div>
-            <div class="dashboard-kpi-trend">運営の対応は不要</div>
-        </button>
-        <button type="button" class="dashboard-kpi-card dashboard-kpi-card--link" data-kpi-filter="confirmed" aria-pressed="false">
+        </article>
+        <article class="dashboard-kpi-card">
             <div class="dashboard-kpi-head">
                 <div class="dashboard-kpi-title">照合済み（直近）</div>
                 <i class="fas fa-circle-check"></i>
@@ -75,8 +72,19 @@
                 <span class="dashboard-kpi-value">{{ number_format($summary['recent_confirmed'] ?? 0) }}</span>
                 <span class="dashboard-kpi-unit">件</span>
             </div>
-        </button>
+        </article>
     </section>
+
+    {{-- フィルタ：運営対応のみ / すべて --}}
+    <div class="admin-page-toolbar-filters" data-deposit-filters>
+        <button type="button" class="admin-filter-chip is-active" data-deposit-filter="pay_check">
+            <span>運営対応の要対応のみ</span>
+            <strong>{{ number_format($summary['payment_confirmation_pending'] ?? 0) }}</strong>
+        </button>
+        <button type="button" class="admin-filter-chip" data-deposit-filter="all">
+            <span>すべて表示</span>
+        </button>
+    </div>
 
     {{-- Compact list --}}
     <section class="admin-panel">
@@ -285,8 +293,8 @@ document.addEventListener('DOMContentLoaded', function () {
         sync();
     });
 
-    // ---- KPI filter: hide non-matching rows ----
-    var kpis = document.querySelectorAll('[data-deposit-kpis] [data-kpi-filter]');
+    // ---- 2択フィルタ（運営対応の要対応のみ / すべて） ----
+    var chips = document.querySelectorAll('[data-deposit-filters] [data-deposit-filter]');
     var rows = document.querySelectorAll('[data-deposit-row]');
     function applyFilter(key) {
         rows.forEach(function (r) {
@@ -294,19 +302,14 @@ document.addEventListener('DOMContentLoaded', function () {
             r.style.display = (key === 'all' || cat === key) ? '' : 'none';
         });
     }
-    kpis.forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var already = btn.getAttribute('aria-pressed') === 'true';
-            var next = already ? 'all' : (btn.getAttribute('data-kpi-filter') || 'all');
-            kpis.forEach(function (b) {
-                var on = !already && b === btn;
-                b.classList.toggle('is-active', on);
-                b.setAttribute('aria-pressed', on ? 'true' : 'false');
-            });
+    chips.forEach(function (chip) {
+        chip.addEventListener('click', function () {
+            var next = chip.getAttribute('data-deposit-filter') || 'pay_check';
+            chips.forEach(function (c) { c.classList.toggle('is-active', c === chip); });
             applyFilter(next);
         });
     });
-    // Default filter: pay_check (照合待ち)
+    // Default filter: pay_check (運営対応の要対応のみ)
     applyFilter('pay_check');
 });
 </script>

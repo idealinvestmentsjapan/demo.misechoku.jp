@@ -194,11 +194,23 @@
     .payment-bank-change-btn { font-size: 0.78rem; padding: 8px 14px; border: 1px solid rgba(124, 58, 237, 0.40); border-radius: 9999px; background: #ffffff; color: #6d28d9; cursor: pointer; }
 
     /* モーダル共通（口座登録 / レビュー / ボーナス確認）：ライト画面に追従して白パネル
-       z-index: グローバルフッター（#bottom-nav = 2000）より前面に出して
-       パネル下部のボタンがフッターに被って押せなくなるのを防ぐ */
-    .payment-bank-modal { position: fixed; inset: 0; z-index: 3000; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; background: rgba(20, 10, 35, 0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); padding: 0; }
+       - z-index: グローバルフッターより前面（`!important` で親の stacking-context 事故を防ぐ）
+       - モバイル時は panel が bottom-nav に隠れないよう padding-bottom で押し上げる */
+    .payment-bank-modal {
+        position: fixed !important;
+        inset: 0;
+        z-index: 3000 !important;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: center;
+        background: rgba(20, 10, 35, 0.55);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        padding: 0 0 calc(var(--footer-height, 75px) + 8px);
+    }
     .payment-bank-modal[hidden] { display: none; }
-    @media (min-width: 640px) { .payment-bank-modal { justify-content: center; } }
+    @media (min-width: 640px) { .payment-bank-modal { justify-content: center; padding-bottom: 0; } }
     .payment-bank-modal-backdrop { position: absolute; inset: 0; cursor: pointer; }
     .payment-bank-modal-panel { position: relative; width: 100%; max-width: min(28rem, calc(100vw - 2rem)); max-height: 90vh; background: #ffffff; border-top-left-radius: 1.5rem; border-top-right-radius: 1.5rem; border: 1px solid rgba(124, 58, 237, 0.30); display: flex; flex-direction: column; box-shadow: 0 25px 60px -12px rgba(76, 29, 149, 0.35); overflow: hidden; box-sizing: border-box; }
     .payment-bank-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(124, 58, 237, 0.20); background: #f7f4fc; }
