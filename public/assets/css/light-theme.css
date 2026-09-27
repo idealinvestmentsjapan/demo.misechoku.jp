@@ -815,6 +815,29 @@ body.theme-light .fav-circle:hover {
     border-color: rgba(124, 58, 237, 0.50);
 }
 body.theme-light .fav-circle__cap { color: rgba(76, 29, 149, 0.55); }
+/* KEEP variant on light theme: match SWIPE card gold so aria-pressed state
+   visually flips on click. Without this the base .fav-circle rule above
+   wins over fav-actions.css and the button looks unresponsive. */
+body.theme-light .fav-circle--keep {
+    background: #ffffff;
+    border-color: rgba(227, 185, 74, 0.55);
+    color: #b8860b;
+    box-shadow: 0 2px 8px rgba(227, 185, 74, 0.18);
+}
+body.theme-light .fav-circle--keep:hover {
+    background: #fffbeb;
+    border-color: rgba(227, 185, 74, 0.9);
+    color: #8a6508;
+}
+body.theme-light .fav-circle--keep[aria-pressed="true"] {
+    background: linear-gradient(135deg, #f6d36a, #e3b94a);
+    border-color: rgba(246, 211, 106, 0.95);
+    color: #1a0f00;
+    box-shadow: 0 0 12px rgba(246, 211, 106, 0.45);
+}
+body.theme-light .fav-circle--keep[aria-pressed="true"]:hover {
+    background: linear-gradient(135deg, #ffe08a, #eec55b);
+}
 
 /* --------------------------------------------------------------------------
    11. トークルームの面談・結果モーダル（.interview-modal 系）を白パネル化

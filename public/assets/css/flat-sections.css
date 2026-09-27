@@ -118,12 +118,6 @@ body:not(.theme-light):not(.theme-premium-white) #app .case-card {
     border-bottom-color: var(--flat-divider-dark) !important;
 }
 
-/* The actor badge was pinned to the top-right of a padded card; keep it
-   pinned to the row's top-right after we removed the internal padding. */
-#app .case-card .case-actor { top: 22px !important; right: 0 !important; }
-#app .case-card.is-actionable .case-actor { right: 0 !important; }
-#app .case-card .case-card__head { padding-right: 108px !important; }
-
 /* -----------------------------------------------------------------------------
    5) Identity / License document hero panels
    ----------------------------------------------------------------------------- */

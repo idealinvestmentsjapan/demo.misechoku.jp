@@ -73,7 +73,9 @@
     color: rgba(196, 181, 253, 0.55);
 }
 
-/* 要対応バッジ：右上の小型カウント。urgent は赤系で警告 */
+/* 要対応バッジ：右上の小型カウント。
+   accent（mauve pink）と同色相族の鮮やかローズで統一（ui-consistency §5）。
+   ここは fallback。実運用色は ui-consistency.css §5 で確定させている。 */
 .mypage-tile__badge {
     position: absolute;
     top: -6px;
@@ -88,14 +90,13 @@
     font-size: 0.62rem;
     font-weight: 900;
     font-variant-numeric: tabular-nums;
-    background: linear-gradient(145deg, var(--gold-light, #f2d371), var(--gold-deep, #b98a2f));
-    color: #1a0f00;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5), 0 0 0 2px rgba(10, 10, 10, 0.9);
+    background: #d94974;
+    color: #ffffff;
     pointer-events: none;
 }
 .mypage-tile__badge--urgent {
-    background: linear-gradient(145deg, #fca5a5, #e15c5c);
-    color: #2a0808;
+    background: #d94974;
+    color: #ffffff;
 }
 
 /* 後方互換：既存の shop-mypage-* クラス名でも同じ見た目に */

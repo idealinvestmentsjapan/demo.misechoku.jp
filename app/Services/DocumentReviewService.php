@@ -619,52 +619,13 @@ class DocumentReviewService
      */
     public function getPurgeCandidateTasks(): array
     {
-        $now = now();
-        $approvedThreshold = $now->copy()->subDays(self::RETENTION_APPROVED_DAYS);
-        $rejectedThreshold = $now->copy()->subDays(self::RETENTION_REJECTED_DAYS);
-        $pendingThreshold  = $now->copy()->subDays(self::RETENTION_PENDING_DAYS);
-
+        // 削除ポリシー: 「承認済みから RETENTION_APPROVED_DAYS 日以上経過」のみ。
+        // 差戻し・未審査の書類は運用中の可能性があるため削除対象外。
+        $candidates = $this->getPurgeCandidateDocuments();
         $tasks = [];
 
-        // キャスト本人確認書類
-        $castDocs = CastIdentityDocument::query()
-            ->leftJoin('cast_profiles', 'cast_identity_documents.cast_id', '=', 'cast_profiles.cast_id')
-            ->where(function ($q) use ($approvedThreshold, $rejectedThreshold, $pendingThreshold) {
-                $q->where(function ($q2) use ($approvedThreshold) {
-                    $q2->where('cast_identity_documents.status', CastIdentityDocument::STATUS_APPROVED)
-                       ->whereNotNull('cast_identity_documents.approved_at')
-                       ->where('cast_identity_documents.approved_at', '<', $approvedThreshold)
-                       ->where(function ($q3) {
-                           $q3->whereNotNull('cast_identity_documents.image_path_front')
-                              ->orWhereNotNull('cast_identity_documents.image_path_back');
-                       });
-                })->orWhere(function ($q2) use ($rejectedThreshold) {
-                    $q2->where('cast_identity_documents.status', CastIdentityDocument::STATUS_REJECTED)
-                       ->where('cast_identity_documents.updated_at', '<', $rejectedThreshold)
-                       ->where(function ($q3) {
-                           $q3->whereNotNull('cast_identity_documents.image_path_front')
-                              ->orWhereNotNull('cast_identity_documents.image_path_back');
-                       });
-                })->orWhere(function ($q2) use ($pendingThreshold) {
-                    $q2->where('cast_identity_documents.status', CastIdentityDocument::STATUS_PENDING)
-                       ->where('cast_identity_documents.updated_at', '<', $pendingThreshold)
-                       ->where(function ($q3) {
-                           $q3->whereNotNull('cast_identity_documents.image_path_front')
-                              ->orWhereNotNull('cast_identity_documents.image_path_back');
-                       });
-                });
-            })
-            ->select(
-                'cast_identity_documents.*',
-                'cast_profiles.nickname',
-                'cast_profiles.name as profile_name'
-            )
-            ->orderBy('cast_identity_documents.updated_at')
-            ->get();
-
-        foreach ($castDocs as $doc) {
-            $statusCode = (int) $doc->status;
-            $reason = $this->purgeReasonLabel($statusCode);
+        foreach ($candidates['cast_docs'] as $doc) {
+            $reason = $this->purgeReasonLabel((int) $doc->status);
             $nickname = trim((string) ($doc->nickname ?? ''));
             $realName = trim((string) ($doc->profile_name ?? ''));
             $displayName = $nickname !== '' ? $nickname : ($realName !== '' ? $realName : (string) $doc->cast_id);
@@ -675,47 +636,17 @@ class DocumentReviewService
                 'target' => $displayName,
                 'type' => 'キャスト本人確認',
                 'status' => $reason,
-                'date' => $this->formatDateTime($doc->updated_at),
+                'date' => $this->formatDateTime($doc->approved_at ?? $doc->updated_at),
                 'urgency' => 'high',
                 'action' => '削除を検討',
                 'cat_id' => 'purge',
                 'amount' => null,
-                'url' => route('admin.verification.index', [
-                    'focus' => 'cast',
-                    'cast_purge' => '1',
-                ]),
+                'url' => route('admin.purge.index'),
             ];
         }
 
-        // 店舗許可証書類
-        $shopDocs = ShopLicenseDocument::query()
-            ->leftJoin('shop_profiles', 'shop_license_documents.shop_id', '=', 'shop_profiles.shop_id')
-            ->where(function ($q) use ($approvedThreshold, $rejectedThreshold, $pendingThreshold) {
-                $q->where(function ($q2) use ($approvedThreshold) {
-                    $q2->where('shop_license_documents.status', ShopLicenseDocument::STATUS_APPROVED)
-                       ->whereNotNull('shop_license_documents.approved_at')
-                       ->where('shop_license_documents.approved_at', '<', $approvedThreshold)
-                       ->whereNotNull('shop_license_documents.image_path');
-                })->orWhere(function ($q2) use ($rejectedThreshold) {
-                    $q2->where('shop_license_documents.status', ShopLicenseDocument::STATUS_REJECTED)
-                       ->where('shop_license_documents.updated_at', '<', $rejectedThreshold)
-                       ->whereNotNull('shop_license_documents.image_path');
-                })->orWhere(function ($q2) use ($pendingThreshold) {
-                    $q2->where('shop_license_documents.status', ShopLicenseDocument::STATUS_PENDING)
-                       ->where('shop_license_documents.updated_at', '<', $pendingThreshold)
-                       ->whereNotNull('shop_license_documents.image_path');
-                });
-            })
-            ->select(
-                'shop_license_documents.*',
-                'shop_profiles.shop_name'
-            )
-            ->orderBy('shop_license_documents.updated_at')
-            ->get();
-
-        foreach ($shopDocs as $doc) {
-            $statusCode = (int) $doc->status;
-            $reason = $this->purgeReasonLabel($statusCode);
+        foreach ($candidates['shop_docs'] as $doc) {
+            $reason = $this->purgeReasonLabel((int) $doc->status);
             $shopName = trim((string) ($doc->shop_name ?? ''));
             $displayName = $shopName !== '' ? $shopName : (string) $doc->shop_id;
 
@@ -725,15 +656,12 @@ class DocumentReviewService
                 'target' => $displayName,
                 'type' => '店舗許可証',
                 'status' => $reason,
-                'date' => $this->formatDateTime($doc->updated_at),
+                'date' => $this->formatDateTime($doc->approved_at ?? $doc->updated_at),
                 'urgency' => 'high',
                 'action' => '削除を検討',
                 'cat_id' => 'purge',
                 'amount' => null,
-                'url' => route('admin.verification.index', [
-                    'focus' => 'shop',
-                    'shop_purge' => '1',
-                ]),
+                'url' => route('admin.purge.index'),
             ];
         }
 
@@ -759,46 +687,27 @@ class DocumentReviewService
      */
     public function getPurgeCandidateDocuments(): array
     {
-        $now = now();
-        $approvedThreshold = $now->copy()->subDays(self::RETENTION_APPROVED_DAYS);
-        $rejectedThreshold = $now->copy()->subDays(self::RETENTION_REJECTED_DAYS);
-        $pendingThreshold  = $now->copy()->subDays(self::RETENTION_PENDING_DAYS);
+        $approvedThreshold = now()->subDays(self::RETENTION_APPROVED_DAYS);
 
+        // 削除ポリシー: 「承認済み書類のみ・承認から RETENTION_APPROVED_DAYS 日以上経過」
+        // 差戻し・未審査の書類は運用中のため削除しない。
         $castDocs = collect();
         if (Schema::hasTable('cast_identity_documents')) {
             $castDocs = CastIdentityDocument::query()
                 ->leftJoin('cast_profiles', 'cast_identity_documents.cast_id', '=', 'cast_profiles.cast_id')
-                ->where(function ($q) use ($approvedThreshold, $rejectedThreshold, $pendingThreshold) {
-                    $q->where(function ($q2) use ($approvedThreshold) {
-                        $q2->where('cast_identity_documents.status', CastIdentityDocument::STATUS_APPROVED)
-                           ->whereNotNull('cast_identity_documents.approved_at')
-                           ->where('cast_identity_documents.approved_at', '<', $approvedThreshold)
-                           ->where(function ($q3) {
-                               $q3->whereNotNull('cast_identity_documents.image_path_front')
-                                  ->orWhereNotNull('cast_identity_documents.image_path_back');
-                           });
-                    })->orWhere(function ($q2) use ($rejectedThreshold) {
-                        $q2->where('cast_identity_documents.status', CastIdentityDocument::STATUS_REJECTED)
-                           ->where('cast_identity_documents.updated_at', '<', $rejectedThreshold)
-                           ->where(function ($q3) {
-                               $q3->whereNotNull('cast_identity_documents.image_path_front')
-                                  ->orWhereNotNull('cast_identity_documents.image_path_back');
-                           });
-                    })->orWhere(function ($q2) use ($pendingThreshold) {
-                        $q2->where('cast_identity_documents.status', CastIdentityDocument::STATUS_PENDING)
-                           ->where('cast_identity_documents.updated_at', '<', $pendingThreshold)
-                           ->where(function ($q3) {
-                               $q3->whereNotNull('cast_identity_documents.image_path_front')
-                                  ->orWhereNotNull('cast_identity_documents.image_path_back');
-                           });
-                    });
+                ->where('cast_identity_documents.status', CastIdentityDocument::STATUS_APPROVED)
+                ->whereNotNull('cast_identity_documents.approved_at')
+                ->where('cast_identity_documents.approved_at', '<', $approvedThreshold)
+                ->where(function ($q) {
+                    $q->whereNotNull('cast_identity_documents.image_path_front')
+                      ->orWhereNotNull('cast_identity_documents.image_path_back');
                 })
                 ->select(
                     'cast_identity_documents.*',
                     'cast_profiles.nickname',
                     'cast_profiles.name as profile_name'
                 )
-                ->orderBy('cast_identity_documents.updated_at')
+                ->orderBy('cast_identity_documents.approved_at')
                 ->get();
         }
 
@@ -806,27 +715,15 @@ class DocumentReviewService
         if (Schema::hasTable('shop_license_documents')) {
             $shopDocs = ShopLicenseDocument::query()
                 ->leftJoin('shop_profiles', 'shop_license_documents.shop_id', '=', 'shop_profiles.shop_id')
-                ->where(function ($q) use ($approvedThreshold, $rejectedThreshold, $pendingThreshold) {
-                    $q->where(function ($q2) use ($approvedThreshold) {
-                        $q2->where('shop_license_documents.status', ShopLicenseDocument::STATUS_APPROVED)
-                           ->whereNotNull('shop_license_documents.approved_at')
-                           ->where('shop_license_documents.approved_at', '<', $approvedThreshold)
-                           ->whereNotNull('shop_license_documents.image_path');
-                    })->orWhere(function ($q2) use ($rejectedThreshold) {
-                        $q2->where('shop_license_documents.status', ShopLicenseDocument::STATUS_REJECTED)
-                           ->where('shop_license_documents.updated_at', '<', $rejectedThreshold)
-                           ->whereNotNull('shop_license_documents.image_path');
-                    })->orWhere(function ($q2) use ($pendingThreshold) {
-                        $q2->where('shop_license_documents.status', ShopLicenseDocument::STATUS_PENDING)
-                           ->where('shop_license_documents.updated_at', '<', $pendingThreshold)
-                           ->whereNotNull('shop_license_documents.image_path');
-                    });
-                })
+                ->where('shop_license_documents.status', ShopLicenseDocument::STATUS_APPROVED)
+                ->whereNotNull('shop_license_documents.approved_at')
+                ->where('shop_license_documents.approved_at', '<', $approvedThreshold)
+                ->whereNotNull('shop_license_documents.image_path')
                 ->select(
                     'shop_license_documents.*',
                     'shop_profiles.shop_name'
                 )
-                ->orderBy('shop_license_documents.updated_at')
+                ->orderBy('shop_license_documents.approved_at')
                 ->get();
         }
 
@@ -840,16 +737,17 @@ class DocumentReviewService
      *
      * @return array{cast_deleted: int, shop_deleted: int, failed: int}
      */
-    public function purgeAllCandidates(): array
+    public function purgeAllCandidates(?string $batchMarker = null): array
     {
         $candidates = $this->getPurgeCandidateDocuments();
+        $marker = $batchMarker ?: now()->format('YmdHis');
         $castDeleted = 0;
         $shopDeleted = 0;
         $failed = 0;
 
         foreach ($candidates['cast_docs'] as $doc) {
             try {
-                $this->purgeCastDocument((int) $doc->id);
+                $this->purgeCastDocument((int) $doc->id, $marker);
                 $castDeleted++;
             } catch (\Throwable $e) {
                 $failed++;
@@ -861,7 +759,7 @@ class DocumentReviewService
 
         foreach ($candidates['shop_docs'] as $doc) {
             try {
-                $this->purgeShopDocument((int) $doc->id);
+                $this->purgeShopDocument((int) $doc->id, $marker);
                 $shopDeleted++;
             } catch (\Throwable $e) {
                 $failed++;
@@ -871,7 +769,7 @@ class DocumentReviewService
             }
         }
 
-        return ['cast_deleted' => $castDeleted, 'shop_deleted' => $shopDeleted, 'failed' => $failed];
+        return ['cast_deleted' => $castDeleted, 'shop_deleted' => $shopDeleted, 'failed' => $failed, 'batch_marker' => $marker];
     }
 
     /**
@@ -925,11 +823,23 @@ class DocumentReviewService
     /**
      * 本人確認書類を完全削除する（運営による手動削除のみ）。
      * private ディスクの実ファイルも消す。
+     *
+     * 削除ポリシー: 承認済み書類のみ、かつ approved_at から
+     * RETENTION_APPROVED_DAYS 日以上経過していること。
+     * ポリシー違反時は DomainException を投げる。
      */
-    public function purgeCastDocument(int $documentId): void
+    public function purgeCastDocument(int $documentId, ?string $batchMarker = null): void
     {
         $document = CastIdentityDocument::query()->findOrFail($documentId);
         $castId = $document->cast_id;
+
+        $this->assertPurgePolicy((int) $document->status, $document->approved_at, 'cast_identity');
+
+        // 削除前スナップショットを取得（監査ログに残すため）
+        $profile = Schema::hasTable('cast_profiles')
+            ? DB::table('cast_profiles')->where('cast_id', $castId)->first()
+            : null;
+        $displayName = trim((string) ($profile->nickname ?? $profile->name ?? $castId));
 
         foreach (['image_path_front', 'image_path_back'] as $col) {
             $path = $document->getAttribute($col);
@@ -947,19 +857,42 @@ class DocumentReviewService
             }
         }
 
+        $approvedAt = $document->approved_at;
+        $statusAtPurge = (int) $document->status;
+
         $document->delete();
         $this->syncCastLegacyStatus($castId);
+
+        // 監査ログ（document_purge_logs）
+        $this->recordPurgeLog(
+            documentType: 'cast_identity',
+            sourceDocumentId: $documentId,
+            subjectType: 'cast',
+            subjectId: (string) $castId,
+            displayName: $displayName,
+            statusAtPurge: $statusAtPurge,
+            approvedAt: $approvedAt ? (string) $approvedAt : null,
+            batchMarker: $batchMarker,
+        );
     }
 
     /**
      * 店舗許可証書類を完全削除する（運営による手動削除のみ）。
+     * 削除ポリシーは purgeCastDocument と同じ。
      */
-    public function purgeShopDocument(int $documentId): void
+    public function purgeShopDocument(int $documentId, ?string $batchMarker = null): void
     {
         $document = ShopLicenseDocument::query()->findOrFail($documentId);
         $shopId = $document->shop_id;
-        $path = $document->getAttribute('image_path');
 
+        $this->assertPurgePolicy((int) $document->status, $document->approved_at, 'shop_license');
+
+        $shopProfile = Schema::hasTable('shop_profiles')
+            ? DB::table('shop_profiles')->where('shop_id', $shopId)->first()
+            : null;
+        $displayName = trim((string) ($shopProfile->shop_name ?? $shopId));
+
+        $path = $document->getAttribute('image_path');
         if (!empty($path)) {
             $relative = preg_replace('#^private/#', '', (string) $path);
             try {
@@ -972,8 +905,111 @@ class DocumentReviewService
             }
         }
 
+        $approvedAt = $document->approved_at;
+        $statusAtPurge = (int) $document->status;
+
         $document->delete();
         $this->syncShopLegacyStatus($shopId);
+
+        $this->recordPurgeLog(
+            documentType: 'shop_license',
+            sourceDocumentId: $documentId,
+            subjectType: 'shop',
+            subjectId: (string) $shopId,
+            displayName: $displayName,
+            statusAtPurge: $statusAtPurge,
+            approvedAt: $approvedAt ? (string) $approvedAt : null,
+            batchMarker: $batchMarker,
+        );
+    }
+
+    /**
+     * 削除ポリシーの安全チェック。違反時は DomainException を投げる。
+     * 「承認済みステータス」かつ「承認から RETENTION_APPROVED_DAYS 日以上経過」でなければ削除不可。
+     */
+    private function assertPurgePolicy(int $statusCode, mixed $approvedAt, string $docType): void
+    {
+        if ($statusCode !== CastIdentityDocument::STATUS_APPROVED
+            && $docType === 'cast_identity') {
+            throw new \DomainException('この書類は承認済みではないため削除できません（保持期間ポリシー）。');
+        }
+        if ($statusCode !== ShopLicenseDocument::STATUS_APPROVED
+            && $docType === 'shop_license') {
+            throw new \DomainException('この書類は承認済みではないため削除できません（保持期間ポリシー）。');
+        }
+        if (empty($approvedAt)) {
+            throw new \DomainException('承認日時が記録されていないため削除できません（保持期間の起算不可）。');
+        }
+        $threshold = now()->subDays(self::RETENTION_APPROVED_DAYS);
+        if (Carbon::parse((string) $approvedAt)->gte($threshold)) {
+            throw new \DomainException(sprintf(
+                '承認から %d 日以上経過するまで削除できません。',
+                self::RETENTION_APPROVED_DAYS
+            ));
+        }
+    }
+
+    /**
+     * document_purge_logs に監査ログを1件記録する。
+     * テーブル未作成の環境ではログチャネルへ流して落とさない。
+     */
+    private function recordPurgeLog(
+        string $documentType,
+        int $sourceDocumentId,
+        string $subjectType,
+        string $subjectId,
+        string $displayName,
+        int $statusAtPurge,
+        ?string $approvedAt,
+        ?string $batchMarker,
+    ): void {
+        $admin = \Illuminate\Support\Facades\Auth::guard('admin')->user();
+        $row = [
+            'document_type'         => $documentType,
+            'source_document_id'    => $sourceDocumentId,
+            'subject_type'          => $subjectType,
+            'subject_id'            => $subjectId,
+            'subject_display_name'  => mb_substr($displayName, 0, 150),
+            'status_at_purge'       => $statusAtPurge,
+            'approved_at'           => $approvedAt,
+            'reason'                => $this->purgeReasonLabel($statusAtPurge),
+            'deleted_by_admin_id'   => $admin?->id,
+            'deleted_by_email'      => $admin?->email,
+            'batch_marker'          => $batchMarker,
+            'note'                  => null,
+            'created_at'            => now(),
+            'updated_at'            => now(),
+        ];
+
+        try {
+            if (Schema::hasTable('document_purge_logs')) {
+                DB::table('document_purge_logs')->insert($row);
+                return;
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('document_purge_logs への書き込みに失敗しました。', [
+                'source_document_id' => $sourceDocumentId,
+                'exception' => $e->getMessage(),
+            ]);
+        }
+        \Illuminate\Support\Facades\Log::info('[purge-log-fallback]', $row);
+    }
+
+    /**
+     * 直近の削除履歴を取得（画面表示用）。
+     *
+     * @return array<int, object>
+     */
+    public function getRecentPurgeLogs(int $limit = 50): array
+    {
+        if (!Schema::hasTable('document_purge_logs')) {
+            return [];
+        }
+        return DB::table('document_purge_logs')
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get()
+            ->all();
     }
 
     private function syncCastLegacyStatus(string $castId): void

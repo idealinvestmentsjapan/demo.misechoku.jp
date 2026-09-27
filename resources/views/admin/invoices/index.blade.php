@@ -25,8 +25,9 @@
                 'eyebrow' => 'INVOICES',
                 'title' => '請求書発行',
                 'info' => '
-                    <p>キャストからの<strong>入金依頼（店舗承認待ち）</strong>と、<strong>店舗承認後の請求書発行</strong>をまとめて扱います。</p>
-                    <p>入金照合・キャスト振込は「<strong>入金確認・振込</strong>」画面で行ってください。</p>
+                    <p><strong>この画面の役割：</strong>請求書のライフサイクル（発行 → プレビュー → 修正 → 店舗へ送信 → 再送）を扱います。</p>
+                    <p>キャストからの<strong>入金依頼（店舗承認待ち）</strong>、<strong>店舗承認後の発行待ち</strong>、<strong>発行済み案件の送信状況</strong>を一覧で確認できます。</p>
+                    <p>店舗への送信完了後の<strong>入金照合・キャスト振込</strong>は「<strong>入金確認・振込</strong>」画面が担当します。</p>
                 ',
             ])
             @include('admin.parts.operation-achievement', ['operationAchievementRoute' => 'admin.invoices.index'])

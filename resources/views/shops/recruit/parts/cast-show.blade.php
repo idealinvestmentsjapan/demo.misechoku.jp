@@ -61,6 +61,10 @@
     $primaryWageLabel = $regularWageDisp
         ? '本入り時給'
         : ($trialWageDisp ? '体入時給' : ($helpWageDisp ? 'ヘルプ時給' : '時給'));
+
+    // ----- Preview flag (also used by CTA/apply buttons below). Hoisted to top so
+    // the KEEP button in the header can share the same flag. -----
+    $isShopPreview = $isShopPreview ?? empty($forCast);
 @endphp
 
 <div class="pb-6">
@@ -84,9 +88,13 @@
             </div>
         </div>
 
-        {{-- 2. 店名（+ 優良店バッヂ）+ ライク + レビュー/エリア/業種 --}}
-        <div class="mb-4 flex flex-col gap-1.5">
-            <div class="flex items-center justify-between gap-2">
+        {{-- 2. 店名 + 共有/KEEP（インライン）+ レビュー/エリア/業種/閲覧数 =====
+             MyPage と同じ構成：1行目は「店名 + インラインアクション」、
+             2行目は「チップ列 + ml-auto の閲覧数」に集約。
+             KEEP は fav-circle--keep（swipe カードと同じゴールド／aria-pressed 連動）で
+             共通トグル（favorite-quick.js の data-fav-toggle）に載せる。 --}}
+        <div class="mb-4">
+            <div class="flex items-center justify-between gap-3 mb-1.5">
                 <div class="flex items-center gap-2 min-w-0">
                     <h1 class="app-title text-[22px] text-text-main leading-tight truncate min-w-0">{{ $shopName }}</h1>
                     @if($isPremiumShop)
@@ -94,7 +102,27 @@
                         <x-ui.premium-badge class="shrink-0" />
                     @endif
                 </div>
-                <x-ui.view-count :count="$viewCount" class="shrink-0 text-[13px] text-text-main" />
+                <div class="profile-inline-actions shrink-0">
+                    @if(!empty($shareUrlResolved))
+                        @include('partials.share-menu', [
+                            'shareUrl' => $shareUrlResolved,
+                            'shareTitle' => $shareTitleResolved,
+                            'shareText' => $shareTextResolved,
+                            'menuId' => 'recruit-share-menu',
+                        ])
+                    @endif
+                    <button type="button"
+                            @if($isShopPreview) disabled title="プレビュー：求職者はここでキープできます" @endif
+                            class="fav-circle fav-circle--keep {{ $isShopPreview ? 'opacity-70' : '' }}"
+                            aria-label="キープ"
+                            aria-pressed="{{ !empty($recruit['is_kept']) ? 'true' : 'false' }}"
+                            @unless($isShopPreview) data-fav-toggle @endunless
+                            data-item-id="{{ $shop['id'] ?? '' }}"
+                            data-item-type="shop"
+                            data-action="keep">
+                        <i class="fas fa-bookmark" aria-hidden="true"></i>
+                    </button>
+                </div>
             </div>
 
             @php
@@ -109,7 +137,7 @@
             @endif
             <div class="flex items-center gap-1.5 text-text-sub text-[12px] flex-wrap">
                 @if($reviewCount > 0)
-                    {{-- レビュー：タップで明細（SHOP タブ内 REVIEWS）へ --}}
+                    {{-- レビュー：タップで明細（PROFILE タブ内 REVIEWS）へ --}}
                     <button type="button" data-open-shop-reviews
                             class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border border-amber-400/50 bg-amber-400/10 text-[11.5px] font-extrabold text-amber-300">
                         <i class="fas fa-star text-[10px]"></i>{{ number_format($reviewAvg, 1) }}
@@ -130,6 +158,7 @@
                         <i class="fas fa-tag text-[9px]"></i>{{ $industryName }}
                     </span>
                 @endif
+                <x-ui.view-count :count="$viewCount" class="ml-auto text-[12px] text-text-sub" />
             </div>
         </div>
 
@@ -165,69 +194,36 @@
             </div>
         @endif
 
-        {{-- 4. アクション CTA：TALK を最上位に、応募系・KEEP・共有を横に --}}
+        {{-- 4. アクション CTA：応募系（KEEP・共有は名前行のインライン、トークは下部固定バー） --}}
         @php
-            $isShopPreview = $isShopPreview ?? empty($forCast);
             // 店舗プレビュー時は cast.talk.room が member 認証必須のため、リンク先を '#' にして
             // クリックしても遷移しないようにし、プレビュー用の注釈を出す
             $mkTalkHref = function (array $params) use ($isShopPreview) {
                 return $isShopPreview ? '#' : route('cast.talk.room', $params);
             };
         @endphp
-        @if(!empty($ctaShopId))
-            <div class="flex flex-col gap-2 mb-2">
-                {{-- KEEP / 共有 の横一列。トークするは画面下部固定バー（.profile-talk-bar）に一本化 --}}
-                <div class="fav-actions-row" style="margin-bottom: 20px;">
-                    <button type="button"
-                            @if($isShopPreview) disabled title="プレビュー：求職者はここでキープできます" @endif
-                            class="fav-circle fav-circle--keep {{ $isShopPreview ? 'opacity-70' : '' }}"
-                            aria-label="キープ"
-                            aria-pressed="{{ !empty($recruit['is_kept']) ? 'true' : 'false' }}"
-                            @unless($isShopPreview) data-fav-toggle @endunless
-                            data-item-id="{{ $shop['id'] ?? '' }}"
-                            data-item-type="shop"
-                            data-action="keep">
-                        <i class="fas fa-bookmark" aria-hidden="true"></i>
-                        <span class="fav-circle__cap">KEEP</span>
-                    </button>
-                    @if(!empty($shareUrlResolved))
-                        <div class="shrink-0 flex flex-col items-center">
-                            @include('partials.share-menu', [
-                                'shareUrl' => $shareUrlResolved,
-                                'shareTitle' => $shareTitleResolved,
-                                'shareText' => $shareTextResolved,
-                                'menuId' => 'recruit-share-menu',
-                            ])
-                        </div>
-                    @endif
-                </div>
-
-                {{-- 応募系（求人が登録されている場合のみ） --}}
-                @if($ctaHasTrial || $ctaHasHelp)
-                    <div class="flex gap-2">
-                        @if($ctaHasTrial)
-                            <a href="{{ $mkTalkHref(['id' => $ctaShopId, 'job_kind' => 'trial', 'talk_topic' => 'new_hire', 'initiate' => 1]) }}"
-                               @if($isShopPreview) aria-disabled="true" onclick="return false;" @endif
-                               class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-full font-bold text-[12.5px] border border-line-accent/40 bg-accent/10 text-accent-text transition-all duration-300 {{ $isShopPreview ? 'cursor-default' : '' }}">
-                                <i class="fas fa-paper-plane text-[11px]"></i> 新規採用に応募
-                            </a>
-                        @endif
-                        @if($ctaHasHelp)
-                            <a href="{{ $mkTalkHref(['id' => $ctaShopId, 'job_kind' => 'help', 'talk_topic' => 'help', 'initiate' => 1]) }}"
-                               @if($isShopPreview) aria-disabled="true" onclick="return false;" @endif
-                               class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-full font-bold text-[12.5px] border border-line-accent/40 bg-accent/10 text-accent-text transition-all duration-300 {{ $isShopPreview ? 'cursor-default' : '' }}">
-                                <i class="fas fa-hand-holding-heart text-[11px]"></i> ヘルプ応募
-                            </a>
-                        @endif
-                    </div>
+        @if(!empty($ctaShopId) && ($ctaHasTrial || $ctaHasHelp))
+            <div class="flex gap-2 mb-2">
+                @if($ctaHasTrial)
+                    <a href="{{ $mkTalkHref(['id' => $ctaShopId, 'job_kind' => 'trial', 'talk_topic' => 'new_hire', 'initiate' => 1]) }}"
+                       @if($isShopPreview) aria-disabled="true" onclick="return false;" @endif
+                       class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-full font-bold text-[12.5px] border border-line-accent/40 bg-accent/10 text-accent-text transition-all duration-300 {{ $isShopPreview ? 'cursor-default' : '' }}">
+                        <i class="fas fa-paper-plane text-[11px]"></i> 新規採用に応募
+                    </a>
                 @endif
-
-                {{-- LIKE / KEEP / 共有 はトークと同じ横一列（上）に統合済み --}}
+                @if($ctaHasHelp)
+                    <a href="{{ $mkTalkHref(['id' => $ctaShopId, 'job_kind' => 'help', 'talk_topic' => 'help', 'initiate' => 1]) }}"
+                       @if($isShopPreview) aria-disabled="true" onclick="return false;" @endif
+                       class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-full font-bold text-[12.5px] border border-line-accent/40 bg-accent/10 text-accent-text transition-all duration-300 {{ $isShopPreview ? 'cursor-default' : '' }}">
+                        <i class="fas fa-hand-holding-heart text-[11px]"></i> ヘルプ応募
+                    </a>
+                @endif
             </div>
         @endif
     </div>
 
-    {{-- Tabs: GALLERY / JOB / SHOP --}}
+    {{-- Tabs: GALLERY / JOB / PROFILE ─ MyPage（shops/mypage）と同名・同アイコンに揃える。
+         data-tab のキーは既存 JS / スクロール処理との互換のため "shop" のまま保持する。 --}}
     <div data-tabs-scope>
         <div data-tabs class="border-t border-b border-line-accent/40 bg-base/90 backdrop-blur-md sticky top-0 z-10">
             <div class="flex">
@@ -243,8 +239,8 @@
                 </button>
                 <button type="button" data-tab="shop"
                         class="flex-1 py-3 flex flex-col items-center justify-center gap-0.5 transition-colors border-b-2 border-transparent text-text-sub [&.is-active]:text-accent-text [&.is-active]:border-accent">
-                    <i class="fas fa-store text-[14px]"></i>
-                    <span class="app-title text-[10px] tracking-widest">SHOP</span>
+                    <i class="fas fa-address-card text-[14px]"></i>
+                    <span class="app-title text-[10px] tracking-widest">PROFILE</span>
                 </button>
             </div>
         </div>

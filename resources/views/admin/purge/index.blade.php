@@ -19,6 +19,7 @@
         'info' => '
             <p>保持期間ポリシーを過ぎた本人確認・許可証の画像を、<strong>まとめてサーバから外に出して削除する</strong>ための運用画面です。</p>
             <ul>
+                <li>削除対象は <strong>「承認済み」の書類のみ、かつ承認から 30日（1ヶ月）以上経過</strong> したものだけです</li>
                 <li>単発の削除ではなく、定期的にまとめて実施します</li>
                 <li>ワークフロー: <strong>取得（ZIP）→ NAS移動 → サーバから削除</strong></li>
                 <li>削除は復元できません。NAS への移動を確実に行ってから実施してください</li>
@@ -56,7 +57,7 @@
             <div>
                 <span class="admin-detail-meta-row__label">保持期間ポリシー</span>
                 <span class="admin-detail-meta-row__value" style="font-size: 0.78rem; font-weight: 500; line-height: 1.4;">
-                    承認 {{ $retentionPolicy['approved_days'] }}日 / 差戻し {{ $retentionPolicy['rejected_days'] }}日 / 未審査 {{ $retentionPolicy['pending_days'] }}日
+                    承認済みかつ<br>approved_at から <strong>{{ $retentionPolicy['approved_days'] }}日</strong> 経過
                 </span>
             </div>
         </div>
@@ -226,6 +227,61 @@
                                 <td>{{ $statusLabel }}</td>
                                 <td>{{ $reason }}</td>
                                 <td>{{ optional($doc->updated_at)->format('Y-m-d H:i') ?? '—' }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </section>
+
+    {{-- 削除履歴（監査ログ・直近50件） --}}
+    <section class="admin-section">
+        <div class="admin-section__head">
+            <h2 class="admin-section__title">
+                削除履歴
+                <span class="admin-section__title-count">直近 {{ count($recentPurgeLogs) }} 件</span>
+            </h2>
+        </div>
+        @if (empty($recentPurgeLogs))
+            <p class="admin-section__note">
+                まだ削除履歴はありません。
+                @if (!\Illuminate\Support\Facades\Schema::hasTable('document_purge_logs'))
+                    <br>
+                    <i class="fas fa-triangle-exclamation" style="color: var(--status-warning-fg);"></i>
+                    <strong>document_purge_logs テーブルが未作成です。</strong>下記の CREATE TABLE SQL を実行してください。
+                @endif
+            </p>
+        @else
+            <div class="table-wrapper">
+                <table class="admin-table admin-table--wide-nowrap">
+                    <thead>
+                        <tr>
+                            <th>削除日時</th>
+                            <th>種別</th>
+                            <th>対象</th>
+                            <th>元書類ID</th>
+                            <th>承認日</th>
+                            <th>削除理由</th>
+                            <th>実施者</th>
+                            <th>バッチID</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($recentPurgeLogs as $log)
+                            @php
+                                $typeLabel = $log->document_type === 'cast_identity' ? 'キャスト本人確認' : '店舗許可証';
+                                $typeToneClass = $log->document_type === 'cast_identity' ? 'is-info' : 'is-warning';
+                            @endphp
+                            <tr>
+                                <td>{{ $log->created_at ? \Illuminate\Support\Carbon::parse($log->created_at)->format('Y-m-d H:i:s') : '—' }}</td>
+                                <td><span class="admin-status-badge {{ $typeToneClass }}">{{ $typeLabel }}</span></td>
+                                <td>{{ $log->subject_display_name ?: '—' }} <span class="admin-table-sub"><code>{{ $log->subject_id }}</code></span></td>
+                                <td>#{{ $log->source_document_id }}</td>
+                                <td>{{ $log->approved_at ? \Illuminate\Support\Carbon::parse($log->approved_at)->format('Y-m-d') : '—' }}</td>
+                                <td>{{ $log->reason ?: '—' }}</td>
+                                <td>{{ $log->deleted_by_email ?: ($log->deleted_by_admin_id ? '#' . $log->deleted_by_admin_id : '—') }}</td>
+                                <td><code>{{ $log->batch_marker ?: '—' }}</code></td>
                             </tr>
                         @endforeach
                     </tbody>

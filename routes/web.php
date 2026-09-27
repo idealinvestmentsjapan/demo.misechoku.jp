@@ -158,6 +158,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::middleware('admin.permission:operations.deposits')->group(function () {
             Route::get('/deposits/invoice-template/download', [AdminDeposit::class, 'downloadInvoiceTemplate'])->name('deposits.invoice-template.download');
             Route::get('/deposits', [AdminDeposit::class, 'index'])->name('deposits.index');
+            Route::get('/deposits/confirmations', [AdminDeposit::class, 'confirmations'])->name('deposits.confirmations');
+            Route::get('/deposits/transfers', [AdminDeposit::class, 'transfers'])->name('deposits.transfers');
             Route::get('/deposits/{deposit}/invoice', [AdminDeposit::class, 'showInvoice'])->name('deposits.invoice.show');
             Route::get('/deposits/{deposit}/invoice/pdf', [AdminDeposit::class, 'downloadInvoicePdf'])->name('deposits.invoice.pdf');
             Route::post('/deposits/{deposit}/invoice', [AdminDeposit::class, 'issueInvoice'])->name('deposits.invoice.issue');

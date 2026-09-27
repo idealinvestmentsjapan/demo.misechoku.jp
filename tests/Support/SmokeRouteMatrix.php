@@ -24,7 +24,9 @@ final class SmokeRouteMatrix
     {
         return [
             'admin dashboard' => ['admin.dashboard', [], 200],
-            'admin deposits' => ['admin.deposits.index', [], 200],
+            // deposits.index redirects to confirmations; hit the two real screens directly
+            'admin deposits confirmations' => ['admin.deposits.confirmations', [], 200],
+            'admin deposits transfers' => ['admin.deposits.transfers', [], 200],
             'admin sales' => ['admin.sales.index', [], 200],
             'admin masters' => ['admin.masters.index', [], 200],
             'admin shops' => ['admin.shops.index', [], 200],

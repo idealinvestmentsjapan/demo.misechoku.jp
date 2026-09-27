@@ -62,6 +62,7 @@ class PurgeController extends Controller
             'lastDownload'     => $state['download'],
             'lastNasMoved'     => $state['nas_moved'],
             'lastExecute'      => $state['execute'],
+            'recentPurgeLogs'  => $this->documentReviewService->getRecentPurgeLogs(50),
         ]);
     }
 
@@ -212,7 +213,8 @@ class PurgeController extends Controller
                 ->with('error', 'ダウンロード → NAS移動 → 削除 の順で実施してください。NAS移動の記録が見つかりません。');
         }
 
-        $result = $this->documentReviewService->purgeAllCandidates();
+        $batchMarker = now()->format('YmdHis');
+        $result = $this->documentReviewService->purgeAllCandidates($batchMarker);
         $castDeleted = $result['cast_deleted'];
         $shopDeleted = $result['shop_deleted'];
         $failed = $result['failed'];
@@ -221,8 +223,8 @@ class PurgeController extends Controller
         $this->opLog->record(
             self::ACTION_EXECUTE,
             'document_purge_batch',
-            null,
-            sprintf('サーバから削除実行（キャスト%d件・店舗%d件・失敗%d件）', $castDeleted, $shopDeleted, $failed),
+            $batchMarker,
+            sprintf('サーバから削除実行（キャスト%d件・店舗%d件・失敗%d件・batch=%s）', $castDeleted, $shopDeleted, $failed, $batchMarker),
             $result
         );
 

@@ -1,88 +1,117 @@
 /* =====================================================================
-   採用→入金フロー 共通 UI（キャスト / 店舗 両ポータルのケースカード拡張）
-   - アクターバッジ（今誰のボールか）
-   - 現在ステージの説明ストリップ
-   - 停滞警告チップ
+   Recruitment -> deposit flow: shared UI (cast + shop management timelines)
+   - Status accordions (.case-group)
+   - Case-card current-stage strip (.case-now)
+   - Inline stall warning line (.case-card__stall-note)
+   - Unified vertical action menu (.case-card__actions / .case-card__action-item)
    ===================================================================== */
 
-/* ---------- アクターバッジ（カード右上） ----------
-   デザイン方針（2026-09-26 リファイン）:
-   ・背景は極力薄く（塗りは 4% までに抑える）。囲いは細めのボーダーで担保。
-   ・文字は各ロールの「深い方」の色 + font-weight 900 で最大限に目立たせる。
-   ・「あなたの番（--you）」だけは境界にパルスを効かせて緊急度を残す。 */
-.case-card { position: relative; }
-.case-actor {
-    position: absolute;
-    top: 10px;
-    right: 10px;
+/* ---------- Status accordions (label + count + chevron) ---------- */
+.case-group {
+    padding: 0;
+    border-bottom: 1px solid rgba(36, 31, 51, 0.10);
+}
+.case-group:last-of-type { border-bottom: 0; }
+
+.case-group__summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 0;
+    user-select: none;
+    color: #241f33;
+}
+.case-group__summary::-webkit-details-marker { display: none; }
+.case-group__summary:hover { background: rgba(124, 58, 237, 0.03); }
+
+.case-group__label {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: inherit;
+    min-width: 0;
+}
+.case-group__label i { color: #7c3aed; font-size: 0.85rem; flex: 0 0 auto; opacity: 0.9; }
+
+.case-group__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    background: rgba(124, 58, 237, 0.10);
+    color: #5b21b6;
+    font-variant-numeric: tabular-nums;
+    flex: 0 0 auto;
+}
+.case-group__chev {
+    color: rgba(76, 29, 149, 0.45);
+    font-size: 0.82rem;
+    transition: transform .2s ease;
+    flex: 0 0 auto;
+}
+.case-group[open] .case-group__chev { transform: rotate(180deg); }
+
+.case-group__body { padding: 4px 0 14px; }
+.case-group__body .mypage-mini-list { margin: 0; }
+
+/* Variants: hue signals status without competing with per-card content */
+.case-group--action .case-group__label i { color: #b3487e; }
+.case-group--action .case-group__count {
+    background: rgba(214, 112, 162, 0.16);
+    color: #9c2f66;
+}
+.case-group--waiting .case-group__label i { color: #7c3aed; }
+.case-group--waiting .case-group__count {
+    background: rgba(124, 58, 237, 0.10);
+    color: #5b21b6;
+}
+.case-group--done .case-group__label i { color: #059669; }
+.case-group--done .case-group__count {
+    background: rgba(5, 150, 105, 0.12);
+    color: #047857;
+}
+.case-group--rejected .case-group__label i { color: #b91c1c; }
+.case-group--rejected .case-group__count {
+    background: rgba(220, 38, 38, 0.12);
+    color: #b91c1c;
+}
+.case-group--ongoing .case-group__label i { color: #7c3aed; }
+
+/* Dark theme fallback (default) — file is loaded on light pages so this
+   is a safety net for anyone reusing the classes on dark surfaces. */
+body:not(.theme-light):not(.theme-premium-white) .case-group {
+    border-bottom-color: rgba(255, 255, 255, 0.09);
+}
+body:not(.theme-light):not(.theme-premium-white) .case-group__summary { color: #e6dffc; }
+
+/* ---------- Inline stall warning (replaces the old .case-stall pill) ---------- */
+.case-card__stall-note {
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    padding: 3px 10px;
-    border-radius: 999px;
-    font-size: 0.72rem;
-    font-weight: 900;
-    letter-spacing: 0.04em;
-    line-height: 1.25;
-    background: transparent;
-    border: 1px solid transparent;
-    white-space: nowrap;
-    z-index: 2;
+    margin: 0 0 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #b45309;
+    letter-spacing: 0.02em;
 }
-.case-actor i { font-size: 0.66rem; }
-
-/* あなたの番：文字は深いアクセント + 境界に淡いパルス（最重要） */
-.case-actor--you {
-    background: rgba(214, 112, 162, 0.05);
-    color: #9c2f66;
-    border-color: rgba(214, 112, 162, 0.55);
-    animation: case-actor-pulse 2s ease-in-out infinite;
-}
-.case-actor--you i { color: #b3487e; }
-@keyframes case-actor-pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(214, 112, 162, 0.00); }
-    50%      { box-shadow: 0 0 0 4px rgba(214, 112, 162, 0.16); }
-}
-@media (prefers-reduced-motion: reduce) {
-    .case-actor--you { animation: none; }
+.case-card__stall-note i {
+    color: #d97706;
+    font-size: 0.7rem;
 }
 
-/* 店舗の対応待ち */
-.case-actor--shop {
-    background: rgba(124, 58, 237, 0.04);
-    color: #5b21b6;
-    border-color: rgba(124, 58, 237, 0.42);
-}
-.case-actor--shop i { color: #6d28d9; }
-
-/* 運営の対応待ち */
-.case-actor--admin {
-    background: rgba(3, 105, 161, 0.04);
-    color: #075985;
-    border-color: rgba(3, 105, 161, 0.42);
-}
-.case-actor--admin i { color: #0369a1; }
-
-/* キャストの対応待ち（店舗視点） */
-.case-actor--cast {
-    background: rgba(190, 24, 93, 0.04);
-    color: #9d174d;
-    border-color: rgba(190, 24, 93, 0.42);
-}
-.case-actor--cast i { color: #be185d; }
-
-/* 完了 */
-.case-actor--done {
-    background: rgba(5, 150, 105, 0.05);
-    color: #047857;
-    border-color: rgba(5, 150, 105, 0.42);
-}
-.case-actor--done i { color: #059669; }
-
-/* バッジぶんの余白（店名がバッジに食い込まないように） */
-.case-card__head { padding-right: 108px; }
-
-/* ---------- 現在ステージの説明ストリップ ---------- */
+/* ---------- Current-stage description strip ---------- */
 .case-now {
     display: flex;
     align-items: flex-start;
@@ -94,7 +123,7 @@
     border: 1px solid rgba(168, 85, 247, 0.20);
     font-size: 0.74rem;
     line-height: 1.55;
-    color: var(--color-text, #e5dcd7);
+    color: var(--color-text, #241f33);
 }
 .case-now--action {
     background: rgba(214, 112, 162, 0.10);
@@ -110,74 +139,96 @@
     color: var(--gold-light, #8b5cf6);
     font-size: 0.78rem;
 }
-.case-now--action .case-now__icon { color: var(--accent-text, #f0a6c4); }
-.case-now--done .case-now__icon { color: var(--color-success, #6ee7b7); }
+.case-now--action .case-now__icon { color: var(--accent-text, #b3487e); }
+.case-now--done .case-now__icon { color: var(--color-success, #059669); }
 .case-now__body { flex: 1; min-width: 0; }
 .case-now__stage {
     font-weight: 800;
-    color: var(--color-text-header, #fff);
+    color: var(--color-text-header, #241f33);
     margin-right: 6px;
 }
 .case-now__next {
     display: block;
     margin-top: 2px;
     font-size: 0.68rem;
-    color: var(--color-text-muted, #998d88);
+    color: var(--color-text-muted, #6d6685);
 }
 .case-now__next i { font-size: 0.6rem; margin-right: 3px; color: var(--gold, #a78bfa); }
 
-/* ---------- 停滞警告チップ ---------- */
-.case-stall {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    margin-left: 8px;
-    padding: 2px 8px;
-    border-radius: 999px;
-    background: var(--color-warn-bg, rgba(252, 211, 77, 0.14));
-    border: 1px solid var(--color-warn-line, rgba(252, 211, 77, 0.40));
-    color: var(--color-warn, #fcd34d);
-    font-size: 0.62rem;
-    font-weight: 800;
-    letter-spacing: 0.02em;
-    white-space: nowrap;
+/* ---------- Unified vertical action menu ----------
+   All action-items share the same shape (icon square + label + chevron).
+   The primary action for the current status gets --primary, a warmer
+   fill that catches the eye without breaking the shared design. */
+.case-card__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
 }
-.case-stall i { font-size: 0.58rem; }
-
-@media (max-width: 380px) {
-    .case-actor { top: 8px; right: 8px; padding: 3px 9px; font-size: 0.6rem; }
-    .case-card__head { padding-right: 96px; }
-    .case-now { font-size: 0.7rem; }
-}
-
-
-/* ============================================================
-   ケースカード：トーク導線（全幅の明確なボタン 2026-07-20）
-   旧「トークを見る」小テキストリンクの置き換え
-   ============================================================ */
-.case-card__talk-open {
+.case-card__action-item {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 10px;
-    padding: 11px 14px;
+    gap: 12px;
+    width: 100%;
+    padding: 13px 14px;
     border-radius: 12px;
-    background: rgba(124, 58, 237, 0.08);
-    border: 1px solid rgba(124, 58, 237, 0.35);
-    color: #6d28d9;
-    font-size: 0.88rem;
+    background: #ffffff;
+    border: 1px solid rgba(124, 58, 237, 0.22);
+    color: #4c1d95;
+    font-size: 0.9rem;
     font-weight: 700;
     text-decoration: none;
-    transition: background 0.15s ease, border-color 0.15s ease;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    line-height: 1.3;
+    transition: background .15s ease, border-color .15s ease, transform .12s ease;
+    box-sizing: border-box;
 }
-.case-card__talk-open:hover {
-    background: rgba(124, 58, 237, 0.14);
-    border-color: rgba(124, 58, 237, 0.55);
+.case-card__action-item:hover {
+    background: rgba(124, 58, 237, 0.06);
+    border-color: rgba(124, 58, 237, 0.42);
 }
-.case-card__talk-open:active { transform: scale(0.98); }
-.case-card__talk-open-chev {
-    margin-left: auto;
-    font-size: 0.72rem;
-    color: rgba(124, 58, 237, 0.55);
+.case-card__action-item:active { transform: scale(0.99); }
+
+.case-card__action-item__icon {
+    width: 32px;
+    height: 32px;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: rgba(124, 58, 237, 0.10);
+    color: #6d28d9;
+    font-size: 0.86rem;
+}
+.case-card__action-item__label { flex: 1; min-width: 0; }
+.case-card__action-item__chev {
+    color: rgba(124, 58, 237, 0.38);
+    font-size: 0.78rem;
+    flex: 0 0 auto;
+}
+
+/* Primary: same shape, differentiated color signalling "this is the task". */
+.case-card__action-item--primary {
+    background: linear-gradient(135deg, rgba(244, 114, 182, 0.14), rgba(214, 112, 162, 0.20));
+    border-color: rgba(214, 112, 162, 0.55);
+    color: #9c2f66;
+    box-shadow: 0 6px 16px rgba(214, 112, 162, 0.20);
+}
+.case-card__action-item--primary:hover {
+    background: linear-gradient(135deg, rgba(244, 114, 182, 0.22), rgba(214, 112, 162, 0.28));
+    border-color: rgba(214, 112, 162, 0.75);
+}
+.case-card__action-item--primary .case-card__action-item__icon {
+    background: linear-gradient(135deg, #f472b6, #d670a2);
+    color: #ffffff;
+}
+.case-card__action-item--primary .case-card__action-item__chev { color: rgba(214, 112, 162, 0.55); }
+
+@media (max-width: 380px) {
+    .case-card__action-item { padding: 12px 12px; font-size: 0.86rem; gap: 10px; }
+    .case-card__action-item__icon { width: 30px; height: 30px; font-size: 0.82rem; }
+    .case-now { font-size: 0.7rem; }
 }

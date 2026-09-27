@@ -3031,3 +3031,32 @@ CREATE TABLE IF NOT EXISTS `admin_operation_logs` (
   PRIMARY KEY (`id`),
   KEY `admin_operation_logs_admin_id_index` (`admin_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- テーブルの構造 `document_purge_logs`
+-- 書類（本人確認・許可証）の削除履歴。承認済みかつ保持期間超過の書類を
+-- 削除した際に、どの書類を誰がいつ削除したかを追跡できるようにするための監査ログ。
+-- admin_operation_logs とは別テーブルにして、書類ごとに1行を残す前提。
+--
+
+CREATE TABLE IF NOT EXISTS `document_purge_logs` (
+  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
+  `document_type` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'cast_identity / shop_license',
+  `source_document_id` bigint UNSIGNED NOT NULL COMMENT '削除元の書類ID',
+  `subject_type` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'cast / shop',
+  `subject_id` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '対象のキャストID / 店舗ID',
+  `subject_display_name` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status_at_purge` tinyint NOT NULL DEFAULT '0' COMMENT '削除時点のステータス',
+  `approved_at` datetime DEFAULT NULL COMMENT '承認日時のスナップショット',
+  `reason` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '削除理由（保持期間ラベル）',
+  `deleted_by_admin_id` bigint UNSIGNED DEFAULT NULL COMMENT '実施した運営アカウントID',
+  `deleted_by_email` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `batch_marker` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '同一バッチをグルーピングする識別子',
+  `note` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `document_purge_logs_doc_idx` (`document_type`,`source_document_id`),
+  KEY `document_purge_logs_subject_idx` (`subject_type`,`subject_id`),
+  KEY `document_purge_logs_batch_idx` (`batch_marker`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

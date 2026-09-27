@@ -18,17 +18,72 @@ class DepositController extends Controller
     }
 
     /**
-     * 入金・振込管理一覧
+     * 旧「入金確認・振込」画面。現在は「入金確認」と「キャスト振込」に分割済み。
+     * 既存リンク（notifications, tasks 等）互換のため index は入金確認へリダイレクト。
      */
     public function index()
     {
+        return redirect()->route('admin.deposits.confirmations');
+    }
+
+    /**
+     * 入金確認画面：店舗からの入金報告を銀行入金と照合する。
+     * 対象データ = 請求書送信済みで、かつ 店舗入金確認 段階以下（STATUS_INVOICE_ISSUED / SHOP_PAYMENT_REPORTED）。
+     * 直近の完了案件はコンテキスト参照として少数だけ含める（デフォルトフィルタで隠す）。
+     */
+    public function confirmations()
+    {
         $dashboard = $this->billingManagementService->getAdminBillingDashboard();
-        $exclude = [
-            BillingManagementService::STATUS_CAST_REQUESTED,
-            BillingManagementService::STATUS_SHOP_APPROVED,
+        $allSent = collect($dashboard['deposits'])
+            ->filter(fn (array $d) => !empty($d['invoice_sent_at']))
+            ->values();
+
+        // Waiting / verifying items (primary work) + a short window of recent confirmed cases for context.
+        $primary = $allSent->whereIn('status_code', [
+            BillingManagementService::STATUS_INVOICE_ISSUED,
+            BillingManagementService::STATUS_SHOP_PAYMENT_REPORTED,
+        ]);
+        $recentlyConfirmed = $allSent
+            ->where('status_code', '>=', BillingManagementService::STATUS_SHOP_PAYMENT_CONFIRMED)
+            ->sortByDesc('shop_payment_confirmed_at')
+            ->take(10);
+        $deposits = $primary->merge($recentlyConfirmed)->values()->all();
+
+        $summary = [
+            'payment_confirmation_pending' => $primary
+                ->where('status_code', BillingManagementService::STATUS_SHOP_PAYMENT_REPORTED)
+                ->count(),
+            'awaiting_shop_payment' => $primary
+                ->where('status_code', BillingManagementService::STATUS_INVOICE_ISSUED)
+                ->count(),
+            'invoice_total' => $primary->sum('invoice_amount'),
+            'recent_confirmed' => $recentlyConfirmed->count(),
         ];
+
+        return view('admin.deposit.confirmations', [
+            'deposits' => $deposits,
+            'summary' => $summary,
+            'adminBank' => $this->billingManagementService->getAdminBankAccount(),
+        ]);
+    }
+
+    /**
+     * キャスト振込画面：店舗入金確認済みの案件をキャストに振込む。
+     * 対象データ = STATUS_SHOP_PAYMENT_CONFIRMED 以上（振込・完了フェーズ）。
+     */
+    public function transfers()
+    {
+        $dashboard = $this->billingManagementService->getAdminBillingDashboard();
         $deposits = collect($dashboard['deposits'])
-            ->reject(fn (array $d) => in_array($d['status_code'], $exclude, true))
+            ->filter(fn (array $d) => !empty($d['invoice_sent_at'])
+                && $d['status_code'] >= BillingManagementService::STATUS_SHOP_PAYMENT_CONFIRMED)
+            ->map(function (array $d) {
+                // Attach cast bank details so the transfer modal can copy account info
+                // straight into net banking. Missing bank means the admin can't proceed.
+                $d['cast_bank'] = $this->billingManagementService
+                    ->getCastBankAccountForAdmin((string) ($d['cast_id'] ?? ''));
+                return $d;
+            })
             ->values()
             ->all();
 
@@ -47,13 +102,14 @@ class DepositController extends Controller
 
         $ds = collect($deposits);
         $summary = [
-            'payment_confirmation_pending' => $ds->where('status_code', BillingManagementService::STATUS_SHOP_PAYMENT_REPORTED)->count(),
             'cast_transfer_pending' => $ds->where('status_code', BillingManagementService::STATUS_SHOP_PAYMENT_CONFIRMED)->count(),
+            'in_transit' => $ds->where('status_code', BillingManagementService::STATUS_CAST_TRANSFERRED)->count(),
+            'completed_recent' => $ds->where('status_code', '>=', BillingManagementService::STATUS_COMPLETED)->count(),
             'invoice_total' => $ds->sum('invoice_amount'),
             'unconfirmed_cast_over_7days' => $unconfirmedOver7,
         ];
 
-        return view('admin.deposit.index', [
+        return view('admin.deposit.transfers', [
             'deposits' => $deposits,
             'summary' => $summary,
             'adminBank' => $this->billingManagementService->getAdminBankAccount(),

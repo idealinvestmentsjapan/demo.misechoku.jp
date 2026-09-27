@@ -216,14 +216,13 @@ body.theme-premium-white .mypage-menu-card > span:last-child {
 body.theme-premium-white .mypage-tile__sub {
     color: var(--pw-text-mute) !important;
 }
-body.theme-premium-white .mypage-tile__badge {
-    background: linear-gradient(135deg, var(--pw-violet-2), var(--pw-violet)) !important;
-    color: #ffffff !important;
-    box-shadow: 0 2px 6px rgba(76, 29, 149, 0.30) !important;
-}
+/* Premium White でも「未済件数バッヂ」は accent 調和のローズで統一（ui-consistency §5）。
+   紫グラデや赤グラデはトーンの主張が強すぎたため 2026-09-27 に廃止。 */
+body.theme-premium-white .mypage-tile__badge,
 body.theme-premium-white .mypage-tile__badge--urgent {
-    background: linear-gradient(135deg, #f87171, #dc2626) !important;
+    background: #d94974 !important;
     color: #ffffff !important;
+    box-shadow: none !important;
 }
 
 /* mypage-alert（本人確認未提出などの警告帯） */
@@ -495,6 +494,30 @@ body.theme-premium-white .fav-circle:hover {
 }
 body.theme-premium-white .fav-circle__cap {
     color: var(--pw-text-sub) !important;
+}
+/* KEEP variant: SWIPE カードと同じゴールドを白面でも維持する。
+   汎用 .fav-circle 上書きが !important でゴールドを潰していたため、
+   より詳細度の高い keep 変種を !important 付きで再定義してクリック時の
+   状態変化（aria-pressed）が視覚的に反映されるようにする。 */
+body.theme-premium-white .fav-circle--keep {
+    background: #ffffff !important;
+    border-color: rgba(227, 185, 74, 0.55) !important;
+    color: #b8860b !important;
+    box-shadow: 0 2px 8px rgba(227, 185, 74, 0.18) !important;
+}
+body.theme-premium-white .fav-circle--keep:hover {
+    background: #fffbeb !important;
+    border-color: rgba(227, 185, 74, 0.9) !important;
+    color: #8a6508 !important;
+}
+body.theme-premium-white .fav-circle--keep[aria-pressed="true"] {
+    background: linear-gradient(135deg, #f6d36a, #e3b94a) !important;
+    border-color: rgba(246, 211, 106, 0.95) !important;
+    color: #1a0f00 !important;
+    box-shadow: 0 0 12px rgba(246, 211, 106, 0.45) !important;
+}
+body.theme-premium-white .fav-circle--keep[aria-pressed="true"]:hover {
+    background: linear-gradient(135deg, #ffe08a, #eec55b) !important;
 }
 /* インライン style の白・薄グレー文字も受け止める */
 body.theme-premium-white main [style*="color:#fff"],

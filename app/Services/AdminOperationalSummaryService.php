@@ -37,6 +37,9 @@ class AdminOperationalSummaryService
         // "運営の対応は不要", so they must not inflate the "要対応" badge.
         return [
             'admin.invoices.index' => (int) ($s['invoice_pending'] ?? 0),
+            'admin.deposits.confirmations' => (int) $s['payment_confirmation_pending'],
+            'admin.deposits.transfers' => (int) $s['cast_transfer_pending'],
+            // Legacy key kept in case some caller still references it.
             'admin.deposits.index' => (int) $s['payment_confirmation_pending'] + (int) $s['cast_transfer_pending'],
             'admin.verification.index' => (int) $v['cast_pending'] + (int) $v['shop_pending'],
             'admin.support-inquiries.index' => $this->getPendingInquiryCount(),
@@ -50,9 +53,15 @@ class AdminOperationalSummaryService
      */
     public function getOperationAchievementCounts(): array
     {
+        // Deposits are split into two screens (入金確認 / キャスト振込) — surface the same
+        // "completed deposit flows total" on each so the operation-achievement badge
+        // consistently reflects the running total.
+        $depositTotal = $this->countDepositFlowsCompletedTotal();
         return [
             'admin.invoices.index' => $this->countInvoicesIssuedTotal(),
-            'admin.deposits.index' => $this->countDepositFlowsCompletedTotal(),
+            'admin.deposits.index' => $depositTotal,
+            'admin.deposits.confirmations' => $depositTotal,
+            'admin.deposits.transfers' => $depositTotal,
             'admin.verification.index' => $this->countVerificationProcessedTotal(),
             'admin.support-inquiries.index' => $this->countInquiriesResolvedTotal(),
         ];
@@ -197,7 +206,7 @@ class AdminOperationalSummaryService
                 'time_label' => '要フォロー',
                 'icon' => 'fa-triangle-exclamation',
                 'class' => 'is-danger',
-                'url' => route('admin.deposits.index'),
+                'url' => route('admin.deposits.transfers'),
                 'sort' => 920,
             ];
         }
@@ -291,12 +300,23 @@ class AdminOperationalSummaryService
             }
         }
 
+        // Route the task URL to the appropriate operation screen based on status:
+        //   確認フェーズ（照合待ち・報告前）→ 入金確認
+        //   振込フェーズ（confirmed 以降）    → キャスト振込
+        //   その他                             → 入金確認（デフォルト）
+        $statusCode = (int) ($task['status_code'] ?? 0);
+        $defaultUrl = route(
+            $statusCode >= BillingManagementService::STATUS_SHOP_PAYMENT_CONFIRMED
+                ? 'admin.deposits.transfers'
+                : 'admin.deposits.confirmations'
+        );
+
         return [
             'title' => $title,
             'time_label' => $timeLabel,
-            'icon' => $this->billingTaskIcon((int) ($task['status_code'] ?? 0)),
+            'icon' => $this->billingTaskIcon($statusCode),
             'class' => $class,
-            'url' => $task['task_url'] ?? route('admin.deposits.index') . ($id > 0 ? '#deposit-' . $id : ''),
+            'url' => $task['task_url'] ?? $defaultUrl,
             'sort' => $sort,
         ];
     }

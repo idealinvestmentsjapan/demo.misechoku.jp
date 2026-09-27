@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="{{ asset('assets/css/recruitment.css') }}?v=20260801-btn-rules">
 <link rel="stylesheet" href="{{ asset('assets/css/mypage.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/css/management.css') }}?v=20260508">
-<link rel="stylesheet" href="{{ asset('assets/css/case-flow.css') }}?v=20260720-talk-open">
+<link rel="stylesheet" href="{{ asset('assets/css/case-flow.css') }}?v=20260927-accordion">
 <style>
     /* ========================================================
        採用・入金 統合タイムライン（店舗側）
@@ -14,31 +14,7 @@
     .shop-management-shell { padding: 0 16px 16px; }
 
     /* 固定ヘッダー分のアンカー余白 */
-    .mypage-stage-heading, .case-card { scroll-margin-top: calc(var(--header-height, 60px) + 12px); }
-
-    /* 絞り込みチップ（ダッシュボード数値カードは廃止）
-       2026-09-26: 大きすぎたため縮小 + アクティブ塗りを控えめに */
-    .case-filter { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
-    .case-filter__chip {
-        display: inline-flex; align-items: center; gap: 5px;
-        padding: 5px 12px; border-radius: 999px;
-        font-size: 0.74rem; font-weight: 700; font-family: inherit;
-        background: transparent; border: 1px solid rgba(124, 58, 237, 0.30);
-        color: #5b21b6; cursor: pointer; line-height: 1.3;
-        transition: background .15s, color .15s, border-color .15s;
-    }
-    .case-filter__chip:hover { background: rgba(124, 58, 237, 0.05); }
-    .case-filter__chip.is-active {
-        background: rgba(124, 58, 237, 0.10);
-        border-color: rgba(124, 58, 237, 0.55);
-        color: #4c1d95;
-    }
-    .case-filter__num {
-        min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px;
-        background: #ef4444; color: #ffffff;
-        font-size: 0.62rem; font-weight: 800; line-height: 16px; text-align: center;
-        font-variant-numeric: tabular-nums;
-    }
+    .case-group, .case-card { scroll-margin-top: calc(var(--header-height, 60px) + 12px); }
 
     .case-card {
         background: #ffffff;
@@ -132,69 +108,6 @@
     }
     .case-card__highlight i { color: var(--gold); margin-right: 4px; font-size: 0.66rem; }
 
-    .case-card__invoice-link-row {
-        margin: 8px 0 0; padding-top: 8px;
-        border-top: 1px dashed var(--color-border);
-    }
-    .case-card__invoice-link {
-        display: inline-flex; align-items: center; gap: 6px;
-        font-size: 0.74rem; padding: 6px 12px; border-radius: 999px;
-        background: rgba(168, 85, 247, 0.08); border: 1px solid var(--color-border-strong);
-        color: var(--gold-light); text-decoration: none;
-    }
-    .case-card__invoice-link:hover { background: rgba(168, 85, 247, 0.16); color: var(--color-text-header); }
-
-    .case-card__action-row {
-        display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
-        margin-top: 10px; padding-top: 10px;
-        border-top: 1px dashed var(--color-border);
-    }
-    .case-card__waiting {
-        font-size: 0.74rem; color: var(--color-text-muted);
-        display: inline-flex; align-items: center; gap: 6px;
-    }
-    .case-card__waiting i { color: var(--gold); }
-    /* 主要アクション：ひと回り大きく・グラデ＋アクセントグローで最優先の操作として目立たせる */
-    .case-card__action-btn {
-        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-        padding: 12px 20px; border-radius: 999px; min-height: 46px;
-        background: linear-gradient(135deg, var(--accent-grad-from, #a78bfa), var(--accent-grad-to, #7c3aed));
-        color: var(--on-accent-strong, #ffffff); border: 0; font-weight: 800; font-size: 0.92rem; cursor: pointer;
-        box-shadow: 0 8px 20px rgba(var(--accent-rgb, 139, 92, 246), 0.38), inset 0 1px 0 rgba(255,255,255,.28), inset 0 -1px 0 rgba(0,0,0,.15);
-        margin-left: auto;
-        transition: filter .15s, transform .12s, box-shadow .15s;
-    }
-    .case-card__action-btn:hover { filter: brightness(1.07); box-shadow: 0 10px 26px rgba(var(--accent-rgb, 139, 92, 246), 0.50), inset 0 1px 0 rgba(255,255,255,.28); }
-    .case-card__action-btn:active { transform: scale(.97); box-shadow: 0 3px 8px rgba(var(--accent-rgb, 139, 92, 246), .35), inset 0 2px 4px rgba(0,0,0,.2); }
-    .case-card__view-talk {
-        display: inline-flex; align-items: center; gap: 4px;
-        font-size: 0.74rem; color: var(--color-text-muted); text-decoration: none;
-    }
-    .case-card__view-talk:hover { color: var(--color-text-header); text-decoration: underline; }
-    .case-card__waiting--done { color: var(--color-success); }
-    .case-card__waiting--done i { color: var(--color-success); }
-
-    /* セクション見出し：ラベル＋ホライズンの構成（cast 側と同じ） */
-    .mypage-stage-heading {
-        margin: 28px 0 12px;
-        font-size: 0.72rem; font-weight: 800;
-        color: var(--accent-text, #f0a6c4); letter-spacing: 0.14em; text-transform: uppercase;
-        display: flex; align-items: center; gap: 10px;
-    }
-    .mypage-stage-heading i {
-        color: var(--accent-text, #f0a6c4);
-        font-size: 0.7rem;
-        flex-shrink: 0;
-        opacity: 0.85;
-    }
-    .mypage-stage-heading::after {
-        content: '';
-        flex: 1 1 auto;
-        height: 1px;
-        background: linear-gradient(to right, rgba(var(--accent-rgb, 214, 112, 162), 0.35), transparent);
-        opacity: 0.6;
-    }
-
     /* 進行中／不採用の応募リスト（mini） */
     .mypage-mini-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
     .mypage-mini-row {
@@ -279,23 +192,15 @@
         $hiredCases = $hiredCases ?? [];
         $ongoingApplications = $ongoingApplications ?? [];
         $rejectedApplications = $rejectedApplications ?? [];
-        // Actionable cases first, preserve original relative order otherwise (stable sort via sortBy).
-        $activeCases = collect($hiredCases)
-            ->filter(fn ($c) => empty($c['is_completed']))
-            ->sortBy(fn ($c) => empty($c['actionable']) ? 1 : 0)
+        // Split active cases into actionable (need your action) and waiting-on-others.
+        $actionCases = collect($hiredCases)
+            ->filter(fn ($c) => empty($c['is_completed']) && !empty($c['actionable']))
+            ->values();
+        $waitingCases = collect($hiredCases)
+            ->filter(fn ($c) => empty($c['is_completed']) && empty($c['actionable']))
             ->values();
         $completedCases = collect($hiredCases)->filter(fn ($c) => !empty($c['is_completed']))->values();
-        $actionableCount = $activeCases->filter(fn ($c) => !empty($c['actionable']))->count();
     @endphp
-
-    {{-- 絞り込みチップ（要対応/待ち/完了） --}}
-    <div class="case-filter" role="group" aria-label="案件の絞り込み">
-        <button type="button" class="case-filter__chip is-active" data-case-filter="all">すべて</button>
-        <button type="button" class="case-filter__chip" data-case-filter="action">
-            要対応@if($actionableCount > 0)<span class="case-filter__num">{{ $actionableCount }}</span>@endif
-        </button>
-
-    </div>
 
     @if(session('status'))
         <p class="management-summary-note">{{ session('status') }}</p>
@@ -304,70 +209,109 @@
         <p class="management-summary-note" style="color:#fca5a5; background: rgba(220,38,38,0.12); border-color: rgba(220,38,38,0.4);">{{ session('error') }}</p>
     @endif
 
-    @if($activeCases->isNotEmpty())
-        <section data-case-section>
-            <h2 class="mypage-stage-heading" id="section-active-cases"><i class="fas fa-fire"></i> 進行中の案件</h2>
-            @foreach($activeCases as $case)
-                @include('shops.mypage._case_card', ['case' => $case])
-            @endforeach
-        </section>
+    @if($actionCases->isNotEmpty())
+        <details class="case-group case-group--action" data-case-group="action" open>
+            <summary class="case-group__summary">
+                <span class="case-group__label"><i class="fas fa-bolt"></i>要対応</span>
+                <span class="case-group__count">{{ $actionCases->count() }}</span>
+                <span class="case-group__chev"><i class="fas fa-chevron-down"></i></span>
+            </summary>
+            <div class="case-group__body">
+                @foreach($actionCases as $case)
+                    @include('shops.mypage._case_card', ['case' => $case])
+                @endforeach
+            </div>
+        </details>
     @endif
 
-    @if($completedCases->isNotEmpty())
-        <section data-case-section>
-            <h2 class="mypage-stage-heading" id="section-completed-cases"><i class="fas fa-check-circle"></i> 完了した案件</h2>
-            @foreach($completedCases as $case)
-                @include('shops.mypage._case_card', ['case' => $case])
-            @endforeach
-        </section>
+    @if($waitingCases->isNotEmpty())
+        <details class="case-group case-group--waiting" data-case-group="waiting" {{ $actionCases->isEmpty() ? 'open' : '' }}>
+            <summary class="case-group__summary">
+                <span class="case-group__label"><i class="fas fa-hourglass-half"></i>進行中（相手の対応待ち）</span>
+                <span class="case-group__count">{{ $waitingCases->count() }}</span>
+                <span class="case-group__chev"><i class="fas fa-chevron-down"></i></span>
+            </summary>
+            <div class="case-group__body">
+                @foreach($waitingCases as $case)
+                    @include('shops.mypage._case_card', ['case' => $case])
+                @endforeach
+            </div>
+        </details>
     @endif
 
     @if(!empty($ongoingApplications))
-        <h2 class="mypage-stage-heading"><i class="fas fa-comments"></i> 選考中・やり取り中</h2>
-        <ul class="mypage-mini-list">
-            @foreach($ongoingApplications as $app)
-                <a href="{{ !empty($app['cast_id']) ? route('shop.talk.room', ['id' => $app['cast_id'], 'talk_topic' => 'other', 'initiate' => 1]) : '#' }}" class="mypage-mini-row">
-                    @if(!empty($app['cast_avatar_url']))
-                        <img src="{{ $app['cast_avatar_url'] }}" alt="" class="mypage-mini-row__avatar">
-                    @else
-                        <span class="mypage-mini-row__avatar-fallback"><i class="fas fa-user"></i></span>
-                    @endif
-                    <span class="mypage-mini-row__name">
-                        {{ $app['cast_name'] }}
-                        @if(!empty($app['job_kind_label']))
-                            <span class="mypage-mini-row__sub">／{{ $app['job_kind_label'] }}</span>
-                        @endif
-                    </span>
-                    <span class="mypage-mini-row__status {{ !empty($app['is_decision_overdue']) ? 'is-overdue' : '' }}">
-                        {{ $app['status_display_label'] ?? $app['status_label'] ?? '' }}
-                    </span>
-                    <i class="fas fa-chevron-right mypage-mini-row__chev"></i>
-                </a>
-            @endforeach
-        </ul>
+        <details class="case-group case-group--ongoing" data-case-group="ongoing">
+            <summary class="case-group__summary">
+                <span class="case-group__label"><i class="fas fa-comments"></i>選考中・やり取り中</span>
+                <span class="case-group__count">{{ count($ongoingApplications) }}</span>
+                <span class="case-group__chev"><i class="fas fa-chevron-down"></i></span>
+            </summary>
+            <div class="case-group__body">
+                <ul class="mypage-mini-list">
+                    @foreach($ongoingApplications as $app)
+                        <a href="{{ !empty($app['cast_id']) ? route('shop.talk.room', ['id' => $app['cast_id'], 'talk_topic' => 'other', 'initiate' => 1]) : '#' }}" class="mypage-mini-row">
+                            @if(!empty($app['cast_avatar_url']))
+                                <img src="{{ $app['cast_avatar_url'] }}" alt="" class="mypage-mini-row__avatar">
+                            @else
+                                <span class="mypage-mini-row__avatar-fallback"><i class="fas fa-user"></i></span>
+                            @endif
+                            <span class="mypage-mini-row__name">
+                                {{ $app['cast_name'] }}
+                                @if(!empty($app['job_kind_label']))
+                                    <span class="mypage-mini-row__sub">／{{ $app['job_kind_label'] }}</span>
+                                @endif
+                            </span>
+                            <i class="fas fa-chevron-right mypage-mini-row__chev"></i>
+                        </a>
+                    @endforeach
+                </ul>
+            </div>
+        </details>
+    @endif
+
+    @if($completedCases->isNotEmpty())
+        <details class="case-group case-group--done" data-case-group="done">
+            <summary class="case-group__summary">
+                <span class="case-group__label"><i class="fas fa-check-circle"></i>完了した案件</span>
+                <span class="case-group__count">{{ $completedCases->count() }}</span>
+                <span class="case-group__chev"><i class="fas fa-chevron-down"></i></span>
+            </summary>
+            <div class="case-group__body">
+                @foreach($completedCases as $case)
+                    @include('shops.mypage._case_card', ['case' => $case])
+                @endforeach
+            </div>
+        </details>
     @endif
 
     @if(!empty($rejectedApplications))
-        <h2 class="mypage-stage-heading"><i class="fas fa-times-circle"></i> 不採用となった応募</h2>
-        <ul class="mypage-mini-list">
-            @foreach($rejectedApplications as $app)
-                <a href="{{ !empty($app['cast_id']) ? route('shop.talk.room', ['id' => $app['cast_id'], 'talk_topic' => 'other', 'initiate' => 1]) : '#' }}" class="mypage-mini-row">
-                    @if(!empty($app['cast_avatar_url']))
-                        <img src="{{ $app['cast_avatar_url'] }}" alt="" class="mypage-mini-row__avatar">
-                    @else
-                        <span class="mypage-mini-row__avatar-fallback"><i class="fas fa-user"></i></span>
-                    @endif
-                    <span class="mypage-mini-row__name">
-                        {{ $app['cast_name'] }}
-                        @if(!empty($app['job_kind_label']))
-                            <span class="mypage-mini-row__sub">／{{ $app['job_kind_label'] }}</span>
-                        @endif
-                    </span>
-                    <span class="mypage-mini-row__status is-rejected">{{ $app['status_display_label'] ?? $app['status_label'] ?? '' }}</span>
-                    <i class="fas fa-chevron-right mypage-mini-row__chev"></i>
-                </a>
-            @endforeach
-        </ul>
+        <details class="case-group case-group--rejected" data-case-group="rejected">
+            <summary class="case-group__summary">
+                <span class="case-group__label"><i class="fas fa-times-circle"></i>不採用となった応募</span>
+                <span class="case-group__count">{{ count($rejectedApplications) }}</span>
+                <span class="case-group__chev"><i class="fas fa-chevron-down"></i></span>
+            </summary>
+            <div class="case-group__body">
+                <ul class="mypage-mini-list">
+                    @foreach($rejectedApplications as $app)
+                        <a href="{{ !empty($app['cast_id']) ? route('shop.talk.room', ['id' => $app['cast_id'], 'talk_topic' => 'other', 'initiate' => 1]) : '#' }}" class="mypage-mini-row">
+                            @if(!empty($app['cast_avatar_url']))
+                                <img src="{{ $app['cast_avatar_url'] }}" alt="" class="mypage-mini-row__avatar">
+                            @else
+                                <span class="mypage-mini-row__avatar-fallback"><i class="fas fa-user"></i></span>
+                            @endif
+                            <span class="mypage-mini-row__name">
+                                {{ $app['cast_name'] }}
+                                @if(!empty($app['job_kind_label']))
+                                    <span class="mypage-mini-row__sub">／{{ $app['job_kind_label'] }}</span>
+                                @endif
+                            </span>
+                            <i class="fas fa-chevron-right mypage-mini-row__chev"></i>
+                        </a>
+                    @endforeach
+                </ul>
+            </div>
+        </details>
     @endif
 
     @if(empty($hiredCases) && empty($ongoingApplications) && empty($rejectedApplications))
@@ -462,34 +406,19 @@ document.addEventListener('DOMContentLoaded', function () {
     var approveModal = document.getElementById('shop-approve-modal');
     var payModal = document.getElementById('shop-pay-modal');
 
-    // 絞り込みチップ：要対応 / 待ち / 完了 でケースカードをフィルタ
-    document.querySelectorAll('[data-case-filter]').forEach(function (chip) {
-        chip.addEventListener('click', function () {
-            var mode = chip.getAttribute('data-case-filter');
-            document.querySelectorAll('[data-case-filter]').forEach(function (c) {
-                c.classList.toggle('is-active', c === chip);
-            });
-            document.querySelectorAll('.case-card[data-case-state]').forEach(function (card) {
-                var st = card.getAttribute('data-case-state');
-                card.style.display = (mode === 'all' || st === mode) ? '' : 'none';
-            });
-            // 表示中カードが1枚もないセクションは見出しごと隠す
-            document.querySelectorAll('[data-case-section]').forEach(function (sec) {
-                var visible = Array.prototype.some.call(
-                    sec.querySelectorAll('.case-card[data-case-state]'),
-                    function (c) { return c.style.display !== 'none'; }
-                );
-                sec.style.display = visible ? '' : 'none';
-            });
+    // Pipeline: center the current step on load. Runs on details[open] change
+    // so newly-opened accordions get the scroll adjustment too.
+    function centerPipelines(root) {
+        (root || document).querySelectorAll('.case-pipeline').forEach(function (p) {
+            var cur = p.querySelector('.is-current') || p.querySelector('.case-pipeline__step.is-done:last-of-type');
+            if (cur) {
+                p.scrollLeft = Math.max(0, cur.offsetLeft - (p.clientWidth / 2) + (cur.clientWidth / 2));
+            }
         });
-    });
-
-    // 進行ステータスバー：現在ステップが中央に来るよう初期スクロール
-    document.querySelectorAll('.case-pipeline').forEach(function (p) {
-        var cur = p.querySelector('.is-current') || p.querySelector('.case-pipeline__step.is-done:last-of-type');
-        if (cur) {
-            p.scrollLeft = Math.max(0, cur.offsetLeft - (p.clientWidth / 2) + (cur.clientWidth / 2));
-        }
+    }
+    centerPipelines(document);
+    document.querySelectorAll('.case-group').forEach(function (g) {
+        g.addEventListener('toggle', function () { if (g.open) centerPipelines(g); });
     });
 
     function openModal(el) { if (el) { el.removeAttribute('hidden'); document.body.style.overflow = 'hidden'; } }

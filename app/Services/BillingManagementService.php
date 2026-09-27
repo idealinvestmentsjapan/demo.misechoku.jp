@@ -89,6 +89,15 @@ class BillingManagementService
         $this->saveHolderBankAccount(BankAccount::HOLDER_SYSTEM_ACCOUNT, $this->resolveAdminHolderId(), $data);
     }
 
+    /**
+     * Public normalized form of the cast's bank account for admin UI (transfer modal etc).
+     * Returns a fixed-shape array with `exists` = false when the cast has no bank on file.
+     */
+    public function getCastBankAccountForAdmin(string $castId): array
+    {
+        return $this->normalizeBankAccount($this->getCastBankAccount($castId));
+    }
+
     public function getCastBankAccount(string $castId): ?object
     {
         return $this->getHolderBankAccount(BankAccount::HOLDER_CAST, $castId);

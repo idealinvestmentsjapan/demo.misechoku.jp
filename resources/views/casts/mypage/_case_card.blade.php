@@ -1,4 +1,7 @@
-{{-- 採用→入金 を一気通貫で見せるケースカード --}}
+{{-- Case card (cast side): recruitment -> deposit unified timeline row.
+     Status is expressed by the enclosing accordion group. The action menu
+     stacks all rows in the same shape; the operational task for the current
+     status (bonus request / receipt confirmation) is highlighted with --primary. --}}
 @php
     $stages = $case['stages'] ?? [];
     $progressIndex = (int) ($case['progress_index'] ?? 0);
@@ -6,23 +9,9 @@
     $isActionable = !empty($case['actionable']);
     $deposit = $case['deposit'] ?? null;
 
-    // ---- 今誰のボールか（キャスト視点）----
-    //   0: あなた（ボーナス申請）   1: 店舗（承認）   2: 運営（請求書）
-    //   3: 店舗（入金）             4: 運営（振込）   5: あなた（受領確認） 6: 完了
-    // ラベルは「要対応 / 待ち（誰） / 完了」の3状態で明確に表記する
-    $actor = match (true) {
-        $isCompleted          => ['cls' => 'case-actor--done',  'icon' => 'fa-circle-check',    'label' => '完了'],
-        $progressIndex === 0  => ['cls' => 'case-actor--you',   'icon' => 'fa-bolt',            'label' => '要対応'],
-        $progressIndex === 1  => ['cls' => 'case-actor--shop',  'icon' => 'fa-hourglass-half',  'label' => '待ち（店舗）'],
-        $progressIndex === 2  => ['cls' => 'case-actor--admin', 'icon' => 'fa-hourglass-half',  'label' => '待ち（運営）'],
-        $progressIndex === 3  => ['cls' => 'case-actor--shop',  'icon' => 'fa-hourglass-half',  'label' => '待ち（店舗）'],
-        $progressIndex === 4  => ['cls' => 'case-actor--admin', 'icon' => 'fa-hourglass-half',  'label' => '待ち（運営）'],
-        $progressIndex === 5  => ['cls' => 'case-actor--you',   'icon' => 'fa-bolt',            'label' => '要対応'],
-        default               => ['cls' => 'case-actor--admin', 'icon' => 'fa-circle-question', 'label' => '確認中'],
-    };
     $caseState = $isCompleted ? 'done' : ($isActionable ? 'action' : 'waiting');
 
-    // ---- 現在ステージの説明 + 次に起こること ----
+    // Current-stage description (cast perspective).
     $currentStage = $stages[$progressIndex] ?? null;
     $nextStage    = $stages[$progressIndex + 1] ?? null;
     $nowNote = match ($progressIndex) {
@@ -35,24 +24,18 @@
         default => null,
     };
 
-    // ---- 停滞警告（5日以上更新なし・進行中のみ）----
+    // Stall warning (no updates for 5+ days) — inline note, not a pill.
     $stallDays = null;
     if (!$isCompleted && !empty($deposit['updated_at_label'])) {
         try {
             $lastUpdated = \Carbon\Carbon::parse($deposit['updated_at_label']);
             $days = $lastUpdated->diffInDays(now());
             if ($days >= 5) $stallDays = $days;
-        } catch (\Throwable $e) { /* パース不可なら非表示 */ }
+        } catch (\Throwable $e) { /* skip on parse failure */ }
     }
 @endphp
 <article class="case-card {{ $isActionable ? 'is-actionable' : '' }} {{ $isCompleted ? 'is-completed' : '' }}"
          data-case-state="{{ $caseState }}">
-    <span class="case-actor {{ $actor['cls'] }}">
-        <i class="fas {{ $actor['icon'] }}" aria-hidden="true"></i>{{ $actor['label'] }}
-        @if($stallDays !== null)
-            <span class="case-stall"><i class="fas fa-triangle-exclamation"></i>{{ $stallDays }}日停滞</span>
-        @endif
-    </span>
     <header class="case-card__head">
         <div class="case-card__icon">
             <i class="fas {{ $isCompleted ? 'fa-check' : 'fa-store' }}"></i>
@@ -72,7 +55,14 @@
         </div>
     </header>
 
-    {{-- パイプライン：採用 → ボーナス申請 → 店舗承認 → 請求書発行 → 店舗入金 → 振込実行 → 受領完了 --}}
+    @if($stallDays !== null)
+        <div class="case-card__stall-note">
+            <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
+            {{ $stallDays }}日間更新がありません
+        </div>
+    @endif
+
+    {{-- Pipeline: hire -> bonus request -> shop approve -> invoice -> shop pay -> transfer -> receipt --}}
     <ol class="case-pipeline" aria-label="採用から入金完了までの進捗">
         @foreach($stages as $idx => $stage)
             @php
@@ -96,7 +86,7 @@
         @endforeach
     </ol>
 
-    {{-- 現在ステージの説明 + 次に起こること --}}
+    {{-- Current-stage description + what's next --}}
     @if(!$isCompleted && $nowNote !== null)
         <div class="case-now {{ $isActionable ? 'case-now--action' : '' }}">
             <i class="fas {{ $isActionable ? 'fa-bolt' : 'fa-circle-info' }} case-now__icon" aria-hidden="true"></i>
@@ -117,7 +107,7 @@
         </div>
     @endif
 
-    {{-- 数値ハイライト：入金フローが始まっていれば表示 --}}
+    {{-- Numeric highlights --}}
     @if($deposit)
         <div class="case-card__highlights">
             @if(!empty($deposit['cast_transfer_amount']))
@@ -155,23 +145,34 @@
         </div>
     @endif
 
-    {{-- アクション行：要対応時の主ボタンのみ（待ち/完了テキストは右上バッジに集約済み） --}}
-    @if($isActionable)
-        <div class="case-card__action-row">
-            <button type="button" class="case-card__action-btn"
-                    data-case-action="{{ $case['actionable'] }}"
-                    data-application-id="{{ $case['application_id'] }}">
-                <i class="fas {{ $case['actionable'] === 'request' ? 'fa-paper-plane' : 'fa-check-circle' }}"></i>
-                {{ $case['actionable_label'] }}
-            </button>
+    {{-- Unified vertical action menu. All rows share the same shape;
+         primary task for this status gets --primary. --}}
+    @php
+        $hasTalk = !empty($case['talk_link']);
+        $primaryIcon = match ($case['actionable'] ?? '') {
+            'request' => 'fa-paper-plane',
+            'confirm' => 'fa-check-circle',
+            default   => 'fa-bolt',
+        };
+    @endphp
+    @if($isActionable || $hasTalk)
+        <div class="case-card__actions">
+            @if($isActionable)
+                <button type="button" class="case-card__action-item case-card__action-item--primary"
+                        data-case-action="{{ $case['actionable'] }}"
+                        data-application-id="{{ $case['application_id'] }}">
+                    <span class="case-card__action-item__icon"><i class="fas {{ $primaryIcon }}"></i></span>
+                    <span class="case-card__action-item__label">{{ $case['actionable_label'] }}</span>
+                    <i class="fas fa-chevron-right case-card__action-item__chev" aria-hidden="true"></i>
+                </button>
+            @endif
+            @if($hasTalk)
+                <a href="{{ $case['talk_link'] }}" class="case-card__action-item">
+                    <span class="case-card__action-item__icon"><i class="fas fa-comment-dots"></i></span>
+                    <span class="case-card__action-item__label">トーク画面へ</span>
+                    <i class="fas fa-chevron-right case-card__action-item__chev" aria-hidden="true"></i>
+                </a>
+            @endif
         </div>
-    @endif
-
-    {{-- トーク導線：全幅の明確なボタン --}}
-    @if(!empty($case['talk_link']))
-        <a href="{{ $case['talk_link'] }}" class="case-card__talk-open">
-            <i class="fas fa-comment-dots"></i> トークを開く
-            <i class="fas fa-chevron-right case-card__talk-open-chev" aria-hidden="true"></i>
-        </a>
     @endif
 </article>

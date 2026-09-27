@@ -13,7 +13,8 @@
             'title' => 'オペレーション',
             'items' => [
                 ['label' => '請求書発行', 'route' => 'admin.invoices.index', 'icon' => 'fa-file-invoice', 'badge' => null, 'badge_class' => '', 'permission' => 'operations.invoices'],
-                ['label' => '入金確認・振込', 'route' => 'admin.deposits.index', 'icon' => 'fa-money-bill-wave', 'badge' => null, 'badge_class' => '', 'permission' => 'operations.deposits'],
+                ['label' => '入金確認', 'route' => 'admin.deposits.confirmations', 'icon' => 'fa-money-bill-wave', 'badge' => null, 'badge_class' => '', 'permission' => 'operations.deposits'],
+                ['label' => 'キャスト振込', 'route' => 'admin.deposits.transfers', 'icon' => 'fa-paper-plane', 'badge' => null, 'badge_class' => '', 'permission' => 'operations.deposits'],
                 ['label' => 'プラン入金管理', 'route' => 'admin.plans.index', 'icon' => 'fa-crown', 'badge' => null, 'badge_class' => '', 'permission' => 'operations.deposits'],
                 ['label' => '身分証・書類審査', 'route' => 'admin.verification.index', 'icon' => 'fa-id-card', 'badge' => null, 'badge_class' => '', 'permission' => 'operations.verification'],
                 ['label' => '書類 削除候補（バッチ）', 'route' => 'admin.purge.index', 'icon' => 'fa-trash-can', 'badge' => null, 'badge_class' => '', 'permission' => 'operations.verification'],
@@ -129,11 +130,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     {{-- メインアプリと同じ Noto Sans JP + Montserrat（DESIGN.md §3 と統一） --}}
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800;900&family=Montserrat:wght@400;600;700;800&display=swap">
-    <link rel="stylesheet" href="{{ asset('assets/css/admin.css') }}?v=20260927-quiet-v10">
+    <link rel="stylesheet" href="{{ asset('assets/css/admin.css') }}?v=20260927-step-labels-v11">
     {{-- Detail-page + role-UI styles (extracted 2026-08-02); load AFTER admin.css --}}
-    <link rel="stylesheet" href="{{ asset('assets/css/admin-detail.css') }}?v=20260927-quiet-v10">
+    <link rel="stylesheet" href="{{ asset('assets/css/admin-detail.css') }}?v=20260927-quiet-v11">
     {{-- モバイル最適化（admin.css の後に読み込んで上書き） --}}
-    <link rel="stylesheet" href="{{ asset('assets/css/admin-mobile.css') }}?v=20260927-quiet-v3">
+    <link rel="stylesheet" href="{{ asset('assets/css/admin-mobile.css') }}?v=20260927-step-labels-v4">
     @stack('admin-styles')
     {{-- 入力コンポーネントの全画面統一（文字列/文章/数値/日付/選択） --}}
     <link rel="stylesheet" href="{{ asset('assets/css/form-controls.css') }}?v=20260719-light-all">
