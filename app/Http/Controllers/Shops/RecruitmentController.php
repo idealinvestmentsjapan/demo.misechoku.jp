@@ -192,6 +192,8 @@ class RecruitmentController extends Controller
             // deposit のスナップショット
             'deposit'        => $deposit ? [
                 'id'                  => $deposit['id'] ?? null,
+                // 承認モーダルのタイトル切替（ヘルプ vs ボーナス）用。
+                'job_kind'            => $deposit['job_kind'] ?? '',
                 'status_label'        => $deposit['status_label'] ?? '',
                 'invoice_number'      => $deposit['invoice_number'] ?? null,
                 'invoice_issued_at'   => $deposit['invoice_issued_at'] ?? null,

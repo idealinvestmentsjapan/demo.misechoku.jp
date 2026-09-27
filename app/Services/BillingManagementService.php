@@ -297,7 +297,10 @@ class BillingManagementService
 
     public function confirmDepositForShop(string $shopId, array $payload = []): array
     {
-        $deposit = $this->findLatestDepositForShop($shopId);
+        // payload の deposit_id / application_id を優先して対象案件を特定する。
+        // 未指定時のみ店舗最新にフォールバック（従来動作の後方互換）。複数の
+        // 承認待ち案件がある状態で「最新のみが対象」になっていた欠陥の修正。
+        $deposit = $this->resolveDepositForShop($shopId, $payload);
 
         if (!$deposit || (int) $deposit->status !== self::STATUS_CAST_REQUESTED) {
             return ['success' => false, 'message' => '店舗確認待ちの入金申請がありません。'];
@@ -649,7 +652,9 @@ class BillingManagementService
 
     public function reportShopPayment(string $shopId, array $payload): array
     {
-        $deposit = $this->findLatestDepositForShop($shopId);
+        // 対象案件は payload の deposit_id / application_id を優先。
+        // 未指定時のみ店舗最新にフォールバック。
+        $deposit = $this->resolveDepositForShop($shopId, $payload);
 
         if (!$deposit || !in_array((int) $deposit->status, [self::STATUS_INVOICE_ISSUED, self::STATUS_SHOP_PAYMENT_REPORTED], true)) {
             return ['success' => false, 'message' => '入金報告できる請求書がありません。'];
@@ -1633,6 +1638,37 @@ class BillingManagementService
             ->where('shops.id', $shopId)
             ->orderByDesc('application_deposits.id')
             ->first();
+    }
+
+    /**
+     * 承認 / 入金報告など「店舗が特定案件に対して行う操作」の対象 deposit を解決する。
+     * - payload.deposit_id が来ていれば ID 一致 + 店舗一致で検索
+     * - なければ payload.application_id で shop_job_application 経由で検索
+     * - どちらも無いときのみ「店舗最新」にフォールバック（後方互換）
+     * どのケースも他店舗の deposit を返さないよう shop 一致を必ずチェックする。
+     */
+    private function resolveDepositForShop(string $shopId, array $payload): ?object
+    {
+        $depositId = isset($payload['deposit_id']) ? (int) $payload['deposit_id'] : 0;
+        if ($depositId > 0) {
+            $row = $this->baseDepositQuery()
+                ->where('application_deposits.id', $depositId)
+                ->where('shops.id', $shopId)
+                ->first();
+            if ($row) return $row;
+        }
+
+        $applicationId = isset($payload['application_id']) ? (int) $payload['application_id'] : 0;
+        if ($applicationId > 0) {
+            $row = $this->baseDepositQuery()
+                ->where('application_deposits.shop_job_application_id', $applicationId)
+                ->where('shops.id', $shopId)
+                ->orderByDesc('application_deposits.id')
+                ->first();
+            if ($row) return $row;
+        }
+
+        return $this->findLatestDepositForShop($shopId);
     }
 
     private function findLatestDepositForCast(string $castId): ?object

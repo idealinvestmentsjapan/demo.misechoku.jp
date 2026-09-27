@@ -391,6 +391,10 @@
             </a>
             <form id="shop-approve-form" action="{{ route('shop.mypage.deposit.approve') }}" method="POST">
                 @csrf
+                {{-- 対象 deposit の特定に使う。未指定だと service 側が「店舗最新」を対象にしてしまい、
+                     複数の承認待ち案件があるときにクリックした案件と別のものが更新される。 --}}
+                <input type="hidden" name="deposit_id" id="shop-approve-deposit-id" value="">
+                <input type="hidden" name="application_id" id="shop-approve-application-id" value="">
                 <div class="shop-action-modal-checklist">
                     <label class="shop-action-modal-check">
                         <input type="checkbox" name="confirm_review_checked" value="1" required>
@@ -428,6 +432,8 @@
             </p>
             <form id="shop-pay-form" action="{{ route('shop.mypage.deposit.pay') }}" method="POST">
                 @csrf
+                {{-- 対象 deposit を明示（未指定だと store 側が店舗最新を対象にしてしまう） --}}
+                <input type="hidden" name="deposit_id" id="shop-pay-deposit-id" value="">
                 <div class="shop-action-modal-field">
                     <label class="shop-action-modal-label" for="shop-pay-amount">振込金額（円）<span style="color:#a78bfa;">*</span></label>
                     <input id="shop-pay-amount" type="number" name="reported_amount" min="1" step="1" required class="shop-action-modal-input" inputmode="numeric" placeholder="例: 50000">
@@ -506,8 +512,15 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     var reviewIndexUrl = @json(route('shop.mypage.review.index'));
-    function openApproveForCase(applicationId, jobKind, castId, castName) {
+    function openApproveForCase(applicationId, jobKind, castId, castName, depositId) {
         if (!approveModal) return;
+        // Hidden input に対象 deposit / application を必ずセット。
+        // これが無いと service 側で店舗の最新 deposit を対象にしてしまい、
+        // 押した案件と別の案件のステータスが更新される（または対象が既に別ステータスで失敗）。
+        var depIdInput = document.getElementById('shop-approve-deposit-id');
+        var appIdInput = document.getElementById('shop-approve-application-id');
+        if (depIdInput) depIdInput.value = depositId || '';
+        if (appIdInput) appIdInput.value = applicationId || '';
         var isHelp = (jobKind === 'help');
         var title = document.getElementById('shop-approve-modal-title');
         if (title) title.textContent = isHelp ? 'ヘルプ勤務完了の承認' : 'ボーナス申請の承認';
@@ -543,10 +556,13 @@ document.addEventListener('DOMContentLoaded', function () {
         var err = document.getElementById('shop-approve-error'); if (err) { err.textContent = ''; err.classList.remove('show'); }
         openModal(approveModal);
     }
-    function openPayForCase(invoiceAmount) {
+    function openPayForCase(invoiceAmount, depositId) {
         if (!payModal) return;
         var amt = document.getElementById('shop-pay-amount');
         if (amt && invoiceAmount) amt.value = invoiceAmount;
+        // 対象 deposit を明示（未指定だと store 側が店舗最新を対象にしてしまう）
+        var depIdInput = document.getElementById('shop-pay-deposit-id');
+        if (depIdInput) depIdInput.value = depositId || '';
         var err = document.getElementById('shop-pay-error'); if (err) { err.textContent = ''; err.classList.remove('show'); }
         openModal(payModal);
     }
@@ -560,13 +576,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     appId,
                     btn.getAttribute('data-job-kind') || '',
                     btn.getAttribute('data-cast-id') || '',
-                    btn.getAttribute('data-cast-name') || ''
+                    btn.getAttribute('data-cast-name') || '',
+                    btn.getAttribute('data-deposit-id') || ''
                 );
             } else if (action === 'pay') {
                 var card = btn.closest('.case-card');
                 var amountText = card ? (card.querySelector('.case-card__highlight strong') || {}).textContent || '' : '';
                 var digits = amountText.replace(/[^0-9]/g, '');
-                openPayForCase(digits ? parseInt(digits, 10) : '');
+                openPayForCase(
+                    digits ? parseInt(digits, 10) : '',
+                    btn.getAttribute('data-deposit-id') || ''
+                );
             }
         });
     });
