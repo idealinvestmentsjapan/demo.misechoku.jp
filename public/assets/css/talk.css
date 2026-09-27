@@ -1234,7 +1234,8 @@
 }
 
 .interview-option-group-grid input[type="date"],
-.interview-option-group-grid input[type="time"] {
+.interview-option-group-grid input[type="time"],
+.interview-option-group-grid select.interview-time-select {
     width: 100%;
     box-sizing: border-box;
     padding: 9px 10px;

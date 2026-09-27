@@ -19,6 +19,13 @@ class DocumentReviewService
     public const RETENTION_REJECTED_DAYS = 14;   // 却下：updated_at から N 日経過で削除候補
     public const RETENTION_PENDING_DAYS  = 90;   // 長期放置：updated_at から N 日経過で削除候補
 
+    // shop_license_documents.type key that gates recruit publication and
+    // interview/hire talk actions. The entertainment slot accepts either a
+    // 風営許可証 or a 深夜酒類届出 (shop uploads whichever matches its business
+    // type — either is sufficient). The 飲食店営業許可書 (business) slot is
+    // tracked for display but does not gate features.
+    public const GATE_LICENSE_KEY = 'entertainment';
+
     public function getCastIdentityPageData(string $castId): array
     {
         $documents = CastIdentityDocument::query()
@@ -198,9 +205,16 @@ class DocumentReviewService
             ]);
         }
 
+        // Gate policy: only the entertainment slot (風営許可証 or 深夜酒類届出 —
+        // either of the two is fine) is required to unlock recruit publication
+        // and 面談/採用 talk actions. 飲食店営業許可書 (business) is still tracked
+        // for display but does not gate features.
+        $entertainmentRow = collect($mapped)->firstWhere('key', self::GATE_LICENSE_KEY);
+        $gateSatisfied = $entertainmentRow !== null && ($entertainmentRow['status'] ?? '') === 'approved';
+
         return [
             'documents' => $mapped,
-            'all_approved' => collect($mapped)->every(fn (array $row) => $row['status'] === 'approved'),
+            'all_approved' => $gateSatisfied,
         ];
     }
 
@@ -249,7 +263,11 @@ class DocumentReviewService
     }
 
     /**
-     * 営業・風営の両書類が承認済みか（求人の公開可否に利用）。
+     * 求人の公開・面談/採用連絡に必要な許可証が承認済みか。
+     *
+     * ゲート要件は entertainment 枠（風営許可証 または 深夜酒類届出 の
+     * いずれか一方）の承認のみ。飲食店営業許可書（business 枠）は表示は
+     * するがゲートには利用しない。
      */
     public function shopLicenseFullyApproved(string $shopId): bool
     {

@@ -9,9 +9,9 @@ use Illuminate\Support\Facades\Schema;
  * Encapsulates shop_jobs publication toggling and its preconditions.
  *
  * Extracted from Shops\RecruitmentController::toggleStatus() (2026-08-02).
- * Publication requires that all shop_license_documents are approved
- * (DocumentReviewService::shopLicenseFullyApproved), otherwise a shop cannot
- * expose its listing to casts.
+ * Publication requires the shop's entertainment license slot (風営許可証 or
+ * 深夜酒類届出 — either is fine) to be approved by admin. See
+ * DocumentReviewService::shopLicenseFullyApproved / GATE_LICENSE_KEY.
  *
  * The service supports both legacy schema shapes:
  *   - Horizontal: shop_jobs has `regular_status` / `trial_status` / `help_status`
@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Schema;
  */
 class RecruitPublicationService
 {
-    public const MESSAGE_LICENSE_REQUIRED = '求人を公開するには、営業許可証と風営許可証の両方を提出し、運営の承認が必要です。';
+    public const MESSAGE_LICENSE_REQUIRED = '求人を公開するには、風営許可証または深夜酒類届出のいずれかを提出し、運営の承認が必要です。';
 
     public function __construct(private readonly DocumentReviewService $documentReviewService) {}
 

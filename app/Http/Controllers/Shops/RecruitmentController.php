@@ -19,7 +19,7 @@ class RecruitmentController extends Controller
 {
     use ResolvesActor;
 
-    private const MSG_LICENSE_REQUIRED_FOR_PUBLISH = '求人を公開するには、営業許可証と風営許可証の両方を提出し、運営の承認が必要です。';
+    private const MSG_LICENSE_REQUIRED_FOR_PUBLISH = '求人を公開するには、風営許可証または深夜酒類届出のいずれかを提出し、運営の承認が必要です。';
 
     public function __construct(
         private readonly AdminMasterService $adminMasterService,

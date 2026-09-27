@@ -2006,6 +2006,50 @@ a.dashboard-kpi-card:hover .dashboard-kpi-card__arrow,
     font-weight: 600;
 }
 
+/* 本人確認・書類審査テーブル：横スクロールの信頼性向上 + 1行の縦幅拡大
+   - min-width をカラム構成に合わせて広めに固定して、狭い desktop 幅でも
+     `overflow-x: auto` の親コンテナが確実にスクロールバーを出せるようにする
+   - 各セルの縦パディングを大きめに取り、書類情報を読みやすく縦積みで表示
+   - 文字列カラムは折り返しを許可（本来 <th> は nowrap のまま維持） */
+@media (min-width: 641px) {
+    .table-wrapper--verification { overflow-x: auto; }
+    .verification-table {
+        /* 8 columns × 平均 140-200px ≒ 1400px。狭い画面では確実に横スクロール */
+        min-width: 1360px;
+    }
+    .verification-table tbody td {
+        padding: 18px 16px;
+        vertical-align: top;
+        line-height: 1.7;
+        white-space: normal;
+        word-break: break-word;
+    }
+    .verification-table thead th {
+        padding: 14px 16px;
+    }
+    /* Column width hints — table-layout auto は使い続けるが、min-width で潰れを防ぐ */
+    .verification-table thead th:nth-child(1),
+    .verification-table tbody td:nth-child(1) { min-width: 160px; }
+    .verification-table thead th:nth-child(2),
+    .verification-table tbody td:nth-child(2) { min-width: 240px; }
+    .verification-table thead th:nth-child(3),
+    .verification-table tbody td:nth-child(3) { min-width: 160px; }
+    .verification-table thead th:nth-child(4),
+    .verification-table tbody td:nth-child(4) { min-width: 160px; }
+    .verification-table thead th:nth-child(5),
+    .verification-table tbody td:nth-child(5) { min-width: 160px; }
+    .verification-table thead th:nth-child(6),
+    .verification-table tbody td:nth-child(6) { min-width: 200px; }
+    .verification-table thead th:nth-child(7),
+    .verification-table tbody td:nth-child(7) { min-width: 140px; }
+    .verification-table thead th:nth-child(8),
+    .verification-table tbody td:nth-child(8) { min-width: 200px; }
+    /* サムネイル並び：縦幅拡大に合わせて少し大きくして視認性を上げる */
+    .verification-table .verification-thumb img { width: 72px; height: 72px; }
+    /* 「登録情報（書類との照合用）」の2カラム化を廃止：1行1情報で高さを稼ぐ */
+    .verification-table .verification-profile { grid-template-columns: 1fr; row-gap: 4px; }
+}
+
 /* プレビューモーダル */
 .verification-preview-overlay {
     position: fixed; inset: 0;

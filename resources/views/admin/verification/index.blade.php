@@ -89,17 +89,27 @@
             </article>
         </section>
 
-        {{-- タブ切替（キャスト / 店舗） --}}
+        {{-- タブ切替（キャスト / 店舗）
+             バッジは「運営対応の未済タスク（承認待ち）」件数のみを表示する。
+             全件数ではなく玉持ちを見える化する運用ルール。 --}}
+        @php
+            $castPendingCount = (int) ($summary['cast_pending'] ?? 0);
+            $shopPendingCount = (int) ($summary['shop_pending'] ?? 0);
+        @endphp
         <div class="admin-tabs" role="tablist">
             <button type="button" class="admin-tab {{ $defaultTab === 'cast' ? 'is-active' : '' }}" data-verif-tab="cast" role="tab">
                 <i class="fas fa-user"></i>
                 <span>キャスト本人確認</span>
-                <span class="admin-tab-badge {{ ($summary['cast_pending'] ?? 0) > 0 ? 'is-alert' : '' }}">{{ count($castDocs) }}</span>
+                @if($castPendingCount > 0)
+                    <span class="admin-tab-badge is-alert">{{ $castPendingCount }}</span>
+                @endif
             </button>
             <button type="button" class="admin-tab {{ $defaultTab === 'shop' ? 'is-active' : '' }}" data-verif-tab="shop" role="tab">
                 <i class="fas fa-store"></i>
                 <span>店舗提出書類</span>
-                <span class="admin-tab-badge {{ ($summary['shop_pending'] ?? 0) > 0 ? 'is-alert' : '' }}">{{ count($shopDocs) }}</span>
+                @if($shopPendingCount > 0)
+                    <span class="admin-tab-badge is-alert">{{ $shopPendingCount }}</span>
+                @endif
             </button>
         </div>
 
@@ -132,8 +142,8 @@
                 </div>
             </div>
 
-            <div class="table-wrapper u-mt-12">
-                <table class="admin-table admin-table--sticky-actions admin-table--stack">
+            <div class="table-wrapper table-wrapper--verification u-mt-12">
+                <table class="admin-table admin-table--sticky-actions admin-table--stack verification-table">
                     <thead>
                         <tr>
                             <th>キャスト</th>
@@ -349,8 +359,8 @@
                 </div>
             </div>
 
-            <div class="table-wrapper u-mt-12">
-                <table class="admin-table admin-table--sticky-actions admin-table--stack">
+            <div class="table-wrapper table-wrapper--verification u-mt-12">
+                <table class="admin-table admin-table--sticky-actions admin-table--stack verification-table">
                     <thead>
                         <tr>
                             <th>店舗</th>

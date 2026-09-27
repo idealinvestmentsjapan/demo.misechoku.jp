@@ -429,11 +429,12 @@ class MypageController extends Controller
     }
 
     /**
-     * 営業許可証・風営許可証のアップロード
+     * 飲食店営業許可書・風営許可証(または深夜酒類届出)のアップロード
      *
      * 提出ファイルは storage に保存し、shop_license_documents テーブルに status=pending で登録される。
      * 承認/差戻しは運営画面（Admin\VerificationController）で行う。
      * 承認済みドキュメントは取り下げないと差し替え不可。
+     * 求人公開・面談連絡のゲートは entertainment 枠（風営 / 深夜酒類）の承認のみ必要。
      */
     public function uploadDocument(Request $request)
     {

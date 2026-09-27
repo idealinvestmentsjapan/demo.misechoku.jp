@@ -675,7 +675,7 @@
             <div class="job-edit-v2__notice">
                 <i class="fas fa-exclamation-triangle"></i>
                 <span>
-                    求人を公開するには、営業許可証と風営許可証の両方を提出し、運営の承認が必要です。審査が完了するまで「公開」にできません。
+                    求人を公開するには、風営許可証または深夜酒類届出のいずれかを提出し、運営の承認が必要です。審査が完了するまで「公開」にできません。
                     <a href="{{ route('shop.mypage.documents.index') }}">許可証提出ページへ</a>
                 </span>
             </div>

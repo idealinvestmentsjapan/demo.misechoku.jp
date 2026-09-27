@@ -448,9 +448,11 @@ class TalkController extends Controller
         // Interview offers and hire notifications require shop license approval.
         // Publication is already gated by DocumentReviewService::shopLicenseFullyApproved,
         // but license approval can be revoked or expire after a conversation begins.
+        // Gate policy: only the entertainment slot (風営許可証 or 深夜酒類届出 —
+        // either one is fine) must be approved. See DocumentReviewService::GATE_LICENSE_KEY.
         if (in_array($actionType, ['interview_offer', 'hired'], true)
             && !$this->documentReviewService->shopLicenseFullyApproved((string) $shopId)) {
-            abort(422, '面談・採用の連絡には、営業許可証と風営許可証の両方について運営の承認が必要です。');
+            abort(422, '面談・採用の連絡には、風営許可証または深夜酒類届出のいずれかについて運営の承認が必要です。');
         }
         $currentApplicationStatus = $this->getCurrentApplicationStatus($castId, $shopId);
         $bonusMeta = in_array($actionType, ['interview_offer', 'interview_confirm'], true)

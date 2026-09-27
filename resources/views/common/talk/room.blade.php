@@ -10,8 +10,8 @@
 @section('body-class', 'page-talk page-talk-room')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/talk.css') }}?v=20260928-hire-terms-card">
-<link rel="stylesheet" href="{{ asset('assets/css/talk-light.css') }}?v=20260928-hire-terms-card">
+<link rel="stylesheet" href="{{ asset('assets/css/talk.css') }}?v=20260928-interview-15min-select">
+<link rel="stylesheet" href="{{ asset('assets/css/talk-light.css') }}?v=20260928-interview-15min-select">
 @if($isCast)
 <link rel="stylesheet" href="{{ asset('assets/css/mypage.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/css/review-modal.css') }}?v=20260927-scroll-fix">
@@ -236,7 +236,7 @@
     window.talkAllQuickReplies = @json($allQuickReplySuggestions ?? []);
     window.talkNgPayload = @json($ngWordPayload ?? ['patterns' => [], 'words' => []]);
 </script>
-<script src="{{ asset('assets/js/talk-room.js') }}?v=20260927-jobkind-2choice"></script>
+<script src="{{ asset('assets/js/talk-room.js') }}?v=20260928-interview-15min-select"></script>
 @endpush
 
 @section('content')
@@ -832,21 +832,47 @@
                 </div>
                 <p class="interview-job-kind-note">求人種別は体験入店またはヘルプの2種類です。採用／不採用が確定するまでは変更できます。</p>
             </div>
-            {{-- step="900" = 15 分刻み（900 秒）。ブラウザ非対応時は JS 側でも 15 分丸めを検証。 --}}
+            {{-- 時刻は15分刻みで固定。<input type="time" step="900"> は
+                 Firefox/一部モバイル系で step が無視され分単位入力を許してしまう
+                 ため、<select> で候補スロットのみを提示する。サーバ側にも
+                 TalkController@action で 15 分丸めガードを維持。 --}}
+            @php
+                $interviewTimeSlots15Min = [];
+                for ($h = 0; $h < 24; $h++) {
+                    foreach ([0, 15, 30, 45] as $m) {
+                        $interviewTimeSlots15Min[] = sprintf('%02d:%02d', $h, $m);
+                    }
+                }
+            @endphp
             <div class="interview-option-group interview-option-group-grid">
                 <label><span class="interview-option-no">1</span>候補1 <em class="interview-option-req">必須</em></label>
                 <input type="date" name="option1_date" aria-label="候補1の日付" required>
-                <input type="time" name="option1_time" aria-label="候補1の時刻" step="900" required>
+                <select name="option1_time" aria-label="候補1の時刻" class="interview-time-select" required>
+                    <option value="">--:--</option>
+                    @foreach($interviewTimeSlots15Min as $slot)
+                        <option value="{{ $slot }}">{{ $slot }}</option>
+                    @endforeach
+                </select>
             </div>
             <div class="interview-option-group interview-option-group-grid">
                 <label><span class="interview-option-no">2</span>候補2（任意）</label>
                 <input type="date" name="option2_date" aria-label="候補2の日付">
-                <input type="time" name="option2_time" aria-label="候補2の時刻" step="900">
+                <select name="option2_time" aria-label="候補2の時刻" class="interview-time-select">
+                    <option value="">--:--</option>
+                    @foreach($interviewTimeSlots15Min as $slot)
+                        <option value="{{ $slot }}">{{ $slot }}</option>
+                    @endforeach
+                </select>
             </div>
             <div class="interview-option-group interview-option-group-grid">
                 <label><span class="interview-option-no">3</span>候補3（任意）</label>
                 <input type="date" name="option3_date" aria-label="候補3の日付">
-                <input type="time" name="option3_time" aria-label="候補3の時刻" step="900">
+                <select name="option3_time" aria-label="候補3の時刻" class="interview-time-select">
+                    <option value="">--:--</option>
+                    @foreach($interviewTimeSlots15Min as $slot)
+                        <option value="{{ $slot }}">{{ $slot }}</option>
+                    @endforeach
+                </select>
             </div>
             <div class="interview-modal-footer">
                 <button type="button" class="btn-interview-cancel">キャンセル</button>

@@ -332,7 +332,7 @@ database/
 | SCR-204 | /cast/mypage | キャストマイページ（プレミアムホワイト） |
 | SCR-300 | /admin | 管理ダッシュボード |
 | SCR-303 | /admin/deposits | 入金・振込管理 |
-| —      | /admin/plans | Premium プラン入金管理 |
+| —      | /admin/deposits/confirmations | 入金確認（ボーナス金・ヘルプ採用金・プラン入金の 3 種類を一元管理） |
 | —      | /admin/verification | 本人確認・書類審査 |
 | —      | /admin/masters | マスタメンテナンス |
 | —      | /admin/character-guide | オコジョガイド設定 |
