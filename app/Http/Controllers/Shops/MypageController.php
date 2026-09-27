@@ -578,8 +578,16 @@ class MypageController extends Controller
             $request->all()
         );
 
+        // 承認成功時は「進行中」アコーディオンで該当案件を強調表示するため、
+        // application_id をクエリで戻す（management.blade.php が
+        // ?highlight_app=XX を拾って自動スクロール + ハイライトする）。
+        $params = ['tab' => 'payment'];
+        if ($result['success'] && $request->filled('application_id')) {
+            $params['highlight_app'] = (int) $request->input('application_id');
+        }
+
         return redirect()
-            ->route('shop.mypage.management', ['tab' => 'payment'])
+            ->route('shop.mypage.management', $params)
             ->with($result['success'] ? 'status' : 'error', $result['message']);
     }
 
@@ -594,10 +602,20 @@ class MypageController extends Controller
             'reference' => 'nullable|string|max:255',
         ]);
 
+        // reportShopPayment 側は payload の deposit_id を優先しつつ、
+        // application_id で振り分けたい場合にも application_id を通す。
+        // ここは validate() の allowlist に無いキーを通すため input() を明示。
+        $payload['deposit_id'] = $request->input('deposit_id');
+
         $result = $this->billingManagementService->reportShopPayment($this->currentShopId(), $payload);
 
+        $params = ['tab' => 'payment'];
+        if ($result['success'] && $request->filled('application_id')) {
+            $params['highlight_app'] = (int) $request->input('application_id');
+        }
+
         return redirect()
-            ->route('shop.mypage.management', ['tab' => 'payment'])
+            ->route('shop.mypage.management', $params)
             ->with($result['success'] ? 'status' : 'error', $result['message']);
     }
 

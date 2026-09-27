@@ -42,7 +42,8 @@
     }
 @endphp
 <article class="case-card {{ $isActionable ? 'is-actionable' : '' }} {{ $isCompleted ? 'is-completed' : '' }}"
-         data-case-state="{{ $caseState }}">
+         data-case-state="{{ $caseState }}"
+         data-application-id="{{ $case['application_id'] ?? '' }}">
     <header class="case-card__head">
         @if(!empty($case['cast_avatar_url']))
             <img loading="lazy" decoding="async" src="{{ $case['cast_avatar_url'] }}" alt="" class="case-card__avatar">

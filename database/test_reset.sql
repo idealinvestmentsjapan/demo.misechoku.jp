@@ -800,7 +800,12 @@ INSERT INTO `reviews` (`id`, `cast_id`, `shop_id`, `contents`, `eva`, `is_anonym
 (5, 'c00000029', 's00000001', 'スタッフさんが皆優しくて、安心して働けています。', 4.4, 1, DATE_SUB(NOW(), INTERVAL 40 DAY), DATE_SUB(NOW(), INTERVAL 40 DAY)),
 (6, 'c00000021', 's00000004', 'アットホームで気楽に働けます。ママも優しい方でした。', 4.2, 1, DATE_SUB(NOW(), INTERVAL 1 HOUR), DATE_SUB(NOW(), INTERVAL 1 HOUR)),
 (7, 'c00000031', 's00000006', '接客のマナーもしっかり教えてもらえます。おすすめです。', 4.7, 0, DATE_SUB(NOW(), INTERVAL 15 DAY), DATE_SUB(NOW(), INTERVAL 15 DAY)),
-(8, 'c00000034', 's00000015', 'ラウンジ経験を活かせて、時給もアップしました。', 4.5, 1, DATE_SUB(NOW(), INTERVAL 20 DAY), DATE_SUB(NOW(), INTERVAL 20 DAY));
+(8, 'c00000034', 's00000015', 'ラウンジ経験を活かせて、時給もアップしました。', 4.5, 1, DATE_SUB(NOW(), INTERVAL 20 DAY), DATE_SUB(NOW(), INTERVAL 20 DAY)),
+-- 承認待ち deposit (status=1) に対応するレビュー。ボーナス達成報告時に
+-- 併せて投稿される想定のため、deposit と対で存在させておく。無いと
+-- confirmDepositForShop() が「レビューが見つかりません」で承認拒否になる。
+(9, 'c00000009', 's00000001', '体験勤務を採用いただきありがとうございました。丁寧な指導で安心して働けました。', 4.5, 1, DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY)),
+(10, 'c00000043', 's00000007', '六本木の落ち着いた店内で、スタッフさんもお客様も気さくで良い時間を過ごせました。', 4.6, 0, DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY));
 
 INSERT INTO `review_details` (`review_id`, `val`, `score`, `created_at`, `updated_at`) VALUES
 (1, 1, 5.0, DATE_SUB(NOW(), INTERVAL 8 DAY), DATE_SUB(NOW(), INTERVAL 8 DAY)),

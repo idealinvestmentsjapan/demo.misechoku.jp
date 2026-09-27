@@ -223,6 +223,17 @@
     .shop-action-modal-review-link__title { font-size: 0.9rem; font-weight: 700; color: #241f33; line-height: 1.3; }
     .shop-action-modal-review-link__sub { font-size: 0.72rem; color: #6d6685; line-height: 1.4; }
     .shop-action-modal-review-link__chev { color: #7c3aed; font-size: 0.8rem; flex: 0 0 auto; }
+
+    /* 承認直後のハイライト。?highlight_app=XX で遷移してきた案件を強調して
+       「どこにいるか」を明示する（waiting アコーディオンに移動しても迷子にならない）。 */
+    .case-card.case-card--just-updated {
+        animation: case-card-just-updated 3.5s ease-out;
+        box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.55), 0 12px 32px rgba(124, 58, 237, 0.22);
+    }
+    @keyframes case-card-just-updated {
+        0%, 55% { background-color: rgba(196, 181, 253, 0.25); }
+        100%    { background-color: #ffffff; }
+    }
 </style>
 @endpush
 
@@ -479,6 +490,27 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.case-group').forEach(function (g) {
         g.addEventListener('toggle', function () { if (g.open) centerPipelines(g); });
     });
+
+    // ---- 承認 / 入金完了直後のハイライト ----
+    // approveDeposit / payToPlatform が成功時に `?highlight_app=XX` を付けて
+    // 戻ってくるので、該当 application の case-card を親アコーディオンごと開いて
+    // スクロール + 一時的ハイライトを付ける。「押しても変わらない」感覚を排除するため。
+    (function () {
+        var params = new URLSearchParams(window.location.search);
+        var appId = params.get('highlight_app');
+        if (!appId) return;
+        var card = document.querySelector('.case-card[data-application-id="' + CSS.escape(appId) + '"]');
+        if (!card) return;
+        // 親アコーディオンを強制展開（進行中や完了へ移動しているケースで閉じっぱなしを回避）
+        var group = card.closest('details.case-group');
+        if (group && !group.open) group.open = true;
+        // スクロール + ハイライト
+        var headerH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-height'), 10) || 60;
+        var y = card.getBoundingClientRect().top + window.scrollY - headerH - 16;
+        window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+        card.classList.add('case-card--just-updated');
+        setTimeout(function () { card.classList.remove('case-card--just-updated'); }, 3600);
+    })();
 
     function openModal(el) { if (el) { el.removeAttribute('hidden'); document.body.style.overflow = 'hidden'; } }
     function closeModal(el) { if (el) { el.setAttribute('hidden', ''); document.body.style.overflow = ''; } }

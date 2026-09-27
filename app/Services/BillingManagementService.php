@@ -302,8 +302,26 @@ class BillingManagementService
         // 承認待ち案件がある状態で「最新のみが対象」になっていた欠陥の修正。
         $deposit = $this->resolveDepositForShop($shopId, $payload);
 
-        if (!$deposit || (int) $deposit->status !== self::STATUS_CAST_REQUESTED) {
-            return ['success' => false, 'message' => '店舗確認待ちの入金申請がありません。'];
+        // 追跡ログ: どの経路で対象案件が特定されたか、実データ側の status を残す。
+        // 「承認しても反映されない」が再発した場合に一次切り分けができるよう情報を残す。
+        Log::info('confirmDepositForShop resolve', [
+            'shop_id'          => $shopId,
+            'payload_deposit'  => $payload['deposit_id'] ?? null,
+            'payload_app'      => $payload['application_id'] ?? null,
+            'resolved_id'      => $deposit->id ?? null,
+            'resolved_status'  => $deposit->status ?? null,
+        ]);
+
+        if (!$deposit) {
+            return ['success' => false, 'message' => '対象の入金申請が見つかりません。ページを再読み込みして再度お試しください。'];
+        }
+
+        if ((int) $deposit->status !== self::STATUS_CAST_REQUESTED) {
+            return [
+                'success' => false,
+                'message' => 'この案件はすでに次のステータスへ進んでいるため、再承認はできません（現ステータス: '
+                    . $this->statusLabel((int) $deposit->status) . '）。',
+            ];
         }
 
         if (empty($payload['confirm_bonus_condition'])) {
@@ -318,12 +336,22 @@ class BillingManagementService
             return ['success' => false, 'message' => 'キャストのレビューが見つかりません。内容を確認してから再度お試しください。'];
         }
 
-        DB::table('application_deposits')
+        // 更新の反映を確実にするため、影響行数を明示チェックする（0 行なら失敗扱い）。
+        // 従来の「update しても success を返すだけで、実際は 0 行だった」ケースを撲滅する。
+        $affected = DB::table('application_deposits')
             ->where('id', $deposit->id)
             ->update($this->filterExistingColumns('application_deposits', [
-                'status' => self::STATUS_SHOP_APPROVED,
+                'status'     => self::STATUS_SHOP_APPROVED,
                 'updated_at' => now(),
             ]));
+
+        if ($affected === 0) {
+            Log::warning('confirmDepositForShop update affected 0 rows', [
+                'deposit_id' => $deposit->id,
+                'shop_id'    => $shopId,
+            ]);
+            return ['success' => false, 'message' => 'ステータスの更新に失敗しました。管理者にお問い合わせください。'];
+        }
 
         $this->appendHistory((int) $deposit->id, self::STATUS_SHOP_APPROVED);
 
