@@ -1110,22 +1110,24 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
 .dashboard-kpi-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
+    gap: 8px;
 }
 .dashboard-kpi-card {
-    padding: 14px;
+    padding: 10px 12px;
     background: var(--admin-surface);
     border: 1px solid var(--admin-line);
     border-radius: 8px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 2px;
+    min-height: 0;
 }
 .dashboard-kpi-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
+    min-height: 0;
 }
 .dashboard-kpi-head i {
     color: var(--admin-muted);
@@ -1136,14 +1138,14 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    font-size: 0.78rem;
-    opacity: 0.5;
+    font-size: 0.72rem;
+    opacity: 0.45;
 }
 .dashboard-kpi-title {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 600;
     color: var(--admin-muted);
-    line-height: 1.3;
+    line-height: 1.2;
     letter-spacing: 0.04em;
     word-break: keep-all;
     overflow: hidden;
@@ -1152,19 +1154,21 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
 .dashboard-kpi-main {
     display: flex;
     align-items: baseline;
-    gap: 4px;
+    gap: 3px;
     flex-wrap: wrap;
+    line-height: 1.1;
 }
 .dashboard-kpi-value {
-    font-size: 1.5rem;
-    font-weight: 800;
+    font-size: 1.15rem;
+    font-weight: 700;
     color: var(--admin-text);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.005em;
     line-height: 1.15;
+    font-variant-numeric: tabular-nums;
 }
 .dashboard-kpi-unit {
-    font-size: 0.72rem;
-    font-weight: 700;
+    font-size: 0.7rem;
+    font-weight: 600;
     color: var(--admin-muted);
 }
 
@@ -1326,7 +1330,228 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
     min-width: 0;
 }
 
-/* 要対応タスクパネル */
+/* ============================================================
+   件数の軽量表示（枠なしピル）: 「要対応 N 件」など
+   ============================================================ */
+.admin-inline-stat {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 6px 0;
+    color: var(--admin-sub);
+    font-size: 0.85rem;
+    letter-spacing: 0.02em;
+}
+.admin-inline-stat__label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--admin-muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+.admin-inline-stat__value {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--admin-text);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.005em;
+}
+.admin-inline-stat__unit {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--admin-muted);
+}
+
+/* ============================================================
+   経過日数ピル: 3日未満は控えめ / 3-6日で警告 / 7日以上で危険
+   ============================================================ */
+.admin-age-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 3.2em;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--admin-surface-alt);
+    color: var(--admin-sub);
+    font-size: 0.78rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+}
+.admin-age-pill.is-warning {
+    background: var(--status-warning-bg);
+    color: var(--status-warning-fg);
+}
+.admin-age-pill.is-critical {
+    background: var(--status-danger-bg);
+    color: var(--status-danger-fg);
+}
+
+/* ============================================================
+   要対応タスク（ショートカット・グリッド）
+   Dashboard 用の簡素化された「タスク件数 + 各管理画面へのリンク」UI
+   ============================================================ */
+.task-shortcut-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.task-shortcut-panel__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+}
+.task-shortcut-panel__title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--admin-text);
+    letter-spacing: 0.01em;
+}
+.task-shortcut-panel__count {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--admin-muted);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+}
+.task-shortcut-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+.task-shortcut-card {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border: 1px solid var(--admin-line);
+    border-radius: 10px;
+    background: var(--admin-surface);
+    color: inherit;
+    text-decoration: none;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+.task-shortcut-card:hover {
+    background: var(--admin-surface-alt);
+    border-color: var(--admin-line-strong, var(--admin-line));
+}
+.task-shortcut-card:active {
+    transform: translateY(1px);
+}
+.task-shortcut-card.is-zero {
+    opacity: 0.55;
+}
+.task-shortcut-card[aria-disabled="true"] {
+    pointer-events: none;
+    opacity: 0.5;
+}
+.task-shortcut-card__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: var(--admin-surface-alt);
+    color: var(--admin-sub);
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+.task-shortcut-card__body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-width: 0;
+}
+.task-shortcut-card__title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--admin-text);
+    letter-spacing: 0.01em;
+}
+.task-shortcut-card__count {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 2px;
+    font-variant-numeric: tabular-nums;
+    color: var(--admin-sub);
+}
+.task-shortcut-card__count strong {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--admin-text);
+    letter-spacing: 0.01em;
+}
+.task-shortcut-card__unit {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--admin-muted);
+    margin-left: 2px;
+}
+.task-shortcut-card__arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--admin-muted);
+    font-size: 0.78rem;
+    transition: transform 0.15s ease, color 0.15s ease;
+    flex-shrink: 0;
+}
+.task-shortcut-card:hover .task-shortcut-card__arrow {
+    color: var(--admin-primary);
+    transform: translateX(2px);
+}
+
+/* サイドバーのオペレーションメニュー 4 カテゴリと 1:1 対応するトーン */
+.task-shortcut-card.tone-verification .task-shortcut-card__icon {
+    background: var(--status-info-bg);
+    color: var(--status-info-fg);
+}
+.task-shortcut-card.tone-invoices .task-shortcut-card__icon {
+    background: #fffbeb;
+    color: #92590a;
+}
+.task-shortcut-card.tone-deposits .task-shortcut-card__icon {
+    background: var(--status-success-bg);
+    color: var(--status-success-fg);
+}
+.task-shortcut-card.tone-inquiries .task-shortcut-card__icon {
+    background: var(--status-warning-bg);
+    color: var(--status-warning-fg);
+}
+
+/* 空状態（0件） */
+.task-shortcut-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 32px 16px;
+    border: 1px dashed var(--admin-line);
+    border-radius: 10px;
+    background: var(--admin-surface);
+    color: var(--admin-muted);
+    font-size: 0.85rem;
+}
+.task-shortcut-empty i {
+    color: var(--status-success-fg);
+    font-size: 1rem;
+}
+
+/* タブレット以上：2カラム */
+@media (min-width: 640px) {
+    .task-shortcut-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+}
+/* デスクトップ：3カラム */
+@media (min-width: 1024px) {
+    .task-shortcut-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+}
+
+/* 要対応タスクパネル（旧: task-table 用。現在は未使用だが他画面での再利用に備え残置） */
 .task-panel {
     background: var(--admin-surface);
     border: 1px solid var(--admin-line);
@@ -3056,7 +3281,7 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
     .billing-amount-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
     .invoice-admin-bank .billing-meta-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .invoice-manual-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .dashboard-kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .dashboard-kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
     .task-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .detail-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 14px; }
     .admin-role-switch { grid-template-columns: repeat(3, 1fr); }
@@ -3188,7 +3413,7 @@ textarea.admin-input { resize: vertical; min-height: 96px; line-height: 1.6; }
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 16px;
     }
-    .dashboard-kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+    .dashboard-kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
     .billing-detail-card {
         grid-template-columns: minmax(0, 1.4fr) minmax(320px, 1fr);
         gap: 18px;

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\CastIdentityDocument;
 use App\Models\ShopLicenseDocument;
+use App\Models\SupportInquiry;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -34,7 +35,7 @@ class AdminOperationalSummaryService
             'admin.invoices.index' => (int) ($s['invoice_workflow_pending'] ?? 0),
             'admin.deposits.index' => (int) $s['payment_confirmation_pending'] + (int) $s['cast_transfer_pending'],
             'admin.verification.index' => (int) $v['cast_pending'] + (int) $v['shop_pending'],
-            'admin.inquiries.index' => $this->getPendingInquiryCount(),
+            'admin.support-inquiries.index' => $this->getPendingInquiryCount(),
         ];
     }
 
@@ -49,7 +50,7 @@ class AdminOperationalSummaryService
             'admin.invoices.index' => $this->countInvoicesIssuedTotal(),
             'admin.deposits.index' => $this->countDepositFlowsCompletedTotal(),
             'admin.verification.index' => $this->countVerificationProcessedTotal(),
-            'admin.inquiries.index' => $this->countInquiriesResolvedTotal(),
+            'admin.support-inquiries.index' => $this->countInquiriesResolvedTotal(),
         ];
     }
 
@@ -104,12 +105,12 @@ class AdminOperationalSummaryService
 
     private function countInquiriesResolvedTotal(): int
     {
-        if (!Schema::hasTable('inquiries')) {
+        if (!Schema::hasTable('support_inquiries')) {
             return 0;
         }
 
-        return (int) DB::table('inquiries')
-            ->whereIn('status', ['対応済み', '完了', 'クローズ'])
+        return (int) SupportInquiry::query()
+            ->whereIn('status', [SupportInquiry::STATUS_RESOLVED, SupportInquiry::STATUS_DISMISSED])
             ->count();
     }
 
@@ -214,12 +215,12 @@ class AdminOperationalSummaryService
 
     private function getPendingInquiryCount(): int
     {
-        if (!Schema::hasTable('inquiries')) {
+        if (!Schema::hasTable('support_inquiries')) {
             return 0;
         }
 
-        return (int) DB::table('inquiries')
-            ->where('status', '未対応')
+        return (int) SupportInquiry::query()
+            ->where('status', SupportInquiry::STATUS_NEW)
             ->count();
     }
 
@@ -228,26 +229,26 @@ class AdminOperationalSummaryService
      */
     private function buildInquiryNotifications(): array
     {
-        if (!Schema::hasTable('inquiries')) {
+        if (!Schema::hasTable('support_inquiries')) {
             return [];
         }
 
-        return DB::table('inquiries')
-            ->where('status', '未対応')
+        return SupportInquiry::query()
+            ->where('status', SupportInquiry::STATUS_NEW)
             ->orderByDesc('created_at')
             ->limit(100)
             ->get()
-            ->map(function ($row) {
+            ->map(function (SupportInquiry $row) {
                 $created = Carbon::parse($row->created_at ?? now());
-                $fromName = trim((string) ($row->from_name ?? $row->name ?? $row->user_name ?? ''));
-                $subject = trim((string) ($row->subject ?? $row->title ?? ''));
+                $fromName = trim((string) ($row->from_name ?? $row->name ?? ''));
+                $subject = trim((string) ($row->subject ?? ''));
 
                 return [
                     'title' => '[問合せ] ' . $fromName . ' — ' . $subject,
                     'time_label' => $created->diffForHumans(),
                     'icon' => 'fa-comments',
                     'class' => 'is-warning',
-                    'url' => route('admin.inquiries.index'),
+                    'url' => route('admin.support-inquiries.index'),
                     'sort' => 400,
                 ];
             })

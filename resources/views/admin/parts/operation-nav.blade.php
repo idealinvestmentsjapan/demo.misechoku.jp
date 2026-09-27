@@ -9,7 +9,7 @@
         ['key' => 'deposits', 'label' => '入金確認・振込', 'icon' => 'fa-money-bill-wave', 'route' => 'admin.deposits.index', 'badge_route' => 'admin.deposits.index'],
         ['key' => 'plans', 'label' => 'プラン入金', 'icon' => 'fa-crown', 'route' => 'admin.plans.index', 'badge_route' => 'admin.plans.index'],
         ['key' => 'verification', 'label' => '書類審査', 'icon' => 'fa-id-card', 'route' => 'admin.verification.index', 'badge_route' => 'admin.verification.index'],
-        ['key' => 'inquiries', 'label' => '問合せ対応', 'icon' => 'fa-triangle-exclamation', 'route' => 'admin.inquiries.index', 'badge_route' => 'admin.inquiries.index'],
+        ['key' => 'inquiries', 'label' => '問合せ対応', 'icon' => 'fa-envelope-open-text', 'route' => 'admin.support-inquiries.index', 'badge_route' => 'admin.support-inquiries.index'],
         ['key' => 'tasks', 'label' => 'タスク', 'icon' => 'fa-list-check', 'route' => 'admin.tasks.index', 'badge_route' => 'admin.tasks.index'],
     ];
     $current = $active ?? '';

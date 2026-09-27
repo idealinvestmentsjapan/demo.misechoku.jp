@@ -14,26 +14,18 @@ class SupportInquiryController extends Controller
 {
     public function index(Request $request): View
     {
-        $status = (string) $request->query('status', '');
-        $category = (string) $request->query('category', '');
+        // 未対応（要対応）のみ、発生日が古い順（＝経過日数が長い順）で表示。
+        // 対応済みや対応中を含む一覧・フリー検索は運用上不要のため撤去済み。
+        $inquiries = SupportInquiry::query()
+            ->where('status', SupportInquiry::STATUS_NEW)
+            ->orderBy('created_at', 'asc')
+            ->paginate(30);
 
-        $query = SupportInquiry::query();
-        if ($status !== '' && array_key_exists($status, SupportInquiry::STATUS_LABELS)) {
-            $query->where('status', $status);
-        }
-        if ($category !== '' && array_key_exists($category, SupportInquiry::CATEGORY_LABELS)) {
-            $query->where('category', $category);
-        }
+        $pendingCount = SupportInquiry::query()
+            ->where('status', SupportInquiry::STATUS_NEW)
+            ->count();
 
-        $inquiries = $query->orderByDesc('created_at')->paginate(30)->withQueryString();
-
-        $counts = [
-            'new' => SupportInquiry::where('status', SupportInquiry::STATUS_NEW)->count(),
-            'in_progress' => SupportInquiry::where('status', SupportInquiry::STATUS_IN_PROGRESS)->count(),
-            'all' => SupportInquiry::count(),
-        ];
-
-        return view('admin.support-inquiries.index', compact('inquiries', 'counts', 'status', 'category'));
+        return view('admin.support-inquiries.index', compact('inquiries', 'pendingCount'));
     }
 
     public function show(SupportInquiry $inquiry): View

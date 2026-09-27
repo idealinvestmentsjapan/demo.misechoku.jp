@@ -39,6 +39,16 @@
             <div class="admin-alert admin-alert-error">{{ session('error') }}</div>
         @endif
 
+        @if(isset($pdfFontInstalled) && !$pdfFontInstalled)
+            <div class="admin-alert admin-alert-warning">
+                <strong>PDFの日本語フォントが未インストールです。</strong>
+                このままPDFをダウンロードすると本文が文字化けするため、サーバで
+                <code>php artisan pdf:install-japanese-font</code>
+                を1度だけ実行してください。実行後、通常のPDFダウンロードが有効になります。
+                （それまでは請求書プレビュー画面の「印刷 / 別名でPDF保存」でダウンロードできます）
+            </div>
+        @endif
+
         {{-- KPI: ボタンとして機能（クリックで下の一覧をフィルタ） --}}
         @php
             $overdueCount = 0;
@@ -106,17 +116,8 @@
             </p>
 
             @if(!empty($pending))
-                {{-- 検索 + ソート --}}
+                {{-- ソート --}}
                 <div class="invoice-toolbar" data-invoice-toolbar>
-                    <div class="invoice-toolbar__search">
-                        <i class="fas fa-magnifying-glass"></i>
-                        <input
-                            type="search"
-                            placeholder="店舗名・キャスト名・申請ID で絞り込み"
-                            data-invoice-search
-                            autocomplete="off"
-                        >
-                    </div>
                     <label class="invoice-toolbar__sort">
                         <span><i class="fas fa-arrow-down-wide-short"></i> 並び順</span>
                         <select data-invoice-sort>
@@ -126,7 +127,6 @@
                             <option value="amount_asc">金額が低い順</option>
                         </select>
                     </label>
-                    <div class="invoice-toolbar__hits" data-invoice-hits aria-live="polite"></div>
                 </div>
 
                 <div class="invoice-pending-list" data-invoice-list>
@@ -217,6 +217,91 @@
                 </a>
             </div>
         </section>
+
+        {{-- 発行済み請求書の送付状況（直近20件） --}}
+        @if(!empty($issued))
+        <section class="admin-panel">
+            <h2 class="admin-panel-title">発行済み請求書の送付状況</h2>
+            <p class="admin-note u-mb-12">
+                発行後に店舗へメールが届いたかを確認できます。<strong>送付済み</strong>=メール送信に成功した記録あり。<strong>未送付</strong>=メール送信が失敗したため再送してください。
+            </p>
+            <div class="dashboard-kpi-grid invoice-filter-kpis u-mb-12">
+                <div class="dashboard-kpi-card">
+                    <div class="dashboard-kpi-head">
+                        <div class="dashboard-kpi-title">送付済み</div>
+                        <i class="fas fa-circle-check"></i>
+                    </div>
+                    <div class="dashboard-kpi-main">
+                        <span class="dashboard-kpi-value">{{ number_format($deliverySummary['sent'] ?? 0) }}</span>
+                        <span class="dashboard-kpi-unit">件</span>
+                    </div>
+                </div>
+                <div class="dashboard-kpi-card {{ ($deliverySummary['unsent'] ?? 0) > 0 ? 'is-critical' : '' }}">
+                    <div class="dashboard-kpi-head">
+                        <div class="dashboard-kpi-title">未送付（要再送）</div>
+                        <i class="fas fa-triangle-exclamation"></i>
+                    </div>
+                    <div class="dashboard-kpi-main">
+                        <span class="dashboard-kpi-value">{{ number_format($deliverySummary['unsent'] ?? 0) }}</span>
+                        <span class="dashboard-kpi-unit">件</span>
+                    </div>
+                </div>
+                <div class="dashboard-kpi-card">
+                    <div class="dashboard-kpi-head">
+                        <div class="dashboard-kpi-title">店舗メール未登録</div>
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="dashboard-kpi-main">
+                        <span class="dashboard-kpi-value">{{ number_format($deliverySummary['no_email'] ?? 0) }}</span>
+                        <span class="dashboard-kpi-unit">件</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="invoice-pending-list">
+                @foreach($issued as $d)
+                    @php $del = $d['mail_delivery_status'] ?? ['code' => 'pre_issue', 'label' => '未発行', 'sent_at' => null]; @endphp
+                    <div class="invoice-pending-card">
+                        <div class="invoice-pending-card-info">
+                            <div class="invoice-pending-card-title">
+                                {{ $d['invoice_number'] }} ／ {{ $d['shop_name'] }} / {{ $d['cast_name'] }}
+                            </div>
+                            <div class="invoice-pending-card-meta">
+                                @if($del['code'] === 'sent')
+                                    <span class="admin-status-badge is-success">
+                                        <i class="fas fa-circle-check"></i> 送付済み {{ $del['sent_at'] }}
+                                    </span>
+                                @elseif($del['code'] === 'unsent')
+                                    <span class="admin-status-badge is-warning">
+                                        <i class="fas fa-triangle-exclamation"></i> 未送付（要再送）
+                                    </span>
+                                @elseif($del['code'] === 'no_email')
+                                    <span class="admin-status-badge is-info">
+                                        <i class="fas fa-envelope"></i> 店舗メール未登録
+                                    </span>
+                                @endif
+                                <span class="admin-note">発行 {{ $d['invoice_issued_at'] ?: '—' }} ／ 支払期限 {{ $d['invoice_due_date'] ?: '—' }}</span>
+                            </div>
+                        </div>
+                        <div class="invoice-pending-card-amount">¥{{ number_format($d['invoice_amount'] ?? 0) }}</div>
+                        <div class="invoice-pending-card-actions" style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <a href="{{ route('admin.deposits.invoice.show', $d['id']) }}" class="btn-action btn-action-secondary" target="_blank" rel="noopener">
+                                <i class="fas fa-file-invoice"></i> 請求書
+                            </a>
+                            @if(in_array($del['code'], ['unsent', 'sent'], true))
+                                <form method="POST" action="{{ route('admin.deposits.invoice.resend', $d['id']) }}" style="margin:0;">
+                                    @csrf
+                                    <button type="submit" class="btn-action {{ $del['code'] === 'unsent' ? 'manage' : 'btn-action-secondary' }}">
+                                        <i class="fas fa-paper-plane"></i> {{ $del['code'] === 'sent' ? 'メール再送' : 'メール送信' }}
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </section>
+        @endif
 
         {{-- 運営口座 --}}
         <section class="admin-panel invoice-admin-bank">

@@ -48,7 +48,6 @@
                 </div>
             </div>
             <div class="policy-doc-admin__actions">
-                @include('admin.parts.back-link', ['url' => route('admin.dashboard'), 'label' => 'ダッシュボードへ戻る'])
                 @if ($isEditing)
                     <a href="{{ route('admin.policies.show', ['key' => $document->key]) }}" class="btn-policy-ghost">
                         <i class="fas fa-times"></i> キャンセル

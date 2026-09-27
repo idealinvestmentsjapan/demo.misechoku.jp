@@ -28,7 +28,6 @@ use App\Http\Controllers\Admin\InvoiceController as AdminInvoice;
 use App\Http\Controllers\Admin\SalesController as AdminSales;
 use App\Http\Controllers\Admin\MasterController as AdminMaster;
 use App\Http\Controllers\Admin\ColumnController as AdminColumn;
-use App\Http\Controllers\Admin\InquiryController as AdminInquiry;
 use App\Http\Controllers\Admin\AuthController as AdminAuth;
 use App\Http\Controllers\Admin\ShopController as AdminShop;
 use App\Http\Controllers\Admin\CastController as AdminCast;
@@ -162,6 +161,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/deposits/{deposit}/invoice', [AdminDeposit::class, 'showInvoice'])->name('deposits.invoice.show');
             Route::get('/deposits/{deposit}/invoice/pdf', [AdminDeposit::class, 'downloadInvoicePdf'])->name('deposits.invoice.pdf');
             Route::post('/deposits/{deposit}/invoice', [AdminDeposit::class, 'issueInvoice'])->name('deposits.invoice.issue');
+            Route::post('/deposits/{deposit}/invoice/resend', [AdminDeposit::class, 'resendInvoiceMail'])->name('deposits.invoice.resend');
             Route::post('/deposits/{deposit}/confirm-shop-payment', [AdminDeposit::class, 'confirmShopPayment'])->name('deposits.shop-payment.confirm');
             Route::post('/deposits/{deposit}/transfer-start', [AdminDeposit::class, 'transferStart'])->name('deposits.transfer-start');
             Route::post('/deposits/{deposit}/transfer-complete', [AdminDeposit::class, 'transferComplete'])->name('deposits.transfer-complete');
@@ -276,12 +276,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::delete('/columns/{column}', [AdminColumn::class, 'destroy'])->name('columns.destroy');
         });
 
-        // サポート問い合わせ管理
-        Route::middleware('admin.permission:content.notices')->group(function () {
+        // 問合せ対応（旧: 問合せ対応 + サポート問合せ を support-inquiries に統合）
+        Route::middleware('admin.permission:operations.inquiries')->group(function () {
             Route::get('/support-inquiries', [\App\Http\Controllers\Admin\SupportInquiryController::class, 'index'])->name('support-inquiries.index');
             Route::get('/support-inquiries/{inquiry}', [\App\Http\Controllers\Admin\SupportInquiryController::class, 'show'])->name('support-inquiries.show');
             Route::post('/support-inquiries/{inquiry}/status', [\App\Http\Controllers\Admin\SupportInquiryController::class, 'updateStatus'])->name('support-inquiries.status');
             Route::post('/support-inquiries/{inquiry}/note', [\App\Http\Controllers\Admin\SupportInquiryController::class, 'updateNote'])->name('support-inquiries.note');
+
+            // 旧 /admin/inquiries は support-inquiries へ 301 リダイレクト（ブックマーク / 外部リンクの互換維持）
+            Route::redirect('/inquiries', '/admin/support-inquiries', 301)->name('inquiries.index');
+            Route::get('/inquiries/{id}', function ($id) {
+                return redirect()->route('admin.support-inquiries.show', $id, 301);
+            })->whereNumber('id')->name('inquiries.show');
         });
 
         // ユーザー通報管理
@@ -319,11 +325,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 ->name('verification.shopdoc.purge');
         });
 
-        // 蝠上＞蜷医ｏ縺帷ｮ｡逅・
-        Route::middleware('admin.permission:operations.inquiries')->group(function () {
-            Route::get('/inquiries', [AdminInquiry::class, 'index'])->name('inquiries.index');
-            Route::get('/inquiries/{id}', [AdminInquiry::class, 'show'])->whereNumber('id')->name('inquiries.show');
-        });
+        // 旧「問合せ対応」ルートは上の support-inquiries グループでリダイレクト定義済み。
 
         // 繧｢繧ｫ繧ｦ繝ｳ繝育ｮ｡逅・ｼ磯°蝟ｶ・・
         Route::middleware('admin.permission:accounts.admins')->group(function () {

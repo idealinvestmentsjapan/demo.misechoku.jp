@@ -155,12 +155,6 @@
              =========================== --}}
         <div class="admin-tab-panel {{ $defaultTab === 'cast' ? 'is-active' : '' }}" data-verif-panel="cast" id="cast-section">
             <div class="admin-page-toolbar">
-                <div class="admin-page-toolbar-row">
-                    <div class="admin-page-toolbar-search">
-                        <i class="fas fa-magnifying-glass"></i>
-                        <input type="text" class="verification-filter" data-target-table="cast-verification-table" data-filter-key="keyword" placeholder="名前・ID・書類種別で検索" value="{{ request('cast_keyword', '') }}">
-                    </div>
-                </div>
                 <div class="admin-page-toolbar-filters">
                     <button type="button" class="admin-filter-chip {{ request('cast_status', 'pending') === 'pending' ? 'is-active' : '' }}"
                         data-verif-quickfilter="pending" data-target-table="cast-verification-table">
@@ -372,12 +366,6 @@
              =========================== --}}
         <div class="admin-tab-panel {{ $defaultTab === 'shop' ? 'is-active' : '' }}" data-verif-panel="shop" id="shop-section">
             <div class="admin-page-toolbar">
-                <div class="admin-page-toolbar-row">
-                    <div class="admin-page-toolbar-search">
-                        <i class="fas fa-magnifying-glass"></i>
-                        <input type="text" class="verification-filter" data-target-table="shop-verification-table" data-filter-key="keyword" placeholder="店舗名・ID・書類種別で検索" value="{{ request('shop_keyword', '') }}">
-                    </div>
-                </div>
                 <div class="admin-page-toolbar-filters">
                     <button type="button" class="admin-filter-chip {{ request('shop_status', 'pending') === 'pending' ? 'is-active' : '' }}"
                         data-verif-quickfilter="pending" data-target-table="shop-verification-table">

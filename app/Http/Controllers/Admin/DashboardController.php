@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\AdminOperationalSummaryService;
 use App\Services\BillingManagementService;
 use App\Services\DocumentReviewService;
 use Carbon\Carbon;
@@ -13,7 +14,8 @@ class DashboardController extends Controller
 {
     public function __construct(
         private readonly BillingManagementService $billingManagementService,
-        private readonly DocumentReviewService $documentReviewService
+        private readonly DocumentReviewService $documentReviewService,
+        private readonly AdminOperationalSummaryService $adminOperationalSummaryService
     ) {
     }
 
@@ -158,56 +160,17 @@ class DashboardController extends Controller
             ];
         }
 
-        $documentTasks = $this->documentReviewService->getDashboardTasks();
-        $billingTasks = collect($this->billingManagementService->getPendingTasks())
-            ->map(function (array $task) {
-                $catId = match ($task['status_code'] ?? null) {
-                    BillingManagementService::STATUS_SHOP_PAYMENT_CONFIRMED => 'transfer',
-                    BillingManagementService::STATUS_SHOP_PAYMENT_REPORTED => 'deposit',
-                    BillingManagementService::STATUS_CAST_REQUESTED,
-                    BillingManagementService::STATUS_SHOP_APPROVED => 'invoice',
-                    default => 'deposit',
-                };
-
-                $categoryLabel = match ($catId) {
-                    'transfer' => '振込実行',
-                    'invoice' => '請求書発行',
-                    default => '入金照合',
-                };
-
-                return [
-                    'id' => 'deposit-' . ($task['id'] ?? 'unknown'),
-                    'category' => $categoryLabel,
-                    'target' => $task['shop_name'] ?? $task['cast_name'] ?? '取引',
-                    'type' => $catId === 'transfer' ? 'キャスト' : '店舗',
-                    'status' => $task['status_label'] ?? '未処理',
-                    'date' => $task['updated_at_label'] ?? ($task['task_due_date'] ?? '-'),
-                    'urgency' => $catId === 'transfer' ? 'normal' : 'high',
-                    'action' => match ($catId) {
-                        'transfer' => '振込確認',
-                        'invoice' => '請求対応',
-                        default => '着金確認',
-                    },
-                    'cat_id' => $catId,
-                    'amount' => !empty($task['invoice_amount'])
-                        ? '¥' . number_format((int) $task['invoice_amount'])
-                        : (!empty($task['cast_transfer_amount']) ? '¥' . number_format((int) $task['cast_transfer_amount']) : null),
-                    'url' => $task['task_url'] ?? route('admin.deposits.index'),
-                ];
-            })
-            ->all();
-
-        $tasks = array_values(array_merge($documentTasks, $billingTasks));
+        // サイドバーの未対応バッジ（AdminOperationalSummaryService）を単一の集計元とする。
+        // これによりダッシュボードの未済タスク合計と、サイドバーの各バッジ合計が完全一致する。
+        $badges = $this->adminOperationalSummaryService->getOperationBadgeCounts();
         $taskSummary = [
-            ['id' => 'kyc', 'title' => '本人確認', 'count' => collect($tasks)->where('cat_id', 'kyc')->count()],
-            ['id' => 'doc', 'title' => '書類審査', 'count' => collect($tasks)->where('cat_id', 'doc')->count()],
-            ['id' => 'invoice', 'title' => '請求書発行', 'count' => collect($tasks)->where('cat_id', 'invoice')->count()],
-            ['id' => 'deposit', 'title' => '入金確認', 'count' => collect($tasks)->where('cat_id', 'deposit')->count()],
-            ['id' => 'transfer', 'title' => '振込実行', 'count' => collect($tasks)->where('cat_id', 'transfer')->count()],
-            ['id' => 'error', 'title' => '振込エラー', 'count' => collect($tasks)->where('cat_id', 'error')->count()],
-            // 保持期間ポリシー超過の書類削除候補（DocumentReviewService::getPurgeCandidateTasks）
-            ['id' => 'purge', 'title' => '削除候補', 'count' => collect($tasks)->where('cat_id', 'purge')->count()],
+            ['id' => 'verification', 'title' => '身分証・書類審査', 'count' => (int) ($badges['admin.verification.index'] ?? 0)],
+            ['id' => 'invoices',     'title' => '請求書発行',       'count' => (int) ($badges['admin.invoices.index'] ?? 0)],
+            ['id' => 'deposits',     'title' => '入金確認・振込',   'count' => (int) ($badges['admin.deposits.index'] ?? 0)],
+            ['id' => 'inquiries',    'title' => '問合せ対応',       'count' => (int) ($badges['admin.support-inquiries.index'] ?? 0)],
         ];
+        // $tasks は現在ダッシュボード Blade で参照されないが、後方互換のため空配列を渡す
+        $tasks = [];
 
         $dashboardUpdatedAt = now()->format('Y/m/d H:i');
 

@@ -176,9 +176,9 @@
    -------------------------------------------------------------------------- */
 @media (max-width: 640px) {
     /* KPI：数値・パディングをやや圧縮（2列グリッドは admin.css のまま） */
-    .dashboard-kpi-card { padding: 10px; }
-    .dashboard-kpi-value { font-size: clamp(1.1rem, 6vw, 1.5rem); }
-    .dashboard-kpi-title { font-size: 0.68rem; }
+    .dashboard-kpi-card { padding: 8px 10px; }
+    .dashboard-kpi-value { font-size: clamp(1.05rem, 5vw, 1.25rem); }
+    .dashboard-kpi-title { font-size: 0.66rem; }
 
     /* 入金確認・振込（/admin/deposits）
        ステップ表示：ラベルは現在ステップのみ表示し、他は点だけに */

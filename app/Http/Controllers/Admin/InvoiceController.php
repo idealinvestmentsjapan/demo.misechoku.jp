@@ -32,14 +32,38 @@ class InvoiceController extends Controller
             ->values()
             ->all();
         $manualTargets = collect($dashboard['deposits'])->filter(fn ($d) => empty($d['invoice_number']))->values()->all();
+
+        // 発行済み案件の送付状況一覧（新しい順、直近20件）
+        $issued = collect($dashboard['deposits'])
+            ->filter(fn ($d) => !empty($d['invoice_number']))
+            ->sortByDesc(fn ($d) => $d['invoice_issued_at'] ?? '')
+            ->take(20)
+            ->values()
+            ->all();
+        $deliverySummary = [
+            'sent' => 0,
+            'unsent' => 0,
+            'no_email' => 0,
+        ];
+        foreach ($issued as $d) {
+            $code = $d['mail_delivery_status']['code'] ?? '';
+            if (isset($deliverySummary[$code])) {
+                $deliverySummary[$code]++;
+            }
+        }
+
         $summary = $dashboard['summary'];
         $adminBank = $this->billingManagementService->getAdminBankAccount();
+        $pdfFontInstalled = is_file(storage_path('fonts/ipaexg.ttf'));
 
         return view('admin.invoices.index', [
             'pending' => $pending,
             'manualTargets' => $manualTargets,
+            'issued' => $issued,
+            'deliverySummary' => $deliverySummary,
             'summary' => $summary,
             'adminBank' => $adminBank,
+            'pdfFontInstalled' => $pdfFontInstalled,
         ]);
     }
 

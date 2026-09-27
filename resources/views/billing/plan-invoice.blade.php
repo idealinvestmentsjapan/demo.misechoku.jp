@@ -8,7 +8,7 @@
     <meta charset="UTF-8">
     <title>請求書 {{ $doc['number'] }}</title>
     <style>
-        body { margin: 0; padding: 0; color: #111827; font-family: "Helvetica Neue", Arial, "Hiragino Sans", "Meiryo", sans-serif; font-size: 11pt; }
+        body { margin: 0; padding: 0; color: #111827; font-family: "ipaexg", "Noto Sans JP", "Hiragino Sans", "Meiryo", sans-serif; font-size: 11pt; }
         .doc-wrap { max-width: 210mm; margin: 0 auto; padding: 16mm; box-sizing: border-box; }
         .doc-header { border-bottom: 2px solid #111827; padding-bottom: 12pt; margin-bottom: 16pt; }
         .doc-title { font-size: 22pt; font-weight: 800; letter-spacing: 0.3em; margin: 0 0 8pt; }

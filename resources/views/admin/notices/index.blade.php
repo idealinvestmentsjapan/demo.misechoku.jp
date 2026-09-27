@@ -79,15 +79,6 @@
         </section>
 
         <div class="admin-toolbar-with-cta">
-            <div class="admin-page-toolbar">
-                <div class="admin-page-toolbar-row">
-                    <div class="admin-page-toolbar-search">
-                        <i class="fas fa-magnifying-glass"></i>
-                        <input type="search" id="notice-search" placeholder="タイトル・本文で検索" autocomplete="off">
-                    </div>
-                    <div class="invoice-toolbar__hits" id="notice-hits" aria-live="polite"></div>
-                </div>
-            </div>
             <a href="{{ route('admin.notices.create') }}" class="btn-action manage">
                 <i class="fas fa-plus"></i> 新規作成
             </a>

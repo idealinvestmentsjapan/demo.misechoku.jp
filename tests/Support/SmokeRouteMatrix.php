@@ -34,7 +34,7 @@ final class SmokeRouteMatrix
             'admin columns' => ['admin.columns.index', [], 200],
             'admin tasks' => ['admin.tasks.index', [], 200],
             'admin verification' => ['admin.verification.index', [], 200],
-            'admin inquiries' => ['admin.inquiries.index', [], 200],
+            'admin inquiries' => ['admin.support-inquiries.index', [], 200],
             'admin accounts' => ['admin.admin-accounts.index', [], 200],
             'admin bank' => ['admin.bank.index', [], 200],
         ];

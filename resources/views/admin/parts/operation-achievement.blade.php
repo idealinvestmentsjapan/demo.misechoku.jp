@@ -9,7 +9,7 @@
         'admin.invoices.index' => '請求書番号が登録済みの入金申請の累計件数',
         'admin.deposits.index' => 'ステータスが「完了」となった案件の累計件数',
         'admin.verification.index' => '承認または却下まで完了した本人確認・書類の累計件数',
-        'admin.inquiries.index' => '対応済み・完了・クローズとした問合せの累計件数',
+        'admin.support-inquiries.index' => '対応済み・クローズとした問合せの累計件数',
     ];
 @endphp
 @if ($key !== '')

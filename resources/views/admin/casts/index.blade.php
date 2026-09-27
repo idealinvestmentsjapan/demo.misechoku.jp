@@ -111,13 +111,9 @@
             </button>
         </section>
 
-        {{-- 検索 + 並び替え --}}
+        {{-- 並び替え --}}
         <div class="admin-page-toolbar">
             <div class="admin-page-toolbar-row">
-                <div class="admin-page-toolbar-search">
-                    <i class="fas fa-magnifying-glass"></i>
-                    <input type="search" id="cast-search" placeholder="ニックネーム・IDで検索" autocomplete="off">
-                </div>
                 <label class="invoice-toolbar__sort">
                     <span><i class="fas fa-arrow-down-wide-short"></i> 並び順</span>
                     <select id="cast-sort">

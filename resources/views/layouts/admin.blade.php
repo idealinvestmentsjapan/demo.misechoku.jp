@@ -4,13 +4,19 @@
     $authedAdmin = auth()->guard('admin')->user();
     $menuGroups = [
         [
+            'title' => 'アナリティクス',
+            'items' => [
+                ['label' => '売上・ユーザー数増減', 'route' => 'admin.sales.index', 'icon' => 'fa-chart-column', 'badge' => null, 'badge_class' => '', 'permission' => 'analytics.sales'],
+            ],
+        ],
+        [
             'title' => 'オペレーション',
             'items' => [
                 ['label' => '請求書発行', 'route' => 'admin.invoices.index', 'icon' => 'fa-file-invoice', 'badge' => null, 'badge_class' => '', 'permission' => 'operations.invoices'],
                 ['label' => '入金確認・振込', 'route' => 'admin.deposits.index', 'icon' => 'fa-money-bill-wave', 'badge' => null, 'badge_class' => '', 'permission' => 'operations.deposits'],
                 ['label' => 'プラン入金管理', 'route' => 'admin.plans.index', 'icon' => 'fa-crown', 'badge' => null, 'badge_class' => '', 'permission' => 'operations.deposits'],
                 ['label' => '身分証・書類審査', 'route' => 'admin.verification.index', 'icon' => 'fa-id-card', 'badge' => null, 'badge_class' => '', 'permission' => 'operations.verification'],
-                ['label' => '問合せ対応', 'route' => 'admin.inquiries.index', 'icon' => 'fa-triangle-exclamation', 'badge' => null, 'badge_class' => '', 'permission' => 'operations.inquiries'],
+                ['label' => '問合せ対応', 'route' => 'admin.support-inquiries.index', 'icon' => 'fa-envelope-open-text', 'badge' => null, 'badge_class' => '', 'permission' => 'operations.inquiries'],
             ],
         ],
         [
@@ -18,7 +24,6 @@
             'items' => [
                 ['label' => 'お知らせ管理', 'route' => 'admin.notices.index', 'icon' => 'fa-bell', 'badge' => null, 'badge_class' => '', 'permission' => 'content.notices'],
                 ['label' => 'コラム管理', 'route' => 'admin.columns.index', 'icon' => 'fa-pen-nib', 'badge' => null, 'badge_class' => '', 'permission' => 'content.columns'],
-                ['label' => 'サポート問合せ', 'route' => 'admin.support-inquiries.index', 'icon' => 'fa-envelope-open-text', 'badge' => null, 'badge_class' => '', 'permission' => 'content.notices'],
                 ['label' => 'ユーザー通報', 'route' => 'admin.user_reports.index', 'icon' => 'fa-flag', 'badge' => null, 'badge_class' => '', 'permission' => 'content.notices'],
             ],
         ],
@@ -30,12 +35,6 @@
                 ['label' => '通知・タスク仕様', 'route' => 'admin.notification-spec.index', 'icon' => 'fa-bell', 'badge' => null, 'badge_class' => '', 'permission' => 'master.notification_spec'],
                 ['label' => 'オコジョガイド設定', 'route' => 'admin.character-guide.index', 'icon' => 'fa-comment-dots', 'badge' => null, 'badge_class' => '', 'permission' => 'master.character_guide'],
                 ['label' => 'トーク定型文マスタ', 'route' => 'admin.talk-quick-replies.index', 'icon' => 'fa-bolt', 'badge' => null, 'badge_class' => '', 'permission' => 'master.talk_quick_replies'],
-            ],
-        ],
-        [
-            'title' => 'アナリティクス',
-            'items' => [
-                ['label' => '売上・ユーザー数増減', 'route' => 'admin.sales.index', 'icon' => 'fa-chart-column', 'badge' => null, 'badge_class' => '', 'permission' => 'analytics.sales'],
             ],
         ],
         [
@@ -92,7 +91,7 @@
         'admin.plans.*' => 'オペレーション',
         'admin.verification.*' => 'オペレーション',
         'admin.tasks.*' => 'オペレーション',
-        'admin.inquiries.*' => 'オペレーション',
+        'admin.support-inquiries.*' => 'オペレーション',
         'admin.notices.*' => 'コンテンツ',
         'admin.columns.*' => 'コンテンツ',
         'admin.ngwords.*' => 'マスタ設定',
@@ -128,11 +127,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     {{-- メインアプリと同じ Noto Sans JP + Montserrat（DESIGN.md §3 と統一） --}}
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800;900&family=Montserrat:wght@400;600;700;800&display=swap">
-    <link rel="stylesheet" href="{{ asset('assets/css/admin.css') }}?v=20260927-quiet-v1">
+    <link rel="stylesheet" href="{{ asset('assets/css/admin.css') }}?v=20260927-quiet-v5">
     {{-- Detail-page + role-UI styles (extracted 2026-08-02); load AFTER admin.css --}}
-    <link rel="stylesheet" href="{{ asset('assets/css/admin-detail.css') }}?v=20260927-quiet-v1">
+    <link rel="stylesheet" href="{{ asset('assets/css/admin-detail.css') }}?v=20260927-quiet-v5">
     {{-- モバイル最適化（admin.css の後に読み込んで上書き） --}}
-    <link rel="stylesheet" href="{{ asset('assets/css/admin-mobile.css') }}?v=20260815-admin-mobile-v4">
+    <link rel="stylesheet" href="{{ asset('assets/css/admin-mobile.css') }}?v=20260927-quiet-v3">
     @stack('admin-styles')
     {{-- 入力コンポーネントの全画面統一（文字列/文章/数値/日付/選択） --}}
     <link rel="stylesheet" href="{{ asset('assets/css/form-controls.css') }}?v=20260719-light-all">
@@ -232,10 +231,6 @@
                 </div>
 
                 <div class="admin-header-right">
-                    <div class="admin-search-wrap">
-                        <i class="fas fa-magnifying-glass"></i>
-                        <input type="text" class="admin-search-input" placeholder="検索...">
-                    </div>
                     {{-- 未済タスク（請求・書類審査・問合せなどの要対応一覧） --}}
                     <div style="position: relative;">
                         @php

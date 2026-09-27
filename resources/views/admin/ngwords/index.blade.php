@@ -88,12 +88,6 @@
             </div>
 
             <div class="admin-page-toolbar" style="margin-top:0;">
-                <div class="admin-page-toolbar-row">
-                    <div class="admin-page-toolbar-search">
-                        <i class="fas fa-magnifying-glass"></i>
-                        <input type="search" id="ngword-search" placeholder="NGワード本文で検索" autocomplete="off">
-                    </div>
-                </div>
                 <div class="admin-page-toolbar-filters" data-ngword-filters>
                     <button type="button" class="admin-filter-chip is-active" data-ngword-filter="all">
                         <span>すべて</span><strong>{{ $words->count() }}</strong>

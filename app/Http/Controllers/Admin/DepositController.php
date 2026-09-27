@@ -77,6 +77,20 @@ class DepositController extends Controller
     }
 
     /**
+     * 運営側：発行済み請求書のメール再送（送付失敗リカバリー）
+     */
+    public function resendInvoiceMail(Request $request, int $deposit)
+    {
+        $result = $this->billingManagementService->resendInvoiceMail($deposit);
+
+        $redirect = $request->input('return_to') === 'deposits'
+            ? redirect()->route('admin.deposits.index')
+            : redirect()->route('admin.invoices.index');
+
+        return $redirect->with($result['success'] ? 'status' : 'error', $result['message']);
+    }
+
+    /**
      * 運営側：店舗からの入金照合
      */
     public function confirmShopPayment(Request $request, int $deposit)
@@ -283,7 +297,7 @@ class DepositController extends Controller
 
     /**
      * 請求書データを帳票テンプレートでPDF化してレスポンスを返す。
-     * barryvdh/laravel-dompdf がインストールされていない場合はHTML表示へリダイレクト。
+     * barryvdh/laravel-dompdf 未導入 or 日本語フォント未設置時は印刷用HTMLへ誘導。
      */
     private function invoiceToPdfResponse(array $invoice, string $filename): Response
     {
@@ -296,6 +310,23 @@ class DepositController extends Controller
             return redirect()
                 ->route('admin.invoices.index')
                 ->with('status', 'PDF生成には barryvdh/laravel-dompdf のインストールが必要です。テンプレートは「帳票テンプレートをダウンロード」で開いた画面の印刷からPDFに保存できます。');
+        }
+
+        // Japanese font must exist or dompdf will render JP text as garbled boxes.
+        // The pdf:install-japanese-font command drops ipaexg.ttf into storage/fonts.
+        $fontPath = storage_path('fonts/ipaexg.ttf');
+        if (!is_file($fontPath)) {
+            $msg = 'PDFの日本語フォントが未インストールのため、印刷プレビュー表示に切り替えました。'
+                . 'サーバ側で `php artisan pdf:install-japanese-font` を一度実行するとPDFダウンロードが有効化されます。'
+                . '（当面は「印刷 / 別名でPDF保存」ボタンでダウンロード可能です）';
+            if ($invoice['deposit_id'] > 0) {
+                return redirect()
+                    ->route('admin.deposits.invoice.show', ['deposit' => $invoice['deposit_id']])
+                    ->with('status', $msg);
+            }
+            return redirect()
+                ->route('admin.invoices.index')
+                ->with('status', $msg);
         }
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('billing.invoice-template', ['invoice' => $invoice]);
