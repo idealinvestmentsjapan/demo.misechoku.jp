@@ -837,8 +837,14 @@ class BillingManagementService
 
     /**
      * 振込完了処理（証跡画像・チェックリスト・振込作業完了日必須）。支払済は不可逆。
+     *
+     * 従来は READY → TRANSFERRING → PAID の3段階を経由していたが、
+     * ネットバンキング側は運営1名で振込を実行する運用のため中間ロックの UX 上の
+     * 価値が薄く、UI からは "振込チェック開始" のワンクッションを撤去した。
+     * ここではその抜けを受けて READY / TRANSFERRING いずれからでも PAID に
+     * 直接遷移させる。同時押しは DB の `where('status', <=)` で1本だけ通す。
      */
-    public function completeTransfer(int $depositId, array $payload, ?string $evidenceFilePath = null): array
+    public function completeTransfer(int $depositId, array $payload, ?string $evidenceFilePath = null, ?string $operatorId = null): array
     {
         if (!Schema::hasTable('payment_tasks')) {
             return ['success' => false, 'message' => '振込タスクテーブルが存在しません。'];
@@ -853,8 +859,12 @@ class BillingManagementService
         if (!$task) {
             return ['success' => false, 'message' => '振込タスクが見つかりません。'];
         }
-        if ((int) $task->status !== PaymentTask::STATUS_TRANSFERRING) {
-            return ['success' => false, 'message' => '振込中のタスクのみ完了できます。'];
+        $taskStatus = (int) $task->status;
+        if (in_array($taskStatus, [PaymentTask::STATUS_PAID, PaymentTask::STATUS_INVALID], true)) {
+            return ['success' => false, 'message' => 'このタスクは既に確定済みのため更新できません。'];
+        }
+        if (!in_array($taskStatus, [PaymentTask::STATUS_READY, PaymentTask::STATUS_TRANSFERRING], true)) {
+            return ['success' => false, 'message' => 'このタスクは振込完了できる状態ではありません。'];
         }
 
         if (empty($payload['checklist_confirmed_account']) || empty($payload['checklist_confirmed_amount'])) {
@@ -870,18 +880,31 @@ class BillingManagementService
         $transferredAt = Carbon::parse($payload['transferred_at']);
         $now = now();
 
-        DB::transaction(function () use ($depositId, $task, $evidenceFilePath, $payload, $transferredAt, $now) {
-            DB::table('payment_tasks')
+        // Atomically claim + close the task. The WHERE-in on status guards against
+        // a concurrent second click landing on an already-closed row.
+        $updated = 0;
+        DB::transaction(function () use ($depositId, $task, $evidenceFilePath, $payload, $transferredAt, $now, $operatorId, &$updated) {
+            $updateData = [
+                'status' => PaymentTask::STATUS_PAID,
+                'transferred_at' => $transferredAt,
+                'completed_at' => $now,
+                'evidence_file_path' => $evidenceFilePath,
+                'checklist_confirmed_account' => true,
+                'checklist_confirmed_amount' => true,
+                'updated_at' => $now,
+            ];
+            if ($operatorId !== null && empty($task->operator_id)) {
+                $updateData['operator_id'] = $operatorId;
+            }
+
+            $updated = DB::table('payment_tasks')
                 ->where('id', $task->id)
-                ->update([
-                    'status' => PaymentTask::STATUS_PAID,
-                    'transferred_at' => $transferredAt,
-                    'completed_at' => $now,
-                    'evidence_file_path' => $evidenceFilePath,
-                    'checklist_confirmed_account' => true,
-                    'checklist_confirmed_amount' => true,
-                    'updated_at' => $now,
-                ]);
+                ->whereIn('status', [PaymentTask::STATUS_READY, PaymentTask::STATUS_TRANSFERRING])
+                ->update($updateData);
+
+            if ($updated === 0) {
+                return;
+            }
 
             DB::table('application_deposits')
                 ->where('id', $depositId)
@@ -893,6 +916,10 @@ class BillingManagementService
                     'updated_at' => $now,
                 ]));
         });
+
+        if ($updated === 0) {
+            return ['success' => false, 'message' => '他の担当者が同じタスクを更新した可能性があります。画面を再読み込みして状態を確認してください。'];
+        }
 
         $this->appendHistory($depositId, self::STATUS_CAST_TRANSFERRED);
 

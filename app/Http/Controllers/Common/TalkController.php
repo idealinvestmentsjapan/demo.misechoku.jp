@@ -41,6 +41,7 @@ class TalkController extends Controller
         private readonly \App\Services\NotificationService $notificationService,
         private readonly TalkQuickReplyCatalog $quickReplyCatalog,
         private readonly \App\Services\NgWordDetector $ngWordDetector,
+        private readonly \App\Services\DocumentReviewService $documentReviewService,
     ) {
     }
 
@@ -444,6 +445,13 @@ class TalkController extends Controller
         abort_unless(\App\Support\TalkActionRegistry::isAllowed($actionType, $isCastPortal), 403);
         $castId = $isCastPortal ? $this->currentCastId() : $partnerId;
         $shopId = $isCastPortal ? $partnerId : $this->currentShopId();
+        // Interview offers and hire notifications require shop license approval.
+        // Publication is already gated by DocumentReviewService::shopLicenseFullyApproved,
+        // but license approval can be revoked or expire after a conversation begins.
+        if (in_array($actionType, ['interview_offer', 'hired'], true)
+            && !$this->documentReviewService->shopLicenseFullyApproved((string) $shopId)) {
+            abort(422, '面談・採用の連絡には、営業許可証と風営許可証の両方について運営の承認が必要です。');
+        }
         $currentApplicationStatus = $this->getCurrentApplicationStatus($castId, $shopId);
         $bonusMeta = in_array($actionType, ['interview_offer', 'interview_confirm'], true)
             ? $this->buildJobBonusMetaForConversation($castId, $shopId)

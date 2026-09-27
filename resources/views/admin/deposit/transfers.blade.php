@@ -270,70 +270,49 @@
                             </div>
                         </section>
 
-                        @if($taskStatus === 1)
-                            {{-- タスク開始 --}}
-                            <section class="ops-input">
-                                <div class="ops-input__label">
-                                    <i class="fas fa-lock"></i> ① 振込ロック
+                        {{-- 振込完了フォーム：READY / TRANSFERRING どちらの状態からも直接入力できる。
+                             以前は「振込チェック開始」でロックを取ってからこの入力欄が現れていたが、
+                             ワンクッションを廃止して最初から入力画面を出す（サービス層で
+                             READY→PAID の直接遷移を許容し、DB の WHERE ステータス条件で
+                             同時押しの二重完了を防ぐ）。 --}}
+                        <section class="ops-input">
+                            <div class="ops-input__label">
+                                <i class="fas fa-pen-to-square"></i> 振込完了の入力
+                            </div>
+                            <form method="POST" action="{{ route('admin.deposits.transfer-complete', $deposit['id']) }}"
+                                  enctype="multipart/form-data" data-transfer-complete-form>
+                                @csrf
+                                <div class="admin-form-row">
+                                    <label class="admin-label">振込作業完了日時 <span class="required">必須</span></label>
+                                    <input type="datetime-local" name="transferred_at" class="admin-input"
+                                           value="{{ now()->format('Y-m-d\\TH:i') }}" required>
                                 </div>
-                                <p class="admin-note">ネットバンキングで振込を実行する前に、他の担当者と同時作業しないようロックしてください。</p>
-                                <form method="POST" action="{{ route('admin.deposits.transfer-start', $deposit['id']) }}">
-                                    @csrf
-                                    <div class="management-actions">
-                                        <button type="submit" class="btn-action manage">
-                                            <i class="fas fa-lock"></i> 振込チェック開始
-                                        </button>
-                                    </div>
-                                </form>
-                                <form method="POST" action="{{ route('admin.deposits.payment-task.invalidate', $deposit['id']) }}"
-                                      style="margin-top:10px;" onsubmit="return confirm('振込タスクを無効にしますか？口座修正後は別タスクで再発行してください。');">
-                                    @csrf
-                                    <button type="submit" class="btn-action danger">
-                                        <i class="fas fa-ban"></i> 振込タスクを無効にする（組戻し・口座誤り時）
-                                    </button>
-                                </form>
-                            </section>
-                        @elseif($taskStatus === 2)
-                            {{-- 振込完了フォーム --}}
-                            <section class="ops-input">
-                                <div class="ops-input__label">
-                                    <i class="fas fa-pen-to-square"></i> ② 振込完了の入力（この画面で入力）
+                                <div class="admin-form-row">
+                                    <label class="admin-label">振込管理番号</label>
+                                    <input type="text" name="reference" class="admin-input" placeholder="TRF-20260313-01">
                                 </div>
-                                <form method="POST" action="{{ route('admin.deposits.transfer-complete', $deposit['id']) }}"
-                                      enctype="multipart/form-data" data-transfer-complete-form>
-                                    @csrf
-                                    <div class="admin-form-row">
-                                        <label class="admin-label">振込作業完了日時 <span class="required">必須</span></label>
-                                        <input type="datetime-local" name="transferred_at" class="admin-input"
-                                               value="{{ now()->format('Y-m-d\\TH:i') }}" required>
-                                    </div>
-                                    <div class="admin-form-row">
-                                        <label class="admin-label">振込管理番号</label>
-                                        <input type="text" name="reference" class="admin-input" placeholder="TRF-20260313-01">
-                                    </div>
-                                    <div class="admin-form-row">
-                                        <label class="admin-label">振込完了画面のスクリーンショット <span class="required">必須</span></label>
-                                        <input type="file" name="evidence_screenshot" accept="image/*" class="admin-input" data-evidence-file required>
-                                    </div>
-                                    <div class="billing-check-grid" data-check-group>
-                                        <label class="billing-check-item"><input type="checkbox" name="checklist_confirmed_account" value="1" data-check-item> 振込先名義・口座番号が正しいことを確認した</label>
-                                        <label class="billing-check-item"><input type="checkbox" name="checklist_confirmed_amount" value="1" data-check-item> 振込金額が正しいことを確認した</label>
-                                    </div>
-                                    <div class="management-actions">
-                                        <button type="submit" class="btn-action manage" data-check-submit disabled data-complete-submit>
-                                            <i class="fas fa-yen-sign"></i> 支払済にする
-                                        </button>
-                                    </div>
-                                </form>
-                                <form method="POST" action="{{ route('admin.deposits.payment-task.invalidate', $deposit['id']) }}"
-                                      style="margin-top:10px;" onsubmit="return confirm('振込タスクを無効にしますか？');">
-                                    @csrf
-                                    <button type="submit" class="btn-action danger">
-                                        <i class="fas fa-ban"></i> 振込タスクを無効にする
+                                <div class="admin-form-row">
+                                    <label class="admin-label">振込完了画面のスクリーンショット <span class="required">必須</span></label>
+                                    <input type="file" name="evidence_screenshot" accept="image/*" class="admin-input" data-evidence-file required>
+                                </div>
+                                <div class="billing-check-grid" data-check-group>
+                                    <label class="billing-check-item"><input type="checkbox" name="checklist_confirmed_account" value="1" data-check-item> 振込先名義・口座番号が正しいことを確認した</label>
+                                    <label class="billing-check-item"><input type="checkbox" name="checklist_confirmed_amount" value="1" data-check-item> 振込金額が正しいことを確認した</label>
+                                </div>
+                                <div class="management-actions">
+                                    <button type="submit" class="btn-action manage" data-check-submit disabled data-complete-submit>
+                                        <i class="fas fa-yen-sign"></i> 支払済にする
                                     </button>
-                                </form>
-                            </section>
-                        @endif
+                                </div>
+                            </form>
+                            <form method="POST" action="{{ route('admin.deposits.payment-task.invalidate', $deposit['id']) }}"
+                                  style="margin-top:10px;" onsubmit="return confirm('振込タスクを無効にしますか？口座修正後は別タスクで再発行してください。');">
+                                @csrf
+                                <button type="submit" class="btn-action danger">
+                                    <i class="fas fa-ban"></i> 振込タスクを無効にする（組戻し・口座誤り時）
+                                </button>
+                            </form>
+                        </section>
                     @elseif($sc === BMS::STATUS_SHOP_PAYMENT_CONFIRMED && $task && in_array($taskStatus, [3, 4], true))
                         <section class="ops-info-note {{ $taskStatus === 3 ? 'is-success' : '' }}">
                             @if($taskStatus === 3)

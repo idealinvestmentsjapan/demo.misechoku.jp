@@ -289,6 +289,7 @@ class DepositController extends Controller
 
         $file = $request->file('evidence_screenshot');
         $path = $file->store('payment_evidence', 'public');
+        $operatorId = (string) (auth()->guard('admin')->id() ?? '') ?: null;
 
         $result = $this->billingManagementService->completeTransfer($deposit, [
             'transferred_at' => $payload['transferred_at'],
@@ -296,7 +297,7 @@ class DepositController extends Controller
             'note' => $payload['note'] ?? null,
             'checklist_confirmed_account' => $payload['checklist_confirmed_account'],
             'checklist_confirmed_amount' => $payload['checklist_confirmed_amount'],
-        ], $path);
+        ], $path, $operatorId);
 
         if (!$result['success']) {
             Storage::disk('public')->delete($path);
