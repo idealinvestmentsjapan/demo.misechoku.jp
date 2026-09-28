@@ -2008,7 +2008,7 @@ class BillingManagementService
 
         return [
             'review_id' => $review->id ?? null,
-            'application_id' => $deposit['application_id'],
+            'application_id' => $deposit['shop_job_application_id'] ?? null,
             'cast_name' => $deposit['cast_name'],
             'job_kind' => trim((string) ($deposit['job_kind'] ?? '')),
             'help_hourly_wage' => (int) ($deposit['help_hourly_wage'] ?? 0),
