@@ -23,8 +23,6 @@ final class TalkActionRegistry
     public const CAST_ONLY = [
         'interview_confirm',
         'interview_cancel_accept',
-        'work_complete_report',
-        'bonus_achievement_report',
     ];
 
     public const SHOP_ONLY = [

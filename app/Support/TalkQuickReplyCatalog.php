@@ -31,12 +31,27 @@ final class TalkQuickReplyCatalog
     /**
      * 指定ステータス x 役割の定型文候補を返す。DB を優先し、無ければ既定へフォールバック。
      *
+     * $talkTopic は初回応募時の求人種別コンテキスト（'new_hire' / 'help'）。
+     * 「やり取り中」ステータスでのみ利用され、コンテキストに合ったテンプレを優先。
+     *
      * @return array<int, array{category:string, body:string}>
      */
-    public function forStatus(bool $isCastPortal, int $status): array
+    public function forStatus(bool $isCastPortal, int $status, ?string $talkTopic = null): array
     {
         $ownerType = $isCastPortal ? 'cast' : 'shop';
         $statusKey = self::statusKey($status);
+        $topicKey = self::topicKey($ownerType, $statusKey, $talkTopic);
+
+        if ($topicKey !== $statusKey) {
+            $fromDb = $this->loadFromDatabase($ownerType, $topicKey);
+            if ($fromDb !== null) {
+                return $fromDb;
+            }
+            $defaults = $this->defaultFor($ownerType, $topicKey);
+            if (!empty($defaults)) {
+                return $defaults;
+            }
+        }
 
         $fromDb = $this->loadFromDatabase($ownerType, $statusKey);
         if ($fromDb !== null) {
@@ -51,7 +66,7 @@ final class TalkQuickReplyCatalog
      *
      * @return array<int, array{status_code:int, status_key:string, status_label:string, items: array<int, array{category:string, body:string}>}>
      */
-    public function allByStatus(bool $isCastPortal): array
+    public function allByStatus(bool $isCastPortal, ?string $talkTopic = null): array
     {
         $groups = [
             ['code' => self::STATUS_CHATTING,          'label' => 'やり取り中（初回・雑談）'],
@@ -61,18 +76,46 @@ final class TalkQuickReplyCatalog
             ['code' => self::STATUS_REJECTED,          'label' => '不採用・お断り'],
         ];
 
-        return array_values(array_filter(array_map(function (array $g) use ($isCastPortal) {
-            $items = $this->forStatus($isCastPortal, $g['code']);
+        return array_values(array_filter(array_map(function (array $g) use ($isCastPortal, $talkTopic) {
+            $topicForStatus = $g['code'] === self::STATUS_CHATTING ? $talkTopic : null;
+            $items = $this->forStatus($isCastPortal, $g['code'], $topicForStatus);
             if (empty($items)) {
                 return null;
             }
             return [
                 'status_code'  => $g['code'],
                 'status_key'   => self::statusKey($g['code']),
-                'status_label' => $g['label'],
+                'status_label' => self::statusLabelWithTopic($g['label'], $topicForStatus),
                 'items'        => $items,
             ];
         }, $groups)));
+    }
+
+    /**
+     * 求人種別コンテキストに応じた統合キー。'chatting' 以外はそのまま返す。
+     */
+    private static function topicKey(string $ownerType, string $statusKey, ?string $talkTopic): string
+    {
+        if ($statusKey !== 'chatting') {
+            return $statusKey;
+        }
+        return match ($talkTopic) {
+            'new_hire' => 'chatting_new_hire',
+            'help'     => 'chatting_help',
+            default    => $statusKey,
+        };
+    }
+
+    /**
+     * トピック（応募種別）が確定しているときは「やり取り中」のラベルに補記を足す。
+     */
+    private static function statusLabelWithTopic(string $baseLabel, ?string $talkTopic): string
+    {
+        return match ($talkTopic) {
+            'new_hire' => 'やり取り中（新規採用）',
+            'help'     => 'やり取り中（ヘルプ）',
+            default    => $baseLabel,
+        };
     }
 
     /**
@@ -146,6 +189,26 @@ final class TalkQuickReplyCatalog
                 ['category' => 'question', 'body' => '未経験ですが、安心して働ける環境でしょうか？'],
                 ['category' => 'schedule', 'body' => 'ぜひ一度、体入または面談をお願いしたいです。ご都合はいかがでしょうか？'],
             ],
+            // 新規採用（体入からのスタート）応募直後に見せる定型文
+            'chatting_new_hire' => [
+                ['category' => 'intro',    'body' => 'はじめまして。新規採用の求人を拝見してご連絡いたしました。まずは体入からご相談させてください。'],
+                ['category' => 'intro',    'body' => 'プロフィールを拝見し、ぜひ体入からお願いしたくご連絡しました。前向きに検討しております。'],
+                ['category' => 'question', 'body' => '体入時の時給・バック率・保証などの条件を詳しく教えてください。'],
+                ['category' => 'question', 'body' => '体入で出勤可能な曜日・時間帯はどのあたりでしょうか？'],
+                ['category' => 'question', 'body' => 'お店の雰囲気・お客様層・在籍キャストさんの傾向を教えてください。'],
+                ['category' => 'question', 'body' => '未経験（もしくは経験少なめ）ですが、大丈夫でしょうか？'],
+                ['category' => 'schedule', 'body' => 'ぜひ一度、体入または面談をお願いしたいです。ご都合の良い日時を教えていただけますか？'],
+            ],
+            // ヘルプ応募（単発ピンチヒッター）直後に見せる定型文
+            'chatting_help' => [
+                ['category' => 'help',     'body' => 'ヘルプの求人を拝見しました。稼働可能ですのでご検討いただけますか？'],
+                ['category' => 'help',     'body' => '本日◯時〜◯時までヘルプ入れます。よろしければお願いいたします。'],
+                ['category' => 'question', 'body' => 'ヘルプ時給・保証・ラウンドの本数目安を教えていただけますか？'],
+                ['category' => 'question', 'body' => 'ヘルプ当日の集合時間・場所・持ち物を教えてください。'],
+                ['category' => 'question', 'body' => 'ドレスコード（衣装／私服／ドレス貸出可否）はいかがでしょうか？'],
+                ['category' => 'schedule', 'body' => '直近で入れる日時をお知らせします：◯月◯日 ◯時〜◯時。ご調整可能でしょうか？'],
+                ['category' => 'status',   'body' => '本日ヘルプ、当日入りが可能です。まだ枠が空いていれば入らせてください。'],
+            ],
             'interview_pending' => [
                 ['category' => 'thanks',   'body' => '面談候補日をお送りいただきありがとうございます。確認してすぐご返信いたします。'],
                 ['category' => 'schedule', 'body' => 'ご提示いただいた第一希望の日程で問題ございません。当日よろしくお願いいたします。'],
@@ -188,6 +251,24 @@ final class TalkQuickReplyCatalog
                 ['category' => 'intro',    'body' => 'プロフィール拝見しました。ぜひ一度お話しできれば嬉しいです。'],
                 ['category' => 'help',     'body' => '「今すぐ入れる」宣言を拝見しました。本日◯時から◯時まで、ヘルプでお願いできませんか？'],
                 ['category' => 'help',     'body' => '急遽ピンチヒッターを探しております。ご対応可能でしたら折り返しお願いいたします！'],
+            ],
+            // 新規採用求人からの応募を受けた店舗側の最初の返信
+            'chatting_new_hire' => [
+                ['category' => 'thanks',   'body' => '新規採用のご応募ありがとうございます！当店にご興味を持っていただき嬉しく思います。'],
+                ['category' => 'intro',    'body' => 'まずは体入からのスタートを想定しております。ご都合の良い候補日を伺えますでしょうか？'],
+                ['category' => 'question', 'body' => 'これまでの在籍経験・お店のジャンル（キャバ／ラウンジ／クラブ 等）を教えていただけますか？'],
+                ['category' => 'question', 'body' => '週の出勤可能日数・勤務開始のご希望時期を教えてください。'],
+                ['category' => 'question', 'body' => '体入時の希望時給・お客様層のご要望など、ご希望があればお伺いします。'],
+                ['category' => 'schedule', 'body' => 'では体入日を決めましょう。候補日を3つほどお送りしますね。'],
+            ],
+            // ヘルプ応募を受けた店舗側の最初の返信
+            'chatting_help' => [
+                ['category' => 'thanks',   'body' => 'ヘルプのお問い合わせありがとうございます！助かります。'],
+                ['category' => 'question', 'body' => 'ご希望の入り時間帯・可能な時間数を教えていただけますか？'],
+                ['category' => 'question', 'body' => 'ヘルプ経験や、経験のあるお店のジャンルを教えてください。'],
+                ['category' => 'help',     'body' => '本日◯時〜◯時のヘルプを想定しております。可能でしたらこの時間でお願いできますでしょうか？'],
+                ['category' => 'help',     'body' => 'ヘルプ時給と本数目安をお伝えします。ご確認のうえご返信お願いいたします。'],
+                ['category' => 'schedule', 'body' => 'ではこの日時で確定でお願いします。集合場所と持ち物を追ってお送りします。'],
             ],
             'interview_pending' => [
                 ['category' => 'schedule', 'body' => '面談の候補日をお送りしました。ご都合はいかがでしょうか？'],

@@ -2618,6 +2618,57 @@ body.page-talk-room .message-bubble-auto,
 }
 .auto-msg-chip i { font-size: 0.6rem; }
 
+/* ---- 課金系自動送信カード（type=8）専用の縦構成 ----
+   1) タグ行（自動送信 / カテゴリ / 対象者）
+   2) タイトル
+   3) 本文
+   4) 中央寄せリンク */
+#talk-room-container .message-bubble-billing .auto-msg-tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+#talk-room-container .message-bubble-billing .auto-msg-tag-row .auto-msg-chip {
+    margin-bottom: 0;
+}
+.auto-msg-chip-category {
+    background: rgba(245, 158, 11, 0.18);
+    border-color: rgba(245, 158, 11, 0.55);
+    color: #fbbf24;
+}
+.auto-msg-chip-shop {
+    background: rgba(56, 189, 248, 0.18);
+    border-color: rgba(56, 189, 248, 0.55);
+    color: #7dd3fc;
+}
+.auto-msg-chip-cast {
+    background: rgba(244, 114, 182, 0.18);
+    border-color: rgba(244, 114, 182, 0.55);
+    color: #f9a8d4;
+}
+#talk-room-container .message-bubble-billing .auto-msg-title {
+    margin: 2px 0 6px;
+    font-size: 0.95rem;
+    font-weight: 800;
+    line-height: 1.35;
+    color: var(--color-text-main, #f5f5f5);
+}
+#talk-room-container .message-bubble-billing .auto-msg-body {
+    margin: 0 0 10px;
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: var(--color-text-main, #f5f5f5);
+    opacity: 0.92;
+}
+#talk-room-container .message-bubble-billing .auto-msg-link-wrap {
+    margin: 0;
+    text-align: center;
+}
+#talk-room-container .message-bubble-billing .auto-msg-link-wrap .interview-change-schedule-btn {
+    display: inline-flex;
+}
+
 /* ---- 面談候補日：選択肢をラジオカード風に明確化 ----
    flex-wrap を許可することで、狭幅バブルでも "選択する" ピルが
    横方向にクリップされず、折り返して表示される。 */

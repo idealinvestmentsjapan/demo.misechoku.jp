@@ -67,12 +67,6 @@ class NotificationSpecService
              'default_body' => 'トーク内容が更新されました。トーク画面でご確認ください。',
              'default_enabled' => true],
 
-            ['key' => 'talk.work_complete_report', 'group' => 'トーク', 'label' => '勤務完了報告（運営宛）',
-             'condition' => 'キャスト or 店舗が勤務完了報告を送信した時',
-             'default_title' => '振込指示が届きました',
-             'default_body' => '勤務完了報告を受領しました。指示額: ¥{amount}。入金確認後に振込を実施してください。',
-             'default_enabled' => true],
-
             ['key' => 'billing.invoice_issued', 'group' => '請求・入金', 'label' => '請求書発行',
              'condition' => '運営が請求書を発行（status を「請求書発行」に遷移）した時',
              'default_title' => '請求書が発行されました',

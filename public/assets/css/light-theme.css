@@ -1836,6 +1836,25 @@ body.theme-light .auto-msg-chip {
     border-color: rgba(124, 58, 237, 0.45);
     color: #5b21b6;
 }
+body.theme-light .auto-msg-chip-category {
+    background: rgba(217, 119, 6, 0.14);
+    border-color: rgba(217, 119, 6, 0.45);
+    color: #b45309;
+}
+body.theme-light .auto-msg-chip-shop {
+    background: rgba(2, 132, 199, 0.14);
+    border-color: rgba(2, 132, 199, 0.45);
+    color: #0369a1;
+}
+body.theme-light .auto-msg-chip-cast {
+    background: rgba(219, 39, 119, 0.12);
+    border-color: rgba(219, 39, 119, 0.45);
+    color: #be185d;
+}
+body.theme-light .message-bubble-billing .auto-msg-title,
+body.theme-light #talk-room-container .message-bubble-billing .auto-msg-title { color: #3a2f6e !important; }
+body.theme-light .message-bubble-billing .auto-msg-body,
+body.theme-light #talk-room-container .message-bubble-billing .auto-msg-body { color: #4b465c !important; opacity: 1; }
 
 
 /* §21 定型文メニューのタブ（ライトモード） */

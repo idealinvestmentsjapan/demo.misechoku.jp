@@ -607,17 +607,24 @@
                                 <p class="interview-note">勤務完了報告が送信されたため、種別・時給は変更できません。</p>
                             @endif
                             @if($showWorkCompleteCta)
+                                {{-- Work-completion is reported from the mypage flow so review
+                                     posting and deposit creation happen through the same
+                                     BillingManagementService::requestDepositForCast path.
+                                     Doing it inline here previously bypassed review/deposit
+                                     creation and left the status stuck for help/trial. --}}
                                 <p class="interview-body-copy" style="margin-top:10px;">
-                                    勤務が完了したら、以下から勤務完了を報告してください。レビュー投稿とボーナス金申請までまとめて行えます。
+                                    勤務が完了したら、採用・入金管理から勤務完了を報告してください。レビュー投稿とボーナス金申請までまとめて行えます。
                                 </p>
-                                <button
-                                    type="button"
-                                    class="talk-bonus-cta js-work-complete-trigger"
-                                    data-application-id="{{ $reviewApplicationId }}"
-                                >
-                                    <i class="fas fa-yen-sign" aria-hidden="true"></i>
-                                    勤務完了報告をする
-                                </button>
+                                <p class="interview-change-schedule-wrap">
+                                    <a
+                                        href="{{ route('cast.mypage.management') }}"
+                                        class="interview-change-schedule-btn"
+                                        data-application-id="{{ $reviewApplicationId }}"
+                                    >
+                                        <i class="fas fa-yen-sign" aria-hidden="true"></i>
+                                        採用・入金管理を開く
+                                    </a>
+                                </p>
                             @endif
                         </div>
                     @elseif($msg->type === 6)
@@ -646,16 +653,20 @@
                             @endif
                         </div>
                     @elseif($msg->type === 8)
-                        <div class="message-bubble message-bubble-interview message-bubble-auto">
-                            <div class="interview-card-head">
-                                <div class="interview-title">
-                                    <span class="auto-msg-chip"><i class="fas fa-robot" aria-hidden="true"></i>自動送信</span>
-                                    <span>{{ $msg->billing_title ?? '入金手続きの進捗' }}</span>
-                                </div>
-                                <span class="interview-badge">採用ボーナス</span>
+                        @php
+                            $billingAudience = $msg->billing_audience ?? ($isCast ? 'cast' : 'shop');
+                            $audienceLabel = $billingAudience === 'shop' ? '店舗向け' : 'キャスト向け';
+                            $audienceChipClass = $billingAudience === 'shop' ? 'auto-msg-chip-shop' : 'auto-msg-chip-cast';
+                        @endphp
+                        <div class="message-bubble message-bubble-interview message-bubble-auto message-bubble-billing">
+                            <div class="auto-msg-tag-row">
+                                <span class="auto-msg-chip"><i class="fas fa-robot" aria-hidden="true"></i>自動送信</span>
+                                <span class="auto-msg-chip auto-msg-chip-category">採用ボーナス</span>
+                                <span class="auto-msg-chip {{ $audienceChipClass }}">{{ $audienceLabel }}</span>
                             </div>
-                            <p class="interview-body-copy">{!! nl2br(e($msg->content)) !!}</p>
-                            <p class="interview-change-schedule-wrap">
+                            <p class="auto-msg-title">{{ $msg->billing_title ?? '入金手続きの進捗' }}</p>
+                            <p class="auto-msg-body">{!! nl2br(e($msg->content)) !!}</p>
+                            <p class="auto-msg-link-wrap">
                                 <a
                                     href="{{ $isCast ? route('cast.mypage.management') : route('shop.mypage.management', ['tab' => 'payment']) }}"
                                     class="interview-change-schedule-btn"
@@ -884,20 +895,6 @@
 @endif
 
 @if($isCast)
-<div id="work-complete-confirm-overlay" role="dialog" aria-modal="true" aria-label="勤務完了の確認" class="interview-modal-overlay" aria-hidden="true">
-    <div class="interview-modal interview-confirm-modal">
-        <div class="interview-modal-header">
-            <h2 id="work-complete-confirm-title">勤務完了報告</h2>
-            <button type="button" class="interview-modal-close js-work-complete-close" aria-label="閉じる">&times;</button>
-        </div>
-        <p id="work-complete-confirm-desc" class="interview-modal-desc">完了しますか？</p>
-        <div class="interview-modal-footer">
-            <button type="button" class="btn-interview-cancel js-work-complete-close">いいえ</button>
-            <button type="button" id="work-complete-confirm-submit" class="btn-interview-submit">はい</button>
-        </div>
-    </div>
-</div>
-
 <div id="interview-confirm-overlay" role="dialog" aria-modal="true" aria-label="面談日時の確認" class="interview-modal-overlay" aria-hidden="true">
     <div class="interview-modal interview-confirm-modal">
         <div class="interview-modal-header">
@@ -984,74 +981,6 @@
         <div class="interview-modal-footer">
             <button type="button" class="btn-interview-cancel js-result-message-close">キャンセル</button>
             <button type="button" id="result-message-submit" class="btn-interview-submit">送信する</button>
-        </div>
-    </div>
-</div>
-@endif
-
-@if($isCast)
-{{-- レビュー投稿モーダル（スターレーティング＋コメント） --}}
-<div id="review-post-modal" class="payment-bank-modal" role="dialog" aria-labelledby="review-post-modal-title" aria-modal="true" hidden>
-    <div class="payment-bank-modal-backdrop" data-close-review-modal></div>
-    <div class="payment-bank-modal-panel review-modal-wrap">
-        <header class="review-modal-header">
-            <h3 id="review-post-modal-title" class="review-modal-title">レビュー投稿</h3>
-            <button type="button" class="review-modal-close-btn" data-close-review-modal aria-label="閉じる"><i class="fas fa-times"></i></button>
-        </header>
-        <div class="payment-bank-modal-body review-modal-body">
-            <p id="review-modal-loading" class="review-modal-loading">読み込み中...</p>
-            <div id="review-modal-form-wrap" style="display:none;">
-                <p class="review-modal-intro">勤務完了後、お店の雰囲気や働きやすさをレビューしてください。</p>
-                <form id="review-post-form">
-                    <input type="hidden" name="application_id" id="review-form-application-id" value="">
-                    @csrf
-                    <div class="review-rating-list" id="review-modal-scores"></div>
-                    <div class="review-comment-card">
-                        <label class="review-comment-label" for="review-modal-comment">レビューコメント</label>
-                        <textarea id="review-modal-comment" name="review_comment" class="review-comment-textarea" rows="4" placeholder="働いてみた感想、雰囲気、条件の印象などを入力してください。" required></textarea>
-                    </div>
-                    <p id="review-modal-error" class="review-modal-error"></p>
-                </form>
-                <div class="review-modal-footer">
-                    <button type="submit" form="review-post-form" class="review-submit-btn" id="review-submit-btn" disabled>
-                        <i class="fas fa-paper-plane"></i> 投稿する
-                    </button>
-                    <p class="review-footer-hint" id="review-footer-hint">すべての項目を評価すると送信できます</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<div id="bonus-confirm-modal" class="payment-bank-modal" role="dialog" aria-labelledby="bonus-confirm-modal-title" aria-modal="true" hidden>
-    <div class="payment-bank-modal-backdrop" data-close-bonus-modal></div>
-    <div class="payment-bank-modal-panel">
-        <div class="payment-bank-modal-header">
-            <h3 id="bonus-confirm-modal-title" class="payment-bank-modal-title">勤務完了報告</h3>
-            <button type="button" class="payment-bank-modal-close" data-close-bonus-modal aria-label="閉じる"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="payment-bank-modal-body">
-            <p class="deposit-precheck-note">勤務が完了した案件のボーナス金・達成条件です。条件を確認してから勤務完了を報告してください。報告後は店舗の入金確認と運営の振込手続きに進みます。</p>
-            <div class="deposit-precheck-card">
-                <div class="deposit-precheck-title">
-                    <span id="bonus-confirm-shop-name">—</span>
-                    <span class="doc-status status-pending">採用済み案件</span>
-                </div>
-                <div class="deposit-precheck-meta">ボーナス金額: ¥<span id="bonus-confirm-amount">0</span></div>
-                <div class="deposit-precheck-note" id="bonus-confirm-condition">—</div>
-            </div>
-            <form id="bonus-confirm-form">
-                <input type="hidden" name="application_id" id="bonus-confirm-application-id" value="">
-                @csrf
-                <input type="hidden" name="confirm_bonus_condition" value="1">
-                <label class="deposit-check-row">
-                    <input type="checkbox" name="confirm_checked" value="1" required>
-                    <span>上記の勤務完了条件・ボーナス金内容に相違がないことを確認しました。</span>
-                </label>
-                <p id="bonus-confirm-error" class="deposit-precheck-note" style="color:#fca5a5; display:none;"></p>
-                <div class="text-right mt-3">
-                    <button type="submit" class="btn-action manage" id="bonus-confirm-submit-btn">勤務完了報告する</button>
-                </div>
-            </form>
         </div>
     </div>
 </div>
@@ -1212,381 +1141,9 @@
 </script>
 @endpush
 
-@if($isCast)
-@push('scripts')
-<script>
-{{-- 入力欄の実高さをメッセージ一覧の padding-bottom に反映（新着が入力欄に隠れない） --}}
-(function () {
-    'use strict';
-    var inputArea = document.querySelector('#talk-room-container .chat-input-area');
-    var messages = document.querySelector('#talk-room-container .chat-messages');
-    if (!inputArea || !messages) return;
-
-    function nearBottom() {
-        return messages.scrollHeight - messages.scrollTop - messages.clientHeight < 120;
-    }
-    function applyComposerHeight() {
-        var wasNearBottom = nearBottom();
-        messages.style.setProperty('--talk-composer-h', inputArea.offsetHeight + 'px');
-        // 末尾を見ている間は、入力欄が伸びても最後のメッセージに追従する
-        if (wasNearBottom) messages.scrollTop = messages.scrollHeight;
-    }
-    applyComposerHeight();
-    if ('ResizeObserver' in window) {
-        new ResizeObserver(applyComposerHeight).observe(inputArea);
-    }
-    // メッセージ追加（送信/受信）でも末尾へ追従
-    if ('MutationObserver' in window) {
-        new MutationObserver(function () {
-            if (nearBottom()) messages.scrollTop = messages.scrollHeight;
-        }).observe(messages, { childList: true });
-    }
-})();
-</script>
-<script>
-(function () {
-    var reviewModal = document.getElementById('review-post-modal');
-    var bonusModal = document.getElementById('bonus-confirm-modal');
-    if (!reviewModal || !bonusModal) return;
-    var requestTargetUrl = '{{ route("cast.mypage.deposit.request-target") }}';
-    var reviewPostUrl = '{{ route("cast.mypage.deposit.review") }}';
-    var depositRequestUrl = '{{ route("cast.mypage.deposit.request") }}';
-    var chatForm = document.getElementById('chat-form');
-    var actionUrl = chatForm ? chatForm.getAttribute('data-action-url') : '';
-    var csrfToken = chatForm ? chatForm.querySelector('input[name="_token"]').value : '';
-    var selectedTalkJobKind = window.selectedTalkJobKind || '';
-    var workCompleteOverlay = document.getElementById('work-complete-confirm-overlay');
-    var workCompleteTitle = document.getElementById('work-complete-confirm-title');
-    var workCompleteDesc = document.getElementById('work-complete-confirm-desc');
-    var workCompleteSubmitBtn = document.getElementById('work-complete-confirm-submit');
-
-    var pendingReviewApplicationId = null;
-    var pendingReviewTarget = null;
-    var bonusFlowMode = 'review';
-
-    function showReviewModalWithTarget(applicationId, target) {
-        document.getElementById('review-form-application-id').value = applicationId;
-        document.getElementById('review-modal-loading').style.display = 'block';
-        document.getElementById('review-modal-form-wrap').style.display = 'none';
-        var errEl = document.getElementById('review-modal-error');
-        if (errEl) { errEl.textContent = ''; errEl.classList.remove('show'); }
-        reviewModal.removeAttribute('hidden');
-        document.body.style.overflow = 'hidden';
-        buildReviewRatingCards(target.review_contents || []);
-        var cmtEl = document.getElementById('review-modal-comment');
-        if (cmtEl) cmtEl.value = '';
-        document.getElementById('review-modal-loading').style.display = 'none';
-        document.getElementById('review-modal-form-wrap').style.display = 'block';
-        checkReviewFormReady();
-    }
-
-    function openWorkCompleteFlow(applicationId) {
-        if (selectedTalkJobKind === 'trial' || selectedTalkJobKind === 'help') {
-            bonusFlowMode = 'work_complete';
-            if (workCompleteTitle) {
-                workCompleteTitle.textContent = '勤務完了報告';
-            }
-            if (workCompleteDesc) {
-                workCompleteDesc.textContent = '完了しますか？';
-            }
-            if (workCompleteOverlay) {
-                workCompleteOverlay.setAttribute('aria-hidden', 'false');
-            }
-            pendingReviewApplicationId = applicationId;
-            return;
-        }
-        fetch(requestTargetUrl + '?application_id=' + encodeURIComponent(applicationId), {
-            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-            if (!data.success || !data.request_target) {
-                (window.appToast || window.alert)(data.message || 'データの取得に失敗しました。', 'error');
-                return;
-            }
-            pendingReviewApplicationId = applicationId;
-            pendingReviewTarget = data.request_target;
-            bonusFlowMode = 'bonus_then_review';
-            showBonusConfirmModal(applicationId, pendingReviewTarget);
-        })
-        .catch(function () {
-            (window.appToast || window.alert)('読み込みに失敗しました。', 'error');
-        });
-    }
-
-    function buildReviewRatingCards(contents) {
-        var scoresWrap = document.getElementById('review-modal-scores');
-        scoresWrap.innerHTML = '';
-        contents.forEach(function (c) {
-            var card = document.createElement('div');
-            card.className = 'review-rating-card';
-            card.setAttribute('data-content-id', c.id);
-            var question = document.createElement('p');
-            question.className = 'review-rating-question';
-            question.textContent = c.name || '';
-            var row = document.createElement('div');
-            row.className = 'review-rating-row';
-            var stars = document.createElement('div');
-            stars.className = 'review-rating-stars';
-            var hidden = document.createElement('input');
-            hidden.type = 'hidden';
-            hidden.name = 'review_scores[' + c.id + ']';
-            hidden.value = '0';
-            hidden.setAttribute('data-rating-input', '1');
-            for (var s = 1; s <= 5; s++) {
-                var btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'review-star-btn';
-                btn.setAttribute('data-value', s);
-                btn.innerHTML = '<i class="far fa-star"></i>';
-                (function (starVal, button) {
-                    button.addEventListener('click', function () {
-                        hidden.value = starVal;
-                        updateStarButtons(card, starVal);
-                        updateRatingValueSpan(card, starVal);
-                        checkReviewFormReady();
-                    });
-                    button.addEventListener('mouseenter', function () { setStarHover(card, starVal); });
-                    button.addEventListener('mouseleave', function () { clearStarHover(card); });
-                })(s, btn);
-                stars.appendChild(btn);
-            }
-            var valueSpan = document.createElement('span');
-            valueSpan.className = 'review-rating-value';
-            valueSpan.textContent = '- / 5';
-            row.appendChild(stars);
-            row.appendChild(valueSpan);
-            card.appendChild(question);
-            card.appendChild(hidden);
-            card.appendChild(row);
-            scoresWrap.appendChild(card);
-        });
-    }
-    function updateStarButtons(card, value) {
-        var btns = card.querySelectorAll('.review-star-btn');
-        btns.forEach(function (btn) {
-            var v = parseInt(btn.getAttribute('data-value'), 10);
-            btn.classList.toggle('active', v <= value);
-            btn.querySelector('.fa-star').className = v <= value ? 'fas fa-star' : 'far fa-star';
-        });
-    }
-    function setStarHover(card, value) {
-        card.querySelectorAll('.review-rating-stars .review-star-btn').forEach(function (btn) {
-            var v = parseInt(btn.getAttribute('data-value'), 10);
-            btn.classList.toggle('hover', v <= value);
-            if (btn.querySelector('.fa-star')) btn.querySelector('.fa-star').className = v <= value ? 'fas fa-star' : 'far fa-star';
-        });
-    }
-    function clearStarHover(card) {
-        card.querySelectorAll('.review-star-btn').forEach(function (btn) { btn.classList.remove('hover'); });
-        var input = card.querySelector('input[name^="review_scores"]');
-        if (input && input.value !== '0') { updateStarButtons(card, parseInt(input.value, 10)); }
-    }
-    function updateRatingValueSpan(card, value) {
-        var span = card.querySelector('.review-rating-value');
-        if (span) {
-            span.textContent = value > 0 ? value + ' / 5' : '- / 5';
-            span.classList.toggle('has-value', value > 0);
-        }
-    }
-    function checkReviewFormReady() {
-        var form = document.getElementById('review-post-form');
-        if (!form) return;
-        var allRated = true;
-        form.querySelectorAll('input[data-rating-input="1"]').forEach(function (inp) {
-            if (!inp.value || inp.value === '0') allRated = false;
-        });
-        var comment = (form.querySelector('#review-modal-comment') && form.querySelector('#review-modal-comment').value) || '';
-        var ready = allRated && comment.trim().length > 0;
-        var btn = document.getElementById('review-submit-btn');
-        var hint = document.getElementById('review-footer-hint');
-        if (btn) btn.disabled = !ready;
-        if (hint) hint.style.display = ready ? 'none' : 'block';
-    }
-    var commentEl = document.getElementById('review-modal-comment');
-    if (commentEl) { commentEl.addEventListener('input', checkReviewFormReady); commentEl.addEventListener('change', checkReviewFormReady); }
-    function closeReviewModal() {
-        reviewModal.setAttribute('hidden', '');
-        document.body.style.overflow = '';
-    }
-    function showBonusConfirmModal(applicationId, target) {
-        document.getElementById('bonus-confirm-application-id').value = applicationId;
-        document.getElementById('bonus-confirm-shop-name').textContent = target.shop_name || '—';
-        document.getElementById('bonus-confirm-amount').textContent = (target.bonus_amount || 0).toLocaleString();
-        document.getElementById('bonus-confirm-condition').innerHTML = (target.bonus_condition || '（条件の記載なし）').replace(/\n/g, '<br>');
-        document.getElementById('bonus-confirm-form').querySelector('input[name="confirm_checked"]').checked = false;
-        document.getElementById('bonus-confirm-error').style.display = 'none';
-        bonusModal.removeAttribute('hidden');
-        document.body.style.overflow = 'hidden';
-    }
-    function closeBonusModal() {
-        bonusModal.setAttribute('hidden', '');
-        document.body.style.overflow = '';
-    }
-    document.querySelectorAll('.btn-review-post, .js-work-complete-trigger').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var id = this.getAttribute('data-application-id');
-            if (id) openWorkCompleteFlow(id);
-        });
-    });
-    document.querySelectorAll('.js-work-complete-close').forEach(function (el) {
-        el.addEventListener('click', function () {
-            if (workCompleteOverlay) workCompleteOverlay.setAttribute('aria-hidden', 'true');
-        });
-    });
-    if (workCompleteOverlay) {
-        workCompleteOverlay.addEventListener('click', function (e) {
-            if (e.target === workCompleteOverlay) {
-                workCompleteOverlay.setAttribute('aria-hidden', 'true');
-            }
-        });
-    }
-    if (workCompleteSubmitBtn) {
-        workCompleteSubmitBtn.addEventListener('click', function () {
-            if (!actionUrl || !csrfToken || !chatForm) return;
-            if (workCompleteOverlay) workCompleteOverlay.setAttribute('aria-hidden', 'true');
-            var partnerId = chatForm.getAttribute('data-partner-id');
-            fetch(actionUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    partner_id: partnerId,
-                    action_type: 'work_complete_report'
-                })
-            })
-            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, json: j }; }); })
-            .then(function (res) {
-                if (!res.ok || !res.json.success) {
-                    throw new Error((res.json && res.json.message) || '勤務完了報告に失敗しました。');
-                }
-                window.location.reload();
-            })
-            .catch(function (err) {
-                (window.appToast || window.alert)(err.message || '勤務完了報告に失敗しました。', 'error');
-            });
-        });
-    }
-    document.querySelectorAll('[data-close-review-modal]').forEach(function (el) { el.addEventListener('click', closeReviewModal); });
-    document.querySelectorAll('[data-close-bonus-modal]').forEach(function (el) { el.addEventListener('click', closeBonusModal); });
-    reviewModal.addEventListener('click', function (e) { if (e.target === reviewModal) closeReviewModal(); });
-    bonusModal.addEventListener('click', function (e) { if (e.target === bonusModal) closeBonusModal(); });
-    document.getElementById('review-post-form').addEventListener('submit', function (e) {
-        e.preventDefault();
-        var form = this;
-        var fd = new FormData(form);
-        var btn = document.getElementById('review-submit-btn');
-        if (btn) btn.disabled = true;
-        fetch(reviewPostUrl, {
-            method: 'POST',
-            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            body: fd
-        })
-        .then(function (r) { return r.json(); })
-        .then(function (res) {
-            if (btn) btn.disabled = false;
-            if (res.success) {
-                closeReviewModal();
-                window.location.reload();
-            } else {
-                var re = document.getElementById('review-modal-error');
-                if (re) { re.textContent = res.message || '投稿に失敗しました。'; re.classList.add('show'); }
-            }
-        })
-        .catch(function () {
-            if (btn) btn.disabled = false;
-            var re = document.getElementById('review-modal-error');
-            if (re) { re.textContent = '送信に失敗しました。'; re.classList.add('show'); }
-        });
-    });
-    document.getElementById('bonus-confirm-form').addEventListener('submit', function (e) {
-        e.preventDefault();
-        var form = this;
-        var confirmChecked = form.querySelector('input[name="confirm_checked"]');
-        var errEl = document.getElementById('bonus-confirm-error');
-        if (!confirmChecked || !confirmChecked.checked) {
-            errEl.textContent = 'チェックを入れてください。';
-            errEl.style.display = 'block';
-            return;
-        }
-        if (bonusFlowMode === 'bonus_then_review') {
-            if (!actionUrl || !csrfToken || !chatForm) {
-                errEl.textContent = '送信先の設定が不足しています。';
-                errEl.style.display = 'block';
-                return;
-            }
-            var partnerIdForBonus = chatForm.getAttribute('data-partner-id');
-            fetch(actionUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    partner_id: partnerIdForBonus,
-                    action_type: 'bonus_achievement_report'
-                })
-            })
-            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, json: j }; }); })
-            .then(function (reportRes) {
-                if (!reportRes.ok || !reportRes.json.success) {
-                    throw new Error((reportRes.json && reportRes.json.message) || '勤務完了報告に失敗しました。');
-                }
-                closeBonusModal();
-                if (pendingReviewApplicationId && pendingReviewTarget) {
-                    if (pendingReviewTarget.review_exists) {
-                        (window.appToast || window.alert)('レビュー投稿は完了しています。', 'info');
-                        return;
-                    }
-                    showReviewModalWithTarget(pendingReviewApplicationId, pendingReviewTarget);
-                }
-            })
-            .catch(function (reportErr) {
-                errEl.textContent = reportErr.message || '勤務完了報告に失敗しました。';
-                errEl.style.display = 'block';
-            });
-            return;
-        }
-        var fd = new FormData(form);
-        fd.set('confirm_bonus_condition', '1');
-        var btn = document.getElementById('bonus-confirm-submit-btn');
-        if (btn) btn.disabled = true;
-        fetch(depositRequestUrl, {
-            method: 'POST',
-            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            body: fd
-        })
-        .then(function (r) { return r.json(); })
-        .then(function (res) {
-            if (btn) btn.disabled = false;
-            if (res.success) {
-                closeBonusModal();
-                window.location.href = '{{ route("cast.mypage.management") }}';
-            } else {
-                errEl.textContent = res.message || '申請に失敗しました。';
-                errEl.style.display = 'block';
-            }
-        })
-        .catch(function () {
-            if (btn) btn.disabled = false;
-            errEl.textContent = '送信に失敗しました。';
-            errEl.style.display = 'block';
-        });
-    });
-})();
-</script>
-
-@endpush
-@endif
 
 {{-- ===== User report modal (both cast and shop) =====
-     Logic lives in public/assets/js/user-report.js (covered by frontend tests).
-     Keep this OUTSIDE the @if($isCast) push above: it once lived inside that
-     block, which made the report button dead for shop users. --}}
+     Logic lives in public/assets/js/user-report.js (covered by frontend tests). --}}
 @push('scripts')
 <script src="{{ asset('assets/js/user-report.js') }}?v=20260924-report-fix"></script>
 @endpush

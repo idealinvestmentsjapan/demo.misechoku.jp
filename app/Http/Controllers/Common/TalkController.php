@@ -120,6 +120,21 @@ class TalkController extends Controller
         if (!$this->canAccessTalkRoom($castId, $shopId, request()->boolean('initiate'))) {
             abort(403, 'このトークルームを表示する権限がありません。');
         }
+        // Cast が求人プロフィールから「新規採用に応募」/「ヘルプ応募」で遷移してきた場合、
+        // 送信を待たずに応募レコード（+ 種別）を確定して、状況チップ・定型文が即時反映
+        // されるようにする。二重呼び出しは findApplicationForTalk のガードで冪等。
+        if (
+            $isCastPortal
+            && request()->boolean('initiate')
+            && in_array(request()->query('talk_topic'), ['new_hire', 'help'], true)
+        ) {
+            $this->ensureApplicationForTalkStart(
+                (string) $castId,
+                (string) $shopId,
+                $this->normalizeTalkTopic((string) request()->query('talk_topic', '')),
+                $this->normalizeTalkJobKind((string) request()->query('job_kind', ''))
+            );
+        }
         $blockState = $this->getBlockState($castId, $shopId, $isCastPortal);
         $currentApplicationStatus = $this->getCurrentApplicationStatus($castId, $shopId);
         $selectedTalkJobKind = $this->getSelectedTalkJobKind($castId, $shopId);
@@ -180,6 +195,14 @@ class TalkController extends Controller
         $messages = $this->mapRoomMessages($rawMessages, $isCastPortal);
         $initialTalkTopic = $this->normalizeTalkTopic((string) request()->query('talk_topic', ''));
         $initialTalkJobKind = $this->normalizeTalkJobKind((string) request()->query('job_kind', ''));
+        // 定型文選択のトピック文脈：DB に保存された種別（reload しても保持される）を優先し、
+        // 未確定なら URL クエリの talk_topic をフォールバックとして採用する。
+        // マッピング：trial/fulltime → new_hire、help → help。
+        $effectiveTalkTopic = match ($selectedTalkJobKind) {
+            'help'                => 'help',
+            'trial', 'fulltime'   => 'new_hire',
+            default               => in_array($initialTalkTopic, ['new_hire', 'help'], true) ? $initialTalkTopic : null,
+        };
 
         DB::table('messages')
             ->where($isCastPortal ? 'cast_id' : 'shop_id', $currentId)
@@ -204,8 +227,8 @@ class TalkController extends Controller
             'blockState' => $blockState,
             'canSend' => !$blockState['is_blocked'],
             // 入力欄下のクイック定型文パネル：やりとりの進行状況に応じた候補を優先表示
-            'quickReplySuggestions' => $this->buildQuickReplySuggestions($isCastPortal, $currentApplicationStatus),
-            'allQuickReplySuggestions' => $this->buildAllQuickReplySuggestionsByStatus($isCastPortal),
+            'quickReplySuggestions' => $this->buildQuickReplySuggestions($isCastPortal, $currentApplicationStatus, $effectiveTalkTopic),
+            'allQuickReplySuggestions' => $this->buildAllQuickReplySuggestionsByStatus($isCastPortal, $effectiveTalkTopic),
             'currentStatusCode' => $this->applicationStatusCode($currentApplicationStatus),
             'currentStatusLabel' => $this->statusLabel(
                 $this->applicationStatusCode($currentApplicationStatus),
@@ -561,18 +584,6 @@ class TalkController extends Controller
             );
         }
 
-        if ($actionType === 'work_complete_report') {
-            abort_if(!$isCastPortal, 403);
-            $talkKind = $this->getSelectedTalkJobKind($castId, $shopId);
-            abort_if(!in_array($talkKind, ['trial', 'help'], true), 422, '本入店では勤務完了報告は利用できません。');
-        }
-
-        if ($actionType === 'bonus_achievement_report') {
-            abort_if(!$isCastPortal, 403);
-            $talkKind = $this->getSelectedTalkJobKind($castId, $shopId);
-            abort_if($talkKind !== 'fulltime', 422, '本入店の勤務完了報告のみ利用できます。');
-        }
-
         if (in_array($actionType, ['hired', 'rejected'], true)) {
             abort_if(
                 $currentApplicationStatus !== self::APPLICATION_STATUS_INTERVIEW_FIXED,
@@ -665,14 +676,6 @@ class TalkController extends Controller
                 self::MESSAGE_TYPE_TEXT,
                 '【自動送信】面談ステータスをキャンセルし、やり取り中に戻しました。必要に応じて面談候補日を再設定してください。',
             ],
-            'work_complete_report' => [
-                self::MESSAGE_TYPE_TEXT,
-                '【自動送信】勤務完了報告を送信しました。ご確認をお願いします。',
-            ],
-            'bonus_achievement_report' => [
-                self::MESSAGE_TYPE_TEXT,
-                '【自動送信】勤務完了報告を送信しました。内容確認後に承認をお願いします。',
-            ],
         };
 
         if ($actionType === 'interview_offer') {
@@ -739,13 +742,6 @@ class TalkController extends Controller
             actionType: (string) $actionType,
             content: (string) $content
         );
-        if ($actionType === 'work_complete_report') {
-            $this->notifyOperationTransferInstruction($castId, $shopId, 'work_complete');
-        }
-        if ($actionType === 'bonus_achievement_report') {
-            $this->notifyOperationTransferInstruction($castId, $shopId, 'bonus_achievement');
-        }
-
         return response()->json([
             'success' => true,
         ]);
@@ -899,6 +895,9 @@ class TalkController extends Controller
                             : ($meta['selected_option'] ?? ''))),
                 'billing_title' => $type === self::MESSAGE_TYPE_BILLING_SYSTEM
                     ? (string) ($meta['title'] ?? '入金手続きの進捗')
+                    : null,
+                'billing_audience' => $type === self::MESSAGE_TYPE_BILLING_SYSTEM
+                    ? ((int) $message->sender_type === \App\Models\Message::SENDER_SYSTEM_TO_SHOP ? 'shop' : 'cast')
                     : null,
                 'is_mine' => $isMine,
                 'created_at' => $createdAt,
@@ -1237,18 +1236,18 @@ class TalkController extends Controller
      * 全ステータスのクイック返信候補（定型文編集画面等で全メニュー表示するとき用）。
      * 実データは TalkQuickReplyCatalog に委譲。ここは薄い adapter。
      */
-    private function buildAllQuickReplySuggestionsByStatus(bool $isCastPortal): array
+    private function buildAllQuickReplySuggestionsByStatus(bool $isCastPortal, ?string $talkTopic = null): array
     {
-        return $this->quickReplyCatalog->allByStatus($isCastPortal);
+        return $this->quickReplyCatalog->allByStatus($isCastPortal, $talkTopic);
     }
 
     /**
      * 現在ステータスに応じたクイック返信候補。
      * 実データは TalkQuickReplyCatalog に委譲。ここは薄い adapter。
      */
-    private function buildQuickReplySuggestions(bool $isCastPortal, int $status): array
+    private function buildQuickReplySuggestions(bool $isCastPortal, int $status, ?string $talkTopic = null): array
     {
-        return $this->quickReplyCatalog->forStatus($isCastPortal, $status);
+        return $this->quickReplyCatalog->forStatus($isCastPortal, $status, $talkTopic);
     }
 
     private function getCurrentApplicationStatus(string $castId, string $shopId): int
@@ -1364,8 +1363,6 @@ class TalkController extends Controller
         } elseif ($actionType === 'interview_cancel_accept') {
             $updates['status'] = self::APPLICATION_STATUS_CHATTING;
             $updates['result_date'] = null;
-        } elseif ($actionType === 'work_complete_report') {
-            $updates['status'] = self::APPLICATION_STATUS_HIRED;
         }
 
         DB::table('shop_job_applications')
@@ -1937,12 +1934,6 @@ class TalkController extends Controller
             $body = $isCastPortal
                 ? '面談日程がキャンセルされました。再提案をお願いします。'
                 : '面談日程が再調整になりました。トークをご確認ください。';
-        } elseif ($actionType === 'work_complete_report') {
-            $title = '勤務完了報告';
-            $body = 'キャストから勤務完了報告が届きました。';
-        } elseif ($actionType === 'bonus_achievement_report') {
-            $title = '勤務完了報告';
-            $body = 'キャストから勤務完了報告が届きました。承認をご確認ください。';
         } elseif ($actionType === 'interview_cancel_request') {
             $title = '面談キャンセル依頼';
             $body = '店舗から面談キャンセル依頼が届きました。承諾するとやり取り中に戻ります。';
@@ -2014,39 +2005,6 @@ class TalkController extends Controller
         } catch (\Throwable $e) {
             Log::warning('Talk notify failed: ' . $e->getMessage());
         }
-    }
-
-    private function notifyOperationTransferInstruction(string $castId, string $shopId, string $flowType): void
-    {
-        $application = $this->findApplicationForTalk($castId, $shopId);
-        if (!$application) {
-            return;
-        }
-
-        if ($flowType === 'work_complete') {
-            $hourly = 0;
-            if (property_exists($application, 'hired_regular_hourly_wage') && $application->hired_regular_hourly_wage !== null) {
-                $hourly = (int) $application->hired_regular_hourly_wage;
-            } elseif (property_exists($application, 'applied_regular_hourly_wage') && $application->applied_regular_hourly_wage !== null) {
-                $hourly = (int) $application->applied_regular_hourly_wage;
-            }
-            $amount = (int) floor($hourly * 0.23);
-            $title = '運営への振込指示';
-            $body = '勤務完了報告を受領しました。指示額: ¥' . number_format($amount);
-            $this->notifyConversationPartner($castId, $shopId, true, $title, $body, url('/shop/talk/room/' . $castId));
-            return;
-        }
-
-        $bonus = 0;
-        if (property_exists($application, 'hired_bonus_amount') && $application->hired_bonus_amount !== null) {
-            $bonus = (int) $application->hired_bonus_amount;
-        } elseif (property_exists($application, 'applied_bonus_reward') && $application->applied_bonus_reward !== null) {
-            $bonus = (int) $application->applied_bonus_reward;
-        }
-        $amount = (int) floor($bonus * 1.23);
-        $title = '運営への振込指示';
-        $body = '勤務完了報告を受領しました。指示額: ¥' . number_format($amount);
-        $this->notifyConversationPartner($castId, $shopId, true, $title, $body, url('/shop/talk/room/' . $castId));
     }
 
     private function invalidateInterviewOffers(string $castId, string $shopId): void

@@ -16,10 +16,11 @@
     }
     $typePath = $isCast ? 'cast' : 'shop';
 
-    // 書類系の未済判定：ヘッダー共有の $todoList（InjectHeaderBadges）から算出
+    // 書類系の未済判定：ヘッダー共有の $todoList（InjectHeaderBadges）から算出。
+    // 店舗許可証は風営／深夜酒類のいずれか一方の提出で運用OKのため、
+    // サイドメニュー側では「未済」バッジを出さない（該当タスクは todo リスト経由で案内）。
     $sidebarTodos = collect($todoList ?? []);
     $identityPendingBadge = $sidebarTodos->whereIn('key', ['cast.identity_unsubmitted', 'cast.identity_rejected', 'cast.identity_pending'])->isNotEmpty();
-    $licensePendingBadge  = $sidebarTodos->whereIn('key', ['shop.license_unsubmitted', 'shop.license_rejected', 'shop.license_pending'])->isNotEmpty();
 @endphp
 
 <aside id="side-menu">
@@ -62,7 +63,6 @@
                     <li>
                         <a href="{{ route('shop.mypage.documents.index') }}">
                             <i class="fas fa-file-signature"></i> 許可証の提出・管理
-                            @if($licensePendingBadge)<span class="sidebar-badge-pending">未済</span>@endif
                         </a>
                     </li>
                 @endif
