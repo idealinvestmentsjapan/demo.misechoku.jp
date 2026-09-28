@@ -313,6 +313,8 @@ database/
 - **書類審査**: `DocumentReviewService` がキャスト本人確認（`cast_identity_documents`）と店舗許可証（`shop_license_documents`、風営 / 深夜酒類）の審査を担当。運営が `/admin/verification` から承認 / 差戻し。原本ファイルは private disk からストリーム配信のみ（Web 直アクセス禁止）。
 - **オコジョガイド**: `character_guide_settings`（route_name UNIQUE）に画面別 ON/OFF・メッセージを保存。ページ内説明文の正本。`CharacterGuideService::CATALOG` にカタログ定義。
 - **トーククイック定型文**: `talk_quick_reply_templates`（owner_type × status_code × sort_order）に候補文を保存。`TalkQuickReplyCatalog` が読み込み、DB 未登録／未整備時は `DEFAULT_TEMPLATES` にフォールバック。運営は `/admin/talk-quick-replies`（`master.talk_quick_replies` 権限）から編集。
+  - 「やり取り中」ステータスに限り、応募種別（`talk_job_kind`）に応じて `chatting_new_hire` / `chatting_help` の変種を返す（`TalkQuickReplyCatalog::topicKey()`）。管理画面の編集対象はベースの `chatting` のみで、topic 変種は `DEFAULT_TEMPLATES` のハードコード扱い。編集可能化する場合は `TalkQuickReplyMasterService::GROUPS` に追記が必要。
+- **応募起点（キャスト側 CTA）**: 店舗プロフィールの `新規採用に応募` / `ヘルプ応募` は `/cast/talk/room/{shopId}?job_kind={trial|help}&talk_topic={new_hire|help}&initiate=1` へ遷移する。`TalkController::room()` が `initiate=1` + `talk_topic ∈ {new_hire, help}` を検知した時点で `ensureApplicationForTalkStart()` を呼び、`shop_job_applications` の作成と `talk_job_kind` 確定、`【自動送信】…応募がありました。` メッセージ挿入までを完了する（キャストの初回送信を待たない）。冪等（`findApplicationForTalk` ガード）。
 - **通報 / 問合せ / お知らせ / 規約**: `user_reports` / `support_inquiries` / `notices` / `notifications` / `policy_documents` + `policy_chapters` + `policy_revisions`
 - **通知**: `notifications` テーブル + `NotificationService`。Web Push は `push_subscriptions` + `PushNotificationService`。`/api/push/subscribe` で購読、テスト送信はヘッダーのベルポップから。
 - **退会**: `POST /setting/account/withdraw` は PII 匿名化 + 最後のオーナー保護 + パスワード再入力必須。

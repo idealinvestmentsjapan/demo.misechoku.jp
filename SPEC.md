@@ -79,7 +79,9 @@
 ### 2.3 応募・トーク・面談
 
 1. キャストが求人に応募 → `shop_job_applications` レコード作成 + トークルーム発生
+    - 応募起点は店舗プロフィールの CTA `新規採用に応募` / `ヘルプ応募`。CTA を押した時点で `TalkController::room()` が `ensureApplicationForTalkStart()` を呼び、`talk_job_kind`（`trial` / `help`）を確定 + `【自動送信】新規採用求人から応募がありました。` または `【自動送信】ヘルプ求人から応募がありました。` を挿入する（送信を待たない）。
 2. トーク（`/(cast|shop)/talk`）で会話。定型文は `/setting/talk-templates/*`（ユーザー個別 4 スロット）+ `talk_quick_reply_templates` テーブル（運営が状況×役割ごとに管理する候補文、`/admin/talk-quick-replies`）
+    - 「やり取り中」ステータスに限り、`talk_job_kind`（trial/fulltime→`chatting_new_hire`、help→`chatting_help`）で候補文が切り替わる（`TalkQuickReplyCatalog::topicKey()`）。他ステータスは従来通り 1 系統。
 3. 店舗が `interview_offer`（候補日提示）→ キャストが `interview_confirm`（受諾）
 4. 面談後、店舗が `hired` / `rejected`（両方 shop-only）
 5. 双方の取消: 店舗発 `interview_cancel_request` → キャスト受諾 `interview_cancel_accept`
