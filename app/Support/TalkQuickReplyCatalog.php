@@ -26,84 +26,132 @@ final class TalkQuickReplyCatalog
     public const STATUS_HIRED_FULLTIME    = 6;
     public const STATUS_REJECTED_TRIAL    = 7;
 
+    // Chatting phase codes (only meaningful when status == STATUS_CHATTING).
+    // - outgoing_first : I have sent 0 messages and partner has sent 0 (I am about to open)
+    // - incoming_first : I have sent 0 messages and partner has sent >=1 (I am about to reply first)
+    // - ongoing        : I have sent >=1 message (we have moved past the opener)
+    public const PHASE_OUTGOING_FIRST = 'outgoing_first';
+    public const PHASE_INCOMING_FIRST = 'incoming_first';
+    public const PHASE_ONGOING        = 'ongoing';
+
     private const TABLE = 'talk_quick_reply_templates';
 
     /**
      * 指定ステータス x 役割の定型文候補を返す。DB を優先し、無ければ既定へフォールバック。
      *
      * $talkTopic は初回応募時の求人種別コンテキスト（'new_hire' / 'help'）。
-     * 「やり取り中」ステータスでのみ利用され、コンテキストに合ったテンプレを優先。
+     * $talkPhase は「やり取り中」ステータスのサブフェーズ（outgoing_first / incoming_first / ongoing）。
+     * どちらも chatting ステータスでのみ利用され、コンテキストに合ったテンプレを優先。
      *
      * @return array<int, array{category:string, body:string}>
      */
-    public function forStatus(bool $isCastPortal, int $status, ?string $talkTopic = null): array
+    public function forStatus(bool $isCastPortal, int $status, ?string $talkTopic = null, ?string $talkPhase = null): array
     {
         $ownerType = $isCastPortal ? 'cast' : 'shop';
         $statusKey = self::statusKey($status);
-        $topicKey = self::topicKey($ownerType, $statusKey, $talkTopic);
 
-        if ($topicKey !== $statusKey) {
-            $fromDb = $this->loadFromDatabase($ownerType, $topicKey);
+        // Try each candidate key in priority order until we find a match
+        // (DB first, then hardcoded defaults). Chatting has extra candidates
+        // for topic overlay (new_hire/help) and phase (outgoing_first/incoming_first/ongoing).
+        foreach ($this->candidateKeys($statusKey, $talkTopic, $talkPhase) as $candidate) {
+            $fromDb = $this->loadFromDatabase($ownerType, $candidate);
             if ($fromDb !== null) {
                 return $fromDb;
             }
-            $defaults = $this->defaultFor($ownerType, $topicKey);
+            $defaults = $this->defaultFor($ownerType, $candidate);
             if (!empty($defaults)) {
                 return $defaults;
             }
         }
 
-        $fromDb = $this->loadFromDatabase($ownerType, $statusKey);
-        if ($fromDb !== null) {
-            return $fromDb;
-        }
-
-        return $this->defaultFor($ownerType, $statusKey);
+        return [];
     }
 
     /**
      * 定型文編集画面などで「すべての状況の候補文」を並べて返す。
+     * chatting は 3 つのフェーズ (outgoing_first / incoming_first / ongoing) に分けて返す。
      *
-     * @return array<int, array{status_code:int, status_key:string, status_label:string, items: array<int, array{category:string, body:string}>}>
+     * @return array<int, array{status_code:int|string, status_key:string, status_label:string, items: array<int, array{category:string, body:string}>}>
      */
     public function allByStatus(bool $isCastPortal, ?string $talkTopic = null): array
     {
         $groups = [
-            ['code' => self::STATUS_CHATTING,          'label' => 'やり取り中（初回・雑談）'],
-            ['code' => self::STATUS_INTERVIEW_PENDING, 'label' => '面談日調整中'],
-            ['code' => self::STATUS_INTERVIEW_FIXED,   'label' => '面談日確定済み'],
-            ['code' => self::STATUS_HIRED,             'label' => '採用'],
-            ['code' => self::STATUS_REJECTED,          'label' => '不採用・お断り'],
+            ['code' => self::STATUS_CHATTING, 'phase' => self::PHASE_OUTGOING_FIRST, 'label' => 'やり取り中（こちらから初回）'],
+            ['code' => self::STATUS_CHATTING, 'phase' => self::PHASE_INCOMING_FIRST, 'label' => 'やり取り中（相手からの初回に返信）'],
+            ['code' => self::STATUS_CHATTING, 'phase' => self::PHASE_ONGOING,        'label' => 'やり取り中（お互い1通以上）'],
+            ['code' => self::STATUS_INTERVIEW_PENDING, 'phase' => null, 'label' => '面談日調整中'],
+            ['code' => self::STATUS_INTERVIEW_FIXED,   'phase' => null, 'label' => '面談日確定済み'],
+            ['code' => self::STATUS_HIRED,             'phase' => null, 'label' => '採用'],
+            ['code' => self::STATUS_REJECTED,          'phase' => null, 'label' => '不採用・お断り'],
         ];
 
         return array_values(array_filter(array_map(function (array $g) use ($isCastPortal, $talkTopic) {
             $topicForStatus = $g['code'] === self::STATUS_CHATTING ? $talkTopic : null;
-            $items = $this->forStatus($isCastPortal, $g['code'], $topicForStatus);
+            $items = $this->forStatus($isCastPortal, $g['code'], $topicForStatus, $g['phase']);
             if (empty($items)) {
                 return null;
             }
+            $statusKey = self::chattingSubKey(self::statusKey($g['code']), $g['phase']);
             return [
                 'status_code'  => $g['code'],
-                'status_key'   => self::statusKey($g['code']),
-                'status_label' => self::statusLabelWithTopic($g['label'], $topicForStatus),
+                'status_key'   => $statusKey,
+                'status_label' => self::statusLabelWithTopic($g['label'], $g['code'] === self::STATUS_CHATTING ? $topicForStatus : null),
                 'items'        => $items,
             ];
         }, $groups)));
     }
 
     /**
-     * 求人種別コンテキストに応じた統合キー。'chatting' 以外はそのまま返す。
+     * Chatting ステータス配下の候補キー（トピック / フェーズ / 汎用）を優先度順に返す。
+     * chatting 以外は単一キーのみ。
+     *
+     * @return array<int, string>
      */
-    private static function topicKey(string $ownerType, string $statusKey, ?string $talkTopic): string
+    private function candidateKeys(string $statusKey, ?string $talkTopic, ?string $talkPhase): array
+    {
+        if ($statusKey !== 'chatting') {
+            return [$statusKey];
+        }
+
+        $candidates = [];
+
+        // Topic overlay applies to the initial application moment only
+        // (whoever is composing has sent 0 messages yet).
+        $isFirstPhase = in_array($talkPhase, [self::PHASE_OUTGOING_FIRST, self::PHASE_INCOMING_FIRST], true);
+        if ($isFirstPhase) {
+            $topicKey = match ($talkTopic) {
+                'new_hire' => 'chatting_new_hire',
+                'help'     => 'chatting_help',
+                default    => null,
+            };
+            if ($topicKey !== null) {
+                $candidates[] = $topicKey;
+            }
+        }
+
+        // Phase-specific bucket.
+        if (in_array($talkPhase, [self::PHASE_OUTGOING_FIRST, self::PHASE_INCOMING_FIRST, self::PHASE_ONGOING], true)) {
+            $candidates[] = 'chatting_' . $talkPhase;
+        }
+
+        // Base fallback.
+        $candidates[] = 'chatting';
+
+        return $candidates;
+    }
+
+    /**
+     * chatting ステータス配下の status_key を組み立てる（phase 付き）。
+     */
+    public static function chattingSubKey(string $statusKey, ?string $talkPhase): string
     {
         if ($statusKey !== 'chatting') {
             return $statusKey;
         }
-        return match ($talkTopic) {
-            'new_hire' => 'chatting_new_hire',
-            'help'     => 'chatting_help',
-            default    => $statusKey,
-        };
+        if (in_array($talkPhase, [self::PHASE_OUTGOING_FIRST, self::PHASE_INCOMING_FIRST, self::PHASE_ONGOING], true)) {
+            return 'chatting_' . $talkPhase;
+        }
+        return $statusKey;
     }
 
     /**
@@ -112,8 +160,8 @@ final class TalkQuickReplyCatalog
     private static function statusLabelWithTopic(string $baseLabel, ?string $talkTopic): string
     {
         return match ($talkTopic) {
-            'new_hire' => 'やり取り中（新規採用）',
-            'help'     => 'やり取り中（ヘルプ）',
+            'new_hire' => $baseLabel . '／新規採用',
+            'help'     => $baseLabel . '／ヘルプ',
             default    => $baseLabel,
         };
     }
@@ -180,6 +228,8 @@ final class TalkQuickReplyCatalog
      */
     private const DEFAULT_TEMPLATES = [
         'cast' => [
+            // Legacy combined bucket. Kept as a final fallback for environments
+            // (or admin edits) that haven't split into the 3 phases yet.
             'chatting' => [
                 ['category' => 'intro',    'body' => 'はじめまして。求人を拝見してご連絡いたしました。ぜひ詳しくお伺いできますと幸いです。'],
                 ['category' => 'intro',    'body' => 'プロフィールをご覧いただきありがとうございます。前向きに検討したく、ご連絡いたしました。'],
@@ -188,6 +238,35 @@ final class TalkQuickReplyCatalog
                 ['category' => 'question', 'body' => '出勤可能なシフトや最低出勤本数はどれくらいでしょうか？'],
                 ['category' => 'question', 'body' => '未経験ですが、安心して働ける環境でしょうか？'],
                 ['category' => 'schedule', 'body' => 'ぜひ一度、体入または面談をお願いしたいです。ご都合はいかがでしょうか？'],
+            ],
+            // Cast opens the conversation (partner has not messaged yet).
+            // Tone: short & warm opener. Cover the 3 typical triggers
+            // (job application / after being viewed / plain outreach).
+            'chatting_outgoing_first' => [
+                ['category' => 'intro',    'body' => 'はじめまして。求人拝見してご連絡しました。前向きに検討したいので、少しだけお話しできますか？'],
+                ['category' => 'intro',    'body' => 'プロフィール拝見しました。応募前に条件だけ確認させてください。'],
+                ['category' => 'intro',    'body' => 'プロフィール見ていただきありがとうございます！私も気になっていたのでご連絡しました。'],
+                ['category' => 'question', 'body' => '差し支えなければ、条件面と体入の流れをざっくり教えていただけますか？'],
+                ['category' => 'schedule', 'body' => '良さそうであれば、体入か面談で一度お会いしたいです。'],
+            ],
+            // Cast replies for the first time to a shop that reached out first.
+            // Include a polite decline template so casts don't have to hand-write it.
+            'chatting_incoming_first' => [
+                ['category' => 'thanks',   'body' => 'ご連絡ありがとうございます！興味がありますので、もう少し詳しくお伺いできますでしょうか。'],
+                ['category' => 'thanks',   'body' => 'スカウトありがとうございます。前向きにお話を伺わせてください。'],
+                ['category' => 'question', 'body' => '時給・バック率・体入の条件を教えていただけると助かります。'],
+                ['category' => 'status',   'body' => 'ご連絡ありがとうございます。大変恐縮ですが、今回は見送らせてください。またのご縁がありましたらよろしくお願いいたします。'],
+                ['category' => 'schedule', 'body' => '一度お会いしてお話しできればと思います。ご都合の良い日時はございますか？'],
+            ],
+            // Both sides have exchanged at least one message.
+            // Focus: deeper concerns, gentle follow-up, and steering toward interview.
+            'chatting_ongoing' => [
+                ['category' => 'question', 'body' => '出勤日数や時間帯の希望は、途中で相談できる感じでしょうか？'],
+                ['category' => 'question', 'body' => 'ドレスコードや衣装レンタルの有無も気になっています。'],
+                ['category' => 'question', 'body' => '体入時の時給と本入店後の時給、差があれば教えてください。'],
+                ['category' => 'schedule', 'body' => 'そろそろ体入または面談の日程を決めさせてください。'],
+                ['category' => 'status',   'body' => '先日ご相談していた件、その後いかがでしょうか？'],
+                ['category' => 'thanks',   'body' => '詳しく教えていただきありがとうございます。前向きに考えます。'],
             ],
             // 新規採用（体入からのスタート）応募直後に見せる定型文
             'chatting_new_hire' => [
@@ -242,6 +321,8 @@ final class TalkQuickReplyCatalog
             ],
         ],
         'shop' => [
+            // Legacy combined bucket. Kept as a final fallback for environments
+            // (or admin edits) that haven't split into the 3 phases yet.
             'chatting' => [
                 ['category' => 'thanks',   'body' => 'この度はご応募（お問い合わせ）ありがとうございます。当店にご興味を持っていただき嬉しく思います。'],
                 ['category' => 'intro',    'body' => 'ご返信ありがとうございます。ご不明な点があればお気軽にご質問くださいませ。'],
@@ -251,6 +332,34 @@ final class TalkQuickReplyCatalog
                 ['category' => 'intro',    'body' => 'プロフィール拝見しました。ぜひ一度お話しできれば嬉しいです。'],
                 ['category' => 'help',     'body' => '「今すぐ入れる」宣言を拝見しました。本日◯時から◯時まで、ヘルプでお願いできませんか？'],
                 ['category' => 'help',     'body' => '急遽ピンチヒッターを探しております。ご対応可能でしたら折り返しお願いいたします！'],
+            ],
+            // Shop opens the conversation (scouting a cast who hasn't messaged yet).
+            // Tone: friendly & short opener. Cover regular scout + help scout.
+            'chatting_outgoing_first' => [
+                ['category' => 'intro',    'body' => 'プロフィール拝見しました。よろしければ一度お話しできませんか？'],
+                ['category' => 'intro',    'body' => 'はじめまして。当店の雰囲気にぴったりだと感じてご連絡しました。'],
+                ['category' => 'help',     'body' => '「今すぐ入れる」宣言を拝見しました。本日◯時〜◯時、ヘルプでお願いできませんか？'],
+                ['category' => 'help',     'body' => '急遽ピンチヒッターを探しております。ご対応可能でしたら折り返しお願いいたします！'],
+                ['category' => 'schedule', 'body' => 'よろしければ体入か面談で、一度直接お話しさせてください。'],
+            ],
+            // Shop replies for the first time to a cast who applied / messaged first.
+            // Focus: welcome, self-intro of the responder, initial fact-finding.
+            'chatting_incoming_first' => [
+                ['category' => 'thanks',   'body' => 'ご応募ありがとうございます！ご興味を持っていただき嬉しく思います。まずはお話しできればと思います。'],
+                ['category' => 'thanks',   'body' => 'ご連絡ありがとうございます。担当より順にお答えいたしますね。'],
+                ['category' => 'question', 'body' => '差し支えなければ、勤務開始のご希望時期と週の出勤可能日数を教えてください。'],
+                ['category' => 'question', 'body' => 'これまでのご経験やお店のジャンルを、差し支えない範囲で教えていただけますか。'],
+                ['category' => 'schedule', 'body' => 'よろしければ体入か面談の候補日をこちらからお送りいたします。'],
+            ],
+            // Both sides have exchanged at least one message.
+            // Focus: deeper answers, follow-up, and offering interview slots.
+            'chatting_ongoing' => [
+                ['category' => 'intro',    'body' => 'ご質問ありがとうございます。順にお答えいたしますね。'],
+                ['category' => 'question', 'body' => '体入希望日の候補があれば、こちらで枠を調整いたします。'],
+                ['category' => 'schedule', 'body' => 'そろそろ面談の候補日をお送りしましょうか？'],
+                ['category' => 'schedule', 'body' => 'ご希望の曜日・時間帯があれば、こちらから体入枠をお押さえいたします。'],
+                ['category' => 'status',   'body' => 'その後、ご不明な点や気になる点はございませんか？'],
+                ['category' => 'status',   'body' => '当店の強み・お客様層についても、ご興味あればお伝えいたします。'],
             ],
             // 新規採用求人からの応募を受けた店舗側の最初の返信
             'chatting_new_hire' => [

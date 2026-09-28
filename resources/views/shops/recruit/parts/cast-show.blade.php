@@ -207,6 +207,7 @@
                 @if($ctaHasTrial)
                     <a href="{{ $mkTalkHref(['id' => $ctaShopId, 'job_kind' => 'trial', 'talk_topic' => 'new_hire', 'initiate' => 1]) }}"
                        @if($isShopPreview) aria-disabled="true" onclick="return false;" @endif
+                       data-apply-confirm="new_hire"
                        class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-full font-bold text-[12.5px] border border-line-accent/40 bg-accent/10 text-accent-text transition-all duration-300 {{ $isShopPreview ? 'cursor-default' : '' }}">
                         <i class="fas fa-paper-plane text-[11px]"></i> 新規採用に応募
                     </a>
@@ -214,6 +215,7 @@
                 @if($ctaHasHelp)
                     <a href="{{ $mkTalkHref(['id' => $ctaShopId, 'job_kind' => 'help', 'talk_topic' => 'help', 'initiate' => 1]) }}"
                        @if($isShopPreview) aria-disabled="true" onclick="return false;" @endif
+                       data-apply-confirm="help"
                        class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-full font-bold text-[12.5px] border border-line-accent/40 bg-accent/10 text-accent-text transition-all duration-300 {{ $isShopPreview ? 'cursor-default' : '' }}">
                         <i class="fas fa-hand-holding-heart text-[11px]"></i> ヘルプ応募
                     </a>
@@ -624,6 +626,109 @@
     });
 })();
 </script>
+
+{{-- 「応募」CTA 押下時のワンクッション確認ダイアログ。
+     CTA タップ時点で TalkController::room() が talk_job_kind を確定 + 自動メッセージを
+     挿入する挙動なので、キャストの誤タップで応募起点が立つのを防ぐ。 --}}
+@if(!empty($ctaShopId) && ($ctaHasTrial || $ctaHasHelp))
+<div id="apply-confirm-modal" class="apply-confirm-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="apply-confirm-title" hidden>
+    <div class="apply-confirm-modal__overlay" data-apply-confirm-cancel></div>
+    <div class="apply-confirm-modal__panel">
+        <button type="button" class="apply-confirm-modal__close" data-apply-confirm-cancel aria-label="閉じる">&times;</button>
+        <h3 id="apply-confirm-title" class="apply-confirm-modal__title" data-apply-confirm-title>応募のご確認</h3>
+        <p class="apply-confirm-modal__lead">応募してメッセージを開始しますか？<br><span class="apply-confirm-modal__note">（メッセージやり取り後に応募・面談が確定します。）</span></p>
+        <div class="apply-confirm-modal__actions">
+            <button type="button" class="apply-confirm-modal__btn apply-confirm-modal__btn--ghost" data-apply-confirm-cancel>キャンセル</button>
+            <button type="button" class="apply-confirm-modal__btn apply-confirm-modal__btn--primary" data-apply-confirm-proceed>
+                <i class="fas fa-paper-plane" aria-hidden="true"></i> 応募してメッセージを送る
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .apply-confirm-modal { position: fixed; inset: 0; z-index: 3400; display: none; align-items: center; justify-content: center; padding: 24px 16px; }
+    .apply-confirm-modal:not([hidden]) { display: flex; }
+    .apply-confirm-modal__overlay { position: absolute; inset: 0; background: rgba(15, 10, 30, 0.62); backdrop-filter: blur(4px); }
+    .apply-confirm-modal__panel { position: relative; width: min(420px, 100%); background: #fff; border-radius: 18px; padding: 22px 20px 20px; box-shadow: 0 24px 64px rgba(0,0,0,0.42); }
+    .apply-confirm-modal__close { position: absolute; top: 10px; right: 12px; background: transparent; border: 0; font-size: 1.5rem; color: #8b84a1; cursor: pointer; padding: 4px 8px; line-height: 1; }
+    .apply-confirm-modal__title { margin: 0 0 12px; font-size: 1.02rem; font-weight: 800; color: #1e1a30; display: flex; align-items: center; gap: 8px; }
+    .apply-confirm-modal__lead { margin: 0 0 18px; font-size: 0.9rem; line-height: 1.7; color: #3c3653; }
+    .apply-confirm-modal__note { display: inline-block; margin-top: 4px; font-size: 0.78rem; color: #6a6485; }
+    .apply-confirm-modal__actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+    .apply-confirm-modal__btn { min-height: 44px; padding: 10px 18px; border-radius: 12px; border: 1px solid transparent; font-size: 0.9rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .apply-confirm-modal__btn--ghost { background: #fff; border-color: rgba(124,58,237,0.24); color: #4a4560; }
+    .apply-confirm-modal__btn--ghost:hover { background: rgba(124,58,237,0.06); }
+    .apply-confirm-modal__btn--primary { background: linear-gradient(135deg, #a78bfa, #7c3aed); color: #fff; border-color: rgba(124,58,237,0.35); }
+    .apply-confirm-modal__btn--primary:hover { filter: brightness(1.05); }
+    .apply-confirm-modal__btn:active { transform: translateY(1px); }
+    /* ダーク画面（ヘッダートグルでダーク強制されたケース）でも読めるようにする */
+    body.mode-dark .apply-confirm-modal__panel { background: #1a1730; box-shadow: 0 24px 64px rgba(0,0,0,0.6); }
+    body.mode-dark .apply-confirm-modal__title { color: #f5f0ff; }
+    body.mode-dark .apply-confirm-modal__lead { color: #d7cff0; }
+    body.mode-dark .apply-confirm-modal__note { color: #a89dcf; }
+    body.mode-dark .apply-confirm-modal__btn--ghost { background: transparent; color: #d7cff0; border-color: rgba(196,181,253,0.32); }
+    body.mode-dark .apply-confirm-modal__btn--ghost:hover { background: rgba(196,181,253,0.08); }
+</style>
+
+<script>
+(function () {
+    'use strict';
+    var modal = document.getElementById('apply-confirm-modal');
+    if (!modal) return;
+    var titleEl = modal.querySelector('[data-apply-confirm-title]');
+    var proceedBtn = modal.querySelector('[data-apply-confirm-proceed]');
+    var cancelEls = modal.querySelectorAll('[data-apply-confirm-cancel]');
+    var pendingHref = null;
+    var lastFocused = null;
+
+    function labelFor(kind) {
+        return kind === 'help' ? 'ヘルプ応募のご確認' : '新規採用へのご応募 確認';
+    }
+    function open(kind, href, sourceEl) {
+        titleEl.textContent = labelFor(kind);
+        pendingHref = href;
+        lastFocused = sourceEl || document.activeElement;
+        modal.hidden = false;
+        modal.setAttribute('aria-hidden', 'false');
+        document.addEventListener('keydown', onKeyDown);
+        window.setTimeout(function () { proceedBtn.focus(); }, 0);
+    }
+    function close() {
+        modal.hidden = true;
+        modal.setAttribute('aria-hidden', 'true');
+        pendingHref = null;
+        document.removeEventListener('keydown', onKeyDown);
+        if (lastFocused && typeof lastFocused.focus === 'function') { lastFocused.focus(); }
+        lastFocused = null;
+    }
+    function onKeyDown(e) {
+        if (e.key === 'Escape') { e.preventDefault(); close(); }
+    }
+
+    document.querySelectorAll('a[data-apply-confirm]').forEach(function (a) {
+        a.addEventListener('click', function (e) {
+            // 店舗プレビュー時は元の onclick="return false;" が既に無効化しているのでスルー
+            if (a.getAttribute('aria-disabled') === 'true') return;
+            var href = a.getAttribute('href');
+            if (!href || href === '#') return;
+            e.preventDefault();
+            open(a.getAttribute('data-apply-confirm'), href, a);
+        });
+    });
+    cancelEls.forEach(function (el) {
+        el.addEventListener('click', function (e) { e.preventDefault(); close(); });
+    });
+    proceedBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (pendingHref) {
+            proceedBtn.disabled = true;
+            window.location.href = pendingHref;
+        }
+    });
+})();
+</script>
+@endif
 
 {{-- 画面下部固定の「トークする」バー（SWIPEカードのCTAと同一デザイン）。
      店舗プレビュー時は見た目そのまま・無効状態で表示（求職者に見える形の確認用） --}}

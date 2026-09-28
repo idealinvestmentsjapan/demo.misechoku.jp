@@ -193,6 +193,25 @@ class TalkController extends Controller
             ->orderBy('id')
             ->get();
         $messages = $this->mapRoomMessages($rawMessages, $isCastPortal);
+        // Chatting のサブフェーズ判定：peer 発の実メッセージ（SENDER_CAST / SENDER_SHOP）
+        // のみをカウントし、システム通知は除外する。
+        $mySenderType = $isCastPortal
+            ? \App\Models\Message::SENDER_CAST
+            : \App\Models\Message::SENDER_SHOP;
+        $partnerSenderType = $isCastPortal
+            ? \App\Models\Message::SENDER_SHOP
+            : \App\Models\Message::SENDER_CAST;
+        $myMessageCount = 0;
+        $partnerMessageCount = 0;
+        foreach ($rawMessages as $rawMessage) {
+            $senderType = (int) $rawMessage->sender_type;
+            if ($senderType === $mySenderType) {
+                $myMessageCount++;
+            } elseif ($senderType === $partnerSenderType) {
+                $partnerMessageCount++;
+            }
+        }
+        $currentTalkPhase = $this->resolveTalkPhase($myMessageCount, $partnerMessageCount);
         $initialTalkTopic = $this->normalizeTalkTopic((string) request()->query('talk_topic', ''));
         $initialTalkJobKind = $this->normalizeTalkJobKind((string) request()->query('job_kind', ''));
         // 定型文選択のトピック文脈：DB に保存された種別（reload しても保持される）を優先し、
@@ -227,14 +246,15 @@ class TalkController extends Controller
             'blockState' => $blockState,
             'canSend' => !$blockState['is_blocked'],
             // 入力欄下のクイック定型文パネル：やりとりの進行状況に応じた候補を優先表示
-            'quickReplySuggestions' => $this->buildQuickReplySuggestions($isCastPortal, $currentApplicationStatus, $effectiveTalkTopic),
+            'quickReplySuggestions' => $this->buildQuickReplySuggestions($isCastPortal, $currentApplicationStatus, $effectiveTalkTopic, $currentTalkPhase),
             'allQuickReplySuggestions' => $this->buildAllQuickReplySuggestionsByStatus($isCastPortal, $effectiveTalkTopic),
-            'currentStatusCode' => $this->applicationStatusCode($currentApplicationStatus),
+            'currentStatusCode' => $this->applicationStatusCode($currentApplicationStatus, $currentTalkPhase),
             'currentStatusLabel' => $this->statusLabel(
                 $this->applicationStatusCode($currentApplicationStatus),
                 $selectedTalkJobKind,
                 $currentApplicationStatus
             ),
+            'currentTalkPhase' => $currentTalkPhase,
             'canOfferInterview' => !$isCastPortal
                 && !$blockState['is_blocked']
                 && $currentApplicationStatus === self::APPLICATION_STATUS_CHATTING
@@ -1245,9 +1265,25 @@ class TalkController extends Controller
      * 現在ステータスに応じたクイック返信候補。
      * 実データは TalkQuickReplyCatalog に委譲。ここは薄い adapter。
      */
-    private function buildQuickReplySuggestions(bool $isCastPortal, int $status, ?string $talkTopic = null): array
+    private function buildQuickReplySuggestions(bool $isCastPortal, int $status, ?string $talkTopic = null, ?string $talkPhase = null): array
     {
-        return $this->quickReplyCatalog->forStatus($isCastPortal, $status, $talkTopic);
+        return $this->quickReplyCatalog->forStatus($isCastPortal, $status, $talkTopic, $talkPhase);
+    }
+
+    /**
+     * peer 発メッセージのカウントから、chatting サブフェーズを算出する。
+     * my=0 / partner=0 → outgoing_first（私がこれから開く）
+     * my=0 / partner>=1 → incoming_first（私がこれから初回返信）
+     * my>=1 → ongoing（すでに私が1通以上発言済み）
+     */
+    private function resolveTalkPhase(int $myMessageCount, int $partnerMessageCount): string
+    {
+        if ($myMessageCount > 0) {
+            return TalkQuickReplyCatalog::PHASE_ONGOING;
+        }
+        return $partnerMessageCount > 0
+            ? TalkQuickReplyCatalog::PHASE_INCOMING_FIRST
+            : TalkQuickReplyCatalog::PHASE_OUTGOING_FIRST;
     }
 
     private function getCurrentApplicationStatus(string $castId, string $shopId): int
@@ -1298,9 +1334,9 @@ class TalkController extends Controller
         ];
     }
 
-    private function applicationStatusCode(int $status): string
+    private function applicationStatusCode(int $status, ?string $talkPhase = null): string
     {
-        return match ($status) {
+        $base = match ($status) {
             self::APPLICATION_STATUS_INTERVIEW_PENDING => 'interview_pending',
             self::APPLICATION_STATUS_INTERVIEW_FIXED => 'interview_fixed',
             self::APPLICATION_STATUS_HIRED => 'hired',
@@ -1309,6 +1345,14 @@ class TalkController extends Controller
             self::APPLICATION_STATUS_REJECTED_TRIAL => 'rejected',
             default => 'chatting',
         };
+
+        // chatting だけはフェーズ (outgoing_first / incoming_first / ongoing) が
+        // 与えられていれば phase 付きのキーへ具体化する。
+        // 定型文タブの初期アクティブ選択・talk-room.js 側の分岐に使う。
+        if ($base === 'chatting' && $talkPhase !== null) {
+            return TalkQuickReplyCatalog::chattingSubKey($base, $talkPhase);
+        }
+        return $base;
     }
 
     private function syncApplicationStatusFromTalkAction(

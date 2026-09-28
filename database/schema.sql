@@ -1326,7 +1326,7 @@ CREATE TABLE IF NOT EXISTS `user_talk_templates` (
 CREATE TABLE IF NOT EXISTS `talk_quick_reply_templates` (
   `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
   `owner_type` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'cast (キャスト -> 店舗) / shop (店舗 -> キャスト)',
-  `status_code` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'chatting / interview_pending / interview_fixed / hired / rejected',
+  `status_code` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'chatting_outgoing_first / chatting_incoming_first / chatting_ongoing / interview_pending / interview_fixed / hired / rejected (legacy: chatting)',
   `category` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'thanks / schedule / question / status / intro / help',
   `body` text COLLATE utf8mb4_unicode_ci NOT NULL,
   `sort_order` int NOT NULL DEFAULT '0',

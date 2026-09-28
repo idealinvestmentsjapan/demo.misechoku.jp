@@ -24,16 +24,20 @@ class TalkQuickReplyMasterService
      * @return array<int, array{owner_type:string, status_code:string, owner_label:string, status_label:string}>
      */
     public const GROUPS = [
-        ['owner_type' => 'cast', 'status_code' => 'chatting',          'owner_label' => 'キャスト → 店舗', 'status_label' => 'やり取り中（初回・雑談）'],
-        ['owner_type' => 'cast', 'status_code' => 'interview_pending', 'owner_label' => 'キャスト → 店舗', 'status_label' => '面談日調整中'],
-        ['owner_type' => 'cast', 'status_code' => 'interview_fixed',   'owner_label' => 'キャスト → 店舗', 'status_label' => '面談日確定済み'],
-        ['owner_type' => 'cast', 'status_code' => 'hired',             'owner_label' => 'キャスト → 店舗', 'status_label' => '採用'],
-        ['owner_type' => 'cast', 'status_code' => 'rejected',          'owner_label' => 'キャスト → 店舗', 'status_label' => '不採用・お断り'],
-        ['owner_type' => 'shop', 'status_code' => 'chatting',          'owner_label' => '店舗 → キャスト', 'status_label' => 'やり取り中（初回・雑談）'],
-        ['owner_type' => 'shop', 'status_code' => 'interview_pending', 'owner_label' => '店舗 → キャスト', 'status_label' => '面談日調整中'],
-        ['owner_type' => 'shop', 'status_code' => 'interview_fixed',   'owner_label' => '店舗 → キャスト', 'status_label' => '面談日確定済み'],
-        ['owner_type' => 'shop', 'status_code' => 'hired',             'owner_label' => '店舗 → キャスト', 'status_label' => '採用'],
-        ['owner_type' => 'shop', 'status_code' => 'rejected',          'owner_label' => '店舗 → キャスト', 'status_label' => '不採用・お断り'],
+        ['owner_type' => 'cast', 'status_code' => 'chatting_outgoing_first', 'owner_label' => 'キャスト → 店舗', 'status_label' => 'やり取り中（こちらから初回）'],
+        ['owner_type' => 'cast', 'status_code' => 'chatting_incoming_first', 'owner_label' => 'キャスト → 店舗', 'status_label' => 'やり取り中（相手からの初回に返信）'],
+        ['owner_type' => 'cast', 'status_code' => 'chatting_ongoing',        'owner_label' => 'キャスト → 店舗', 'status_label' => 'やり取り中（お互い1通以上）'],
+        ['owner_type' => 'cast', 'status_code' => 'interview_pending',       'owner_label' => 'キャスト → 店舗', 'status_label' => '面談日調整中'],
+        ['owner_type' => 'cast', 'status_code' => 'interview_fixed',         'owner_label' => 'キャスト → 店舗', 'status_label' => '面談日確定済み'],
+        ['owner_type' => 'cast', 'status_code' => 'hired',                   'owner_label' => 'キャスト → 店舗', 'status_label' => '採用'],
+        ['owner_type' => 'cast', 'status_code' => 'rejected',                'owner_label' => 'キャスト → 店舗', 'status_label' => '不採用・お断り'],
+        ['owner_type' => 'shop', 'status_code' => 'chatting_outgoing_first', 'owner_label' => '店舗 → キャスト', 'status_label' => 'やり取り中（こちらから初回）'],
+        ['owner_type' => 'shop', 'status_code' => 'chatting_incoming_first', 'owner_label' => '店舗 → キャスト', 'status_label' => 'やり取り中（相手からの初回に返信）'],
+        ['owner_type' => 'shop', 'status_code' => 'chatting_ongoing',        'owner_label' => '店舗 → キャスト', 'status_label' => 'やり取り中（お互い1通以上）'],
+        ['owner_type' => 'shop', 'status_code' => 'interview_pending',       'owner_label' => '店舗 → キャスト', 'status_label' => '面談日調整中'],
+        ['owner_type' => 'shop', 'status_code' => 'interview_fixed',         'owner_label' => '店舗 → キャスト', 'status_label' => '面談日確定済み'],
+        ['owner_type' => 'shop', 'status_code' => 'hired',                   'owner_label' => '店舗 → キャスト', 'status_label' => '採用'],
+        ['owner_type' => 'shop', 'status_code' => 'rejected',                'owner_label' => '店舗 → キャスト', 'status_label' => '不採用・お断り'],
     ];
 
     /** 選択肢用カテゴリ（既存の色分け・並びに準拠）。 */
